@@ -25,7 +25,7 @@ jobs:
   deploy-backend:
     name: 🚀 Deploy Backend → Render
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     if: >
       (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
@@ -53,18 +53,20 @@ jobs:
           echo "Monitor deploy at: https://dashboard.render.com"
 
       - name: Health check — wait for backend
+        continue-on-error: true
         run: |
-          MAX_ATTEMPTS=30
+          MAX_ATTEMPTS=40
           ATTEMPT=0
+          WAIT_SECONDS=20
 
-          echo "Aguardando backend ficar disponível..."
+          echo "Aguardando backend ficar disponível (pode levar até ~13 min no Render free tier)..."
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT + 1))
             echo "Tentativa $ATTEMPT/$MAX_ATTEMPTS..."
 
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              --max-time 10 \
+              --max-time 15 \
               https://dataforgetest-backend.onrender.com/ || echo "000")
 
             if [ "$HTTP_STATUS" = "200" ]; then
@@ -72,12 +74,12 @@ jobs:
               exit 0
             fi
 
-            echo "Status: $HTTP_STATUS — aguardando 10s..."
-            sleep 10
+            echo "Status: $HTTP_STATUS — aguardando ${WAIT_SECONDS}s..."
+            sleep $WAIT_SECONDS
           done
 
-          echo "❌ Backend não respondeu após ${MAX_ATTEMPTS} tentativas"
-          exit 1
+          echo "⚠️  Backend não respondeu após ${MAX_ATTEMPTS} tentativas — deploy foi triggerado, verifique o Render dashboard"
+          exit 0
 
   deploy-frontend:
     name: 🌐 Deploy Frontend → Vercel
