@@ -1,0 +1,323 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-quality:
+    name: 🔍 Lint & Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install lint dependencies
+        run: pip install flake8 pylint black isort
+
+      - name: Flake8 — syntax & critical style errors
+        run: flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Black — formatting check
+        run: black --check src/ --line-length 100
+        continue-on-error: true
+
+      - name: isort — import order check
+        run: isort --check-only src/ --profile black
+        continue-on-error: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: ESLint — frontend
+        run: cd frontend && npx eslint src/ --ext .js,.jsx --max-warnings 50
+        continue-on-error: true
+
+  backend-tests:
+    name: 🐍 Backend Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-quality
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      checks: write
+    env:
+      LLM_PROVIDER: "gemini"
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-cov pytest-html
+
+      - name: Create result directories
+        run: mkdir -p test-results/backend test-results/performance
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: "[2a] Unit tests"
+        run: |
+          python -m pytest tests/backend/unit \
+            -v --tb=short \
+            --junit-xml=test-results/backend/unit-results.xml \
+            -q
+
+      - name: "[2b] API tests"
+        run: |
+          python -m pytest tests/backend/api \
+            -v --tb=short \
+            --junit-xml=test-results/backend/api-results.xml \
+            -q
+
+      - name: "[2c] Security tests"
+        run: |
+          python -m pytest tests/backend/security \
+            -v --tb=short -m security \
+            --junit-xml=test-results/backend/security-results.xml \
+            -q
+
+      - name: "[2d] Integration tests"
+        run: |
+          python -m pytest tests/backend/integration \
+            -v --tb=short \
+            --junit-xml=test-results/backend/integration-results.xml \
+            -q
+
+      - name: "[2e] E2E tests"
+        run: |
+          python -m pytest tests/backend/e2e \
+            -v --tb=short \
+            --junit-xml=test-results/backend/e2e-results.xml \
+            -q
+        continue-on-error: true
+
+      - name: "[2f] Performance benchmarks"
+        run: |
+          python -m pytest tests/backend/performance/test_performance_benchmarks.py \
+            -v --tb=short \
+            --junit-xml=test-results/backend/performance-results.xml \
+            -q
+        continue-on-error: true
+
+      - uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Test Results
+          path: 'test-results/backend/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: test-results/backend/
+          retention-days: 30
+
+  frontend-tests:
+    name: ⚛️ Frontend Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-quality
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Tests with coverage
+        env:
+          CI: true
+        run: |
+          cd frontend && npm run test:coverage -- \
+            --watchAll=false \
+            --ci \
+            --reporters=default \
+            --coverageReporters=lcov \
+            --coverageReporters=text-summary \
+            --coverageReporters=cobertura \
+            --coverageDirectory=../test-results/frontend/coverage
+
+      - uses: orgoro/coverage@v3.2
+        if: github.event_name == 'pull_request'
+        with:
+          coverageFile: test-results/frontend/coverage/cobertura-coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: 0.80
+          thresholdNew: 0.85
+          thresholdModified: 0.80
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage-report
+          path: test-results/frontend/coverage/
+          retention-days: 30
+
+      - name: Frontend security tests
+        run: |
+          cd frontend && npx jest \
+            --testPathPattern="tests/frontend/security" \
+            --watchAll=false \
+            --ci \
+            --env=node
+
+  docker-build:
+    name: 🐳 Docker Build Validation
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        run: |
+          docker buildx build \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --tag dataforgetest-backend:${{ github.sha }} \
+            --tag dataforgetest-backend:latest \
+            --load \
+            .
+
+      - name: Smoke test container
+        run: |
+          docker run -d \
+            --name test-backend \
+            -p 5001:5000 \
+            -e LLM_PROVIDER=gemini \
+            -e GEMINI_API_KEY=test_key_placeholder \
+            dataforgetest-backend:${{ github.sha }}
+
+          sleep 10
+
+          docker ps | grep test-backend
+
+          curl -f http://localhost:5001/ || exit 1
+
+          docker stop test-backend
+          docker rm test-backend
+
+      - name: Move Docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: docker-build
+    permissions:
+      contents: read
+      security-events: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild Docker image for scanning
+        run: |
+          docker build \
+            --tag dataforgetest-backend:${{ github.sha }} \
+            .
+
+      - name: Trivy — Docker image vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'dataforgetest-backend:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: pip-audit — Python dependency audit
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --format=json --output=pip-audit-results.json || true
+          cat pip-audit-results.json
+
+      - name: npm audit — JavaScript dependency audit
+        run: |
+          cd frontend && npm audit --audit-level=high --json > ../npm-audit-results.json || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-results
+          path: |
+            pip-audit-results.json
+            npm-audit-results.json
+          retention-days: 30

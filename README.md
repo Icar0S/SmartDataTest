@@ -1,5 +1,10 @@
 # DataForgeTest
 
+![CI Pipeline](https://github.com/Icar0S/DataForgeTest/actions/workflows/ci.yml/badge.svg)
+![Deploy](https://github.com/Icar0S/DataForgeTest/actions/workflows/deploy.yml/badge.svg)
+![Nightly Tests](https://github.com/Icar0S/DataForgeTest/actions/workflows/nightly.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-80%25-green)
+
 > **Advanced Data Quality Testing Platform with AI-Powered Synthetic Data Generation**
 
 DataForgeTest is a comprehensive solution for automating data quality testing in Big Data environments. It combines Large Language Models (LLMs) with advanced data processing capabilities to generate synthetic datasets, validate data accuracy, and create intelligent testing workflows for scalable data systems.
