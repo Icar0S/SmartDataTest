@@ -32,6 +32,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "❌ Secret RENDER_DEPLOY_HOOK_URL is not set."
+            echo "   Add it at: Settings → Secrets → Actions → New repository secret"
+            exit 1
+          fi
+          echo "✅ RENDER_DEPLOY_HOOK_URL is configured"
+
       - name: Trigger Render deploy webhook
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
@@ -100,12 +109,25 @@ jobs:
           CI: false
         run: cd frontend && npm run build
 
+      - name: Check required secrets
+        run: |
+          MISSING=""
+          [ -z "${{ secrets.VERCEL_TOKEN }}" ]      && MISSING="$MISSING VERCEL_TOKEN"
+          [ -z "${{ secrets.VERCEL_ORG_ID }}" ]     && MISSING="$MISSING VERCEL_ORG_ID"
+          [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ] && MISSING="$MISSING VERCEL_PROJECT_ID"
+          if [ -n "$MISSING" ]; then
+            echo "❌ Missing secrets:$MISSING"
+            echo "   Add them at: Settings → Secrets → Actions → New repository secret"
+            exit 1
+          fi
+          echo "✅ All Vercel secrets are configured"
+
       - name: Deploy to Vercel
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          npx vercel deploy frontend/build \
+          npx vercel deploy --prebuilt frontend/build \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --yes \
             --prod
