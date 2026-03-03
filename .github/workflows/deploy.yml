@@ -1,0 +1,120 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      deploy_backend:
+        description: 'Deploy backend to Render?'
+        required: true
+        default: 'true'
+        type: boolean
+      deploy_frontend:
+        description: 'Deploy frontend to Vercel?'
+        required: true
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-backend:
+    name: 🚀 Deploy Backend → Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger Render deploy webhook
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            --fail-with-body
+
+      - name: Confirm deploy trigger
+        run: |
+          echo "Deploy triggered successfully on Render"
+          echo "Monitor deploy at: https://dashboard.render.com"
+
+      - name: Health check — wait for backend
+        run: |
+          MAX_ATTEMPTS=30
+          ATTEMPT=0
+
+          echo "Aguardando backend ficar disponível..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Tentativa $ATTEMPT/$MAX_ATTEMPTS..."
+
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 \
+              https://dataforgetest-backend.onrender.com/ || echo "000")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Backend disponível! Status: $HTTP_STATUS"
+              exit 0
+            fi
+
+            echo "Status: $HTTP_STATUS — aguardando 10s..."
+            sleep 10
+          done
+
+          echo "❌ Backend não respondeu após ${MAX_ATTEMPTS} tentativas"
+          exit 1
+
+  deploy-frontend:
+    name: 🌐 Deploy Frontend → Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend for production
+        env:
+          REACT_APP_API_URL: https://dataforgetest-backend.onrender.com
+          CI: false
+        run: cd frontend && npm run build
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel deploy frontend/build \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes \
+            --prod
+
+      - name: Verify Vercel deploy
+        run: |
+          echo "✅ Frontend deployed to https://data-forge-test.vercel.app"
+          curl -f https://data-forge-test.vercel.app/ \
+            --max-time 30 \
+            -o /dev/null \
+            -s \
+            -w "HTTP Status: %{http_code}\n"

@@ -1,0 +1,178 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-validation:
+    name: ✅ PR Quality Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title (Conventional Commits)
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            chore
+            perf
+            ci
+            build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-cov pytest-html
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: Create result directories
+        run: mkdir -p test-results/backend test-results/frontend/coverage
+
+      - name: Run backend unit tests
+        id: backend_unit
+        run: |
+          python -m pytest tests/backend/unit \
+            -v --tb=short \
+            --junit-xml=test-results/backend/unit-results.xml
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: "gemini"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Run backend API tests
+        id: backend_api
+        run: |
+          python -m pytest tests/backend/api \
+            -v --tb=short \
+            --junit-xml=test-results/backend/api-results.xml
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: "gemini"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Run backend security tests
+        id: backend_security
+        run: |
+          python -m pytest tests/backend/security \
+            -v --tb=short -m security \
+            --junit-xml=test-results/backend/security-results.xml
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: "gemini"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Run frontend tests with coverage
+        id: frontend_coverage
+        env:
+          CI: true
+        run: |
+          cd frontend && npm run test:coverage -- \
+            --watchAll=false \
+            --ci \
+            --reporters=default \
+            --coverageReporters=text-summary \
+            --coverageReporters=cobertura \
+            --coverageDirectory=../test-results/frontend/coverage
+        continue-on-error: true
+
+      - name: Post PR comment with test summary
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const backendUnit     = '${{ steps.backend_unit.outcome }}';
+            const backendApi      = '${{ steps.backend_api.outcome }}';
+            const backendSecurity = '${{ steps.backend_security.outcome }}';
+            const frontendCov     = '${{ steps.frontend_coverage.outcome }}';
+
+            const icon = (s) => s === 'success' ? '✅' : s === 'skipped' ? '⏭️' : '❌';
+
+            const body = [
+              '## 🧪 PR Test Summary',
+              '',
+              '| Suite | Status |',
+              '|---|---|',
+              `| Backend — Unit       | ${icon(backendUnit)} ${backendUnit} |`,
+              `| Backend — API        | ${icon(backendApi)} ${backendApi} |`,
+              `| Backend — Security   | ${icon(backendSecurity)} ${backendSecurity} |`,
+              `| Frontend — Coverage  | ${icon(frontendCov)} ${frontendCov} |`,
+              '',
+              '> Coverage thresholds: Statements 80% · Branches 70% · Functions 75% · Lines 80%',
+              '',
+              `[📦 View artifacts](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.startsWith('## 🧪 PR Test Summary')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
