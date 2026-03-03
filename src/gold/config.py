@@ -28,8 +28,9 @@ class GoldConfig:
     @classmethod
     def from_env(cls) -> "GoldConfig":
         """Create config from environment variables."""
-        from dotenv import load_dotenv
         import os
+
+        from dotenv import load_dotenv
 
         load_dotenv()
 

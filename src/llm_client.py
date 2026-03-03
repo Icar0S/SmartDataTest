@@ -1,8 +1,8 @@
 """LLM client abstraction layer supporting multiple providers."""
 
 import os
-from typing import Dict, List, Optional
 from abc import ABC, abstractmethod
+from typing import Dict, List, Optional
 
 
 class LLMClient(ABC):
@@ -183,9 +183,7 @@ class GeminiClient(LLMClient):
             }
 
             # Generate response
-            response = self.model.generate_content(
-                prompt, generation_config=generation_config
-            )
+            response = self.model.generate_content(prompt, generation_config=generation_config)
 
             # Handle blocked or empty responses
             if not response.text:
@@ -228,22 +226,16 @@ def create_llm_client(
     if provider == "anthropic":
         api_key = api_key or os.getenv("LLM_API_KEY")
         if not api_key:
-            raise ValueError(
-                "Anthropic API key is required. Set LLM_API_KEY environment variable."
-            )
+            raise ValueError("Anthropic API key is required. Set LLM_API_KEY environment variable.")
         model = model or os.getenv("LLM_MODEL", "claude-3-haiku-20240307")
         return AnthropicClient(api_key=api_key, model=model)
 
     elif provider == "gemini":
         api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY")
         if not api_key:
-            raise ValueError(
-                "Gemini API key is required. Set GEMINI_API_KEY environment variable."
-            )
+            raise ValueError("Gemini API key is required. Set GEMINI_API_KEY environment variable.")
         model = (
-            model
-            or os.getenv("GEMINI_MODEL")
-            or os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
+            model or os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
         )
         return GeminiClient(api_key=api_key, model=model)
 

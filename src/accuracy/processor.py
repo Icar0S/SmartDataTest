@@ -3,9 +3,10 @@
 import re
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
-import pandas as pd
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
+import pandas as pd
 
 
 def normalize_column_name(name: str) -> str:
@@ -139,9 +140,7 @@ def read_dataset(file_path: Path) -> pd.DataFrame:
             for sep in separators:
                 try:
                     # Try to read a small sample first
-                    df_sample = pd.read_csv(
-                        file_path, encoding=encoding, sep=sep, nrows=5
-                    )
+                    df_sample = pd.read_csv(file_path, encoding=encoding, sep=sep, nrows=5)
                     # If successful and has multiple columns, use this configuration
                     if len(df_sample.columns) > 1:
                         df = pd.read_csv(file_path, encoding=encoding, sep=sep)
@@ -260,9 +259,7 @@ def compare_and_correct(
     )
 
     # Check for duplicates in GOLD
-    gold_duplicates = gold_df[
-        gold_df.duplicated(subset=["__composite_key__"], keep=False)
-    ]
+    gold_duplicates = gold_df[gold_df.duplicated(subset=["__composite_key__"], keep=False)]
     if len(gold_duplicates) > 0:
         duplicate_keys = gold_duplicates["__composite_key__"].unique().tolist()
         raise ValueError(
@@ -351,9 +348,9 @@ def compare_and_correct(
                 corrected_value = gold_value
 
             # Update corrected dataframe
-            corrected_df.loc[
-                corrected_df["__composite_key__"] == composite_key, col
-            ] = corrected_value
+            corrected_df.loc[corrected_df["__composite_key__"] == composite_key, col] = (
+                corrected_value
+            )
 
             # Record difference - use original key values from target dataframe
             key_values = {}
@@ -366,9 +363,7 @@ def compare_and_correct(
                     original_value = row[key_col]
                 else:
                     # Fallback to normalized value from composite key if can't find original
-                    original_value = composite_key.split("||")[
-                        key_columns.index(key_col)
-                    ]
+                    original_value = composite_key.split("||")[key_columns.index(key_col)]
 
                 # Convert to native Python type for JSON serialization
                 if pd.isna(original_value):
@@ -385,12 +380,8 @@ def compare_and_correct(
                     "keys": key_values,
                     "column": col,
                     "gold": float(gold_value) if not pd.isna(gold_value) else None,
-                    "target": (
-                        float(target_value) if not pd.isna(target_value) else None
-                    ),
-                    "corrected": (
-                        float(corrected_value) if not pd.isna(corrected_value) else None
-                    ),
+                    "target": (float(target_value) if not pd.isna(target_value) else None),
+                    "corrected": (float(corrected_value) if not pd.isna(corrected_value) else None),
                     "delta": (
                         float(abs(gold_value - target_value))
                         if not pd.isna(gold_value) and not pd.isna(target_value)

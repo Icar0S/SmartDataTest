@@ -1,6 +1,7 @@
 """File reading utilities for data quality metrics."""
 
 from pathlib import Path
+
 import pandas as pd
 
 
@@ -134,9 +135,7 @@ def read_csv_robust(file_path: Path) -> pd.DataFrame:
 
             # If we only got one column but expected more (and the column name contains separators)
             if len(df.columns) == 1 and detected_sep in df.columns[0]:
-                raise ValueError(
-                    "Data not properly separated - single column contains separators"
-                )
+                raise ValueError("Data not properly separated - single column contains separators")
 
             print(f"Successfully read CSV with strategy {i}. Shape: {df.shape}")
             return df

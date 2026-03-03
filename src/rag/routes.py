@@ -5,9 +5,9 @@ from pathlib import Path
 from flask import Blueprint, Response, jsonify, request, stream_with_context
 from werkzeug.utils import secure_filename
 
+from .chat import ChatEngine
 from .config import RAGConfig
 from .ingest import DocumentIngestor
-from .chat import ChatEngine
 
 # Create blueprint
 rag_bp = Blueprint("rag", __name__, url_prefix="/api/rag")
@@ -58,9 +58,7 @@ def upload():
     if not allowed_file(file.filename):
         return (
             jsonify(
-                {
-                    "error": f"File type not allowed. Must be one of: {config.allowed_file_types}"
-                }
+                {"error": f"File type not allowed. Must be one of: {config.allowed_file_types}"}
             ),
             400,
         )
@@ -77,11 +75,7 @@ def upload():
         if size_mb > config.max_upload_mb:
             temp_path.unlink()
             return (
-                jsonify(
-                    {
-                        "error": f"File too large. Maximum size is {config.max_upload_mb}MB"
-                    }
-                ),
+                jsonify({"error": f"File too large. Maximum size is {config.max_upload_mb}MB"}),
                 400,
             )
 
@@ -101,9 +95,7 @@ def upload():
         # Cleanup
         temp_path.unlink()
 
-        return jsonify(
-            {"document_id": doc_id, "filename": filename, "size_mb": size_mb}
-        )
+        return jsonify({"document_id": doc_id, "filename": filename, "size_mb": size_mb})
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         return jsonify({"error": str(e)}), 500

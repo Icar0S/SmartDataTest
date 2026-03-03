@@ -1,21 +1,23 @@
 """File processing services for GOLD dataset cleaning."""
 
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
+
 from ..processor import (
-    read_dataset,
-    normalize_column_name,
     clean_dataframe_chunk,
     get_null_counts,
+    normalize_column_name,
+    read_dataset,
 )
 from .serialization_utils import convert_to_json_serializable
 
 
-def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize, 
-                        config, processing_status):
+def process_csv_chunked(
+    file_path, session_id, options, encoding, sep, chunksize, config, processing_status
+):
     """Process CSV file in chunks.
-    
+
     Args:
         file_path: Path to the CSV file
         session_id: Session identifier
@@ -25,7 +27,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
         chunksize: Number of rows per chunk
         config: Configuration object with storage_path
         processing_status: Status tracking dict
-        
+
     Returns:
         pd.DataFrame: Processed dataframe
     """
@@ -54,9 +56,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
         # Need to check full file for empty columns
         df_check = read_dataset(file_path, encoding=encoding, sep=sep)
         if column_mapping:
-            df_check.columns = [
-                column_mapping.get(col, col) for col in df_check.columns
-            ]
+            df_check.columns = [column_mapping.get(col, col) for col in df_check.columns]
         for col in df_check.columns:
             if df_check[col].isna().all():
                 columns_to_drop.append(col)
@@ -123,9 +123,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
                 chunk_reader = pd.read_csv(file_path, **strategy)
                 successful_strategy = i + 1
                 if i > 0:  # Log fallback usage
-                    print(
-                        f"Using CSV chunk reading strategy {successful_strategy} for processing"
-                    )
+                    print(f"Using CSV chunk reading strategy {successful_strategy} for processing")
                 break
         except Exception as e:
             last_error = e
@@ -149,9 +147,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
 
                 # Apply column mapping
                 if column_mapping:
-                    chunk.columns = [
-                        column_mapping.get(col, col) for col in chunk.columns
-                    ]
+                    chunk.columns = [column_mapping.get(col, col) for col in chunk.columns]
 
                 # Drop empty columns
                 chunk = chunk.drop(columns=columns_to_drop, errors="ignore")
@@ -171,9 +167,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
                 chunks.append(cleaned_chunk)
 
             except Exception as chunk_error:
-                print(
-                    f"Warning: Error processing chunk {chunk_count}: {str(chunk_error)}"
-                )
+                print(f"Warning: Error processing chunk {chunk_count}: {str(chunk_error)}")
                 # Skip this problematic chunk and continue
                 continue
 
@@ -194,24 +188,18 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
                 "skipinitialspace": True,
             }
 
-            print(
-                "Attempting recovery by reading entire file with permissive settings..."
-            )
+            print("Attempting recovery by reading entire file with permissive settings...")
             df_full = pd.read_csv(file_path, **recovery_strategy)
 
             # Apply column mapping to full dataframe
             if column_mapping:
-                df_full.columns = [
-                    column_mapping.get(col, col) for col in df_full.columns
-                ]
+                df_full.columns = [column_mapping.get(col, col) for col in df_full.columns]
 
             # Drop empty columns
             df_full = df_full.drop(columns=columns_to_drop, errors="ignore")
 
             # Process in memory chunks
-            print(
-                f"Recovery successful. Processing {len(df_full)} rows in memory chunks..."
-            )
+            print(f"Recovery successful. Processing {len(df_full)} rows in memory chunks...")
             total_chunks = (len(df_full) // chunksize) + 1
 
             for i in range(0, len(df_full), chunksize):
@@ -274,9 +262,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
 
                 # Apply column mapping to full dataframe
                 if column_mapping:
-                    df_full.columns = [
-                        column_mapping.get(col, col) for col in df_full.columns
-                    ]
+                    df_full.columns = [column_mapping.get(col, col) for col in df_full.columns]
 
                 # Drop empty columns
                 df_full = df_full.drop(columns=columns_to_drop, errors="ignore")
@@ -370,7 +356,7 @@ def process_csv_chunked(file_path, session_id, options, encoding, sep, chunksize
 
 def process_excel(file_path, session_id, options, chunksize, config, processing_status):
     """Process Excel file.
-    
+
     Args:
         file_path: Path to the Excel file
         session_id: Session identifier
@@ -378,7 +364,7 @@ def process_excel(file_path, session_id, options, chunksize, config, processing_
         chunksize: Number of rows per chunk
         config: Configuration object with storage_path
         processing_status: Status tracking dict
-        
+
     Returns:
         pd.DataFrame: Processed dataframe
     """
@@ -489,7 +475,7 @@ def process_excel(file_path, session_id, options, chunksize, config, processing_
 
 def process_parquet_chunked(file_path, session_id, options, chunksize, config, processing_status):
     """Process Parquet file in chunks.
-    
+
     Args:
         file_path: Path to the Parquet file
         session_id: Session identifier
@@ -497,7 +483,7 @@ def process_parquet_chunked(file_path, session_id, options, chunksize, config, p
         chunksize: Number of rows per chunk
         config: Configuration object with storage_path
         processing_status: Status tracking dict
-        
+
     Returns:
         pd.DataFrame: Processed dataframe
     """

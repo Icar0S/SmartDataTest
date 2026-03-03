@@ -33,14 +33,13 @@ class RAGConfig:
     chunk_overlap: int = 50
     top_k: int = 4
     max_upload_mb: int = 10
-    allowed_file_types: List[str] = field(
-        default_factory=lambda: [".pdf", ".txt", ".md", ".csv"]
-    )
+    allowed_file_types: List[str] = field(default_factory=lambda: [".pdf", ".txt", ".md", ".csv"])
 
     @classmethod
     def from_env(cls) -> "RAGConfig":
         """Create config from environment variables."""
         import os
+
         from dotenv import load_dotenv
 
         load_dotenv()
@@ -60,7 +59,5 @@ class RAGConfig:
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "50")),
             top_k=int(os.getenv("TOP_K", "4")),
             max_upload_mb=int(os.getenv("MAX_UPLOAD_MB", "10")),
-            allowed_file_types=os.getenv(
-                "ALLOWED_FILE_TYPES", ".pdf,.txt,.md,.csv"
-            ).split(","),
+            allowed_file_types=os.getenv("ALLOWED_FILE_TYPES", ".pdf,.txt,.md,.csv").split(","),
         )

@@ -2,13 +2,13 @@
 
 from .config import AccuracyConfig
 from .processor import (
-    normalize_column_name,
-    strip_accents,
-    normalize_key_value,
     coerce_numeric,
-    read_dataset,
+    compare_and_correct,
     handle_duplicates,
-    compare_and_correct
+    normalize_column_name,
+    normalize_key_value,
+    read_dataset,
+    strip_accents,
 )
 from .routes import accuracy_bp
 
@@ -21,5 +21,5 @@ __all__ = [
     "coerce_numeric",
     "read_dataset",
     "handle_duplicates",
-    "compare_and_correct"
+    "compare_and_correct",
 ]

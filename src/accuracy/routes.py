@@ -3,12 +3,13 @@
 import json
 import uuid
 from pathlib import Path
-from flask import Blueprint, request, jsonify, send_file
-from werkzeug.utils import secure_filename
+
 import pandas as pd
+from flask import Blueprint, jsonify, request, send_file
+from werkzeug.utils import secure_filename
 
 from .config import AccuracyConfig
-from .processor import read_dataset, compare_and_correct, normalize_column_name
+from .processor import compare_and_correct, normalize_column_name, read_dataset
 
 # Create blueprint
 accuracy_bp = Blueprint("accuracy", __name__, url_prefix="/api/accuracy")
@@ -99,9 +100,7 @@ def upload_dataset():
         if len(df) > config.max_rows:
             return (
                 jsonify(
-                    {
-                        "error": f"Dataset has {len(df)} rows, exceeds maximum of {config.max_rows}"
-                    }
+                    {"error": f"Dataset has {len(df)} rows, exceeds maximum of {config.max_rows}"}
                 ),
                 400,
             )
@@ -294,19 +293,14 @@ def download_file(session_id, filename):
             return jsonify({"error": "File not found"}), 404
 
         # Determine mimetype based on file extension
-        if filename.endswith('.csv'):
-            mimetype = 'text/csv'
-        elif filename.endswith('.json'):
-            mimetype = 'application/json'
+        if filename.endswith(".csv"):
+            mimetype = "text/csv"
+        elif filename.endswith(".json"):
+            mimetype = "application/json"
         else:
-            mimetype = 'application/octet-stream'
+            mimetype = "application/octet-stream"
 
-        return send_file(
-            file_path, 
-            as_attachment=True, 
-            download_name=filename,
-            mimetype=mimetype
-        )
+        return send_file(file_path, as_attachment=True, download_name=filename, mimetype=mimetype)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

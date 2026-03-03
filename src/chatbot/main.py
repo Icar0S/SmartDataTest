@@ -6,8 +6,8 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsl_parser.generator import generate_dsl
 from code_generator.pyspark_generator import generate_pyspark_code
+from dsl_parser.generator import generate_dsl
 
 from .answers import AnswerManager
 from .questions import QUESTIONS
@@ -23,25 +23,23 @@ def process_chatbot_request(answers):
         tuple: (dsl, pyspark_code, errors)
     """
     # Add default answers for missing keys
-    answers.setdefault(
-        "What is the name of the dataset you want to validate?", "my_dataset"
-    )
+    answers.setdefault("What is the name of the dataset you want to validate?", "my_dataset")
     answers.setdefault(
         "What is the source of the data (e.g., a file path, a database table)?",
         "my_source",
     )
-    answers.setdefault(
-        "What is the format of the data (e.g., CSV, JSON, Parquet)?", "csv"
-    )
+    answers.setdefault("What is the format of the data (e.g., CSV, JSON, Parquet)?", "csv")
     answers.setdefault(
         "What are the expected column names, in order? (e.g., id, first_name, last_name, email)",
         "col1,col2,col3,col4,col5,col6",
     )
     answers.setdefault(
-        ("What is the expected data type for each column "
-         "(e.g., string, integer, float, date)? Please list them in the same order "
-         "as column names, separated by commas. "
-         "(e.g., integer, string, string, string)"),
+        (
+            "What is the expected data type for each column "
+            "(e.g., string, integer, float, date)? Please list them in the same order "
+            "as column names, separated by commas. "
+            "(e.g., integer, string, string, string)"
+        ),
         "string,string,string,string,string,string",
     )
 
@@ -89,9 +87,7 @@ def main():
         if not filename.endswith(".json"):
             filename += ".json"
 
-        project_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         dsl_dir = os.path.join(project_root, "dsl")
 
         if not os.path.exists(dsl_dir):
@@ -117,9 +113,7 @@ def main():
         if not filename.endswith(".py"):
             filename += ".py"
 
-        project_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         output_dir = os.path.join(project_root, "output")
 
         if not os.path.exists(output_dir):

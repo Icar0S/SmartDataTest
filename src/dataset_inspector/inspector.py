@@ -1,11 +1,11 @@
 """Dataset inspection module for automatic schema and statistics inference."""
 
 import os
-from typing import Dict, Any, Optional
-import pandas as pd
-import numpy as np
-import chardet
+from typing import Any, Dict, Optional
 
+import chardet
+import numpy as np
+import pandas as pd
 
 # Constants
 MAX_FILE_SIZE_MB = 100
@@ -102,13 +102,9 @@ def infer_column_statistics(
         "name": column,
         "type": str(col_data.dtype),
         "null_count": int(col_data.isna().sum()),
-        "null_ratio": (
-            float(col_data.isna().sum() / len(col_data)) if len(col_data) > 0 else 0.0
-        ),
+        "null_ratio": (float(col_data.isna().sum() / len(col_data)) if len(col_data) > 0 else 0.0),
         "unique_count": int(col_data.nunique()),
-        "unique_ratio": (
-            float(col_data.nunique() / len(col_data)) if len(col_data) > 0 else 0.0
-        ),
+        "unique_ratio": (float(col_data.nunique() / len(col_data)) if len(col_data) > 0 else 0.0),
     }
     # Add type-specific statistics
     if pd.api.types.is_numeric_dtype(col_data):
@@ -119,9 +115,7 @@ def infer_column_statistics(
             stats["mean"] = float(non_null.mean())
             stats["median"] = float(non_null.median())
             stats["std"] = float(non_null.std()) if len(non_null) > 1 else 0.0
-    elif pd.api.types.is_string_dtype(col_data) or pd.api.types.is_object_dtype(
-        col_data
-    ):
+    elif pd.api.types.is_string_dtype(col_data) or pd.api.types.is_object_dtype(col_data):
         non_null = col_data.dropna()
         if len(non_null) > 0:
             stats["avg_length"] = float(non_null.astype(str).str.len().mean())
@@ -133,9 +127,7 @@ def infer_column_statistics(
     return stats
 
 
-def inspect_csv(
-    file_path: str, options: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+def inspect_csv(file_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Inspect a CSV file and extract metadata.
 
     Args:
@@ -161,9 +153,7 @@ def inspect_csv(
         raise ValueError(f"Failed to detect file encoding: {e}") from e
 
     try:
-        delimiter = options.get("delimiter") or detect_csv_delimiter(
-            file_path, encoding
-        )
+        delimiter = options.get("delimiter") or detect_csv_delimiter(file_path, encoding)
     except Exception as e:
         raise ValueError(f"Failed to detect CSV delimiter: {e}") from e
 
@@ -175,9 +165,7 @@ def inspect_csv(
         if header:
             df = pd.read_csv(file_path, encoding=encoding, delimiter=delimiter)
         else:
-            df = pd.read_csv(
-                file_path, encoding=encoding, delimiter=delimiter, header=None
-            )
+            df = pd.read_csv(file_path, encoding=encoding, delimiter=delimiter, header=None)
     except Exception as e:
         raise ValueError(f"Failed to parse CSV file: {e}") from e
 
@@ -211,9 +199,7 @@ def inspect_csv(
     return sanitize_for_json(metadata)
 
 
-def inspect_parquet(
-    file_path: str, options: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+def inspect_parquet(file_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Inspect a Parquet file and extract metadata.
 
     Args:
@@ -265,9 +251,7 @@ def inspect_parquet(
     return sanitize_for_json(metadata)
 
 
-def inspect_json(
-    file_path: str, options: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+def inspect_json(file_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Inspect a JSON file and extract metadata.
 
     Args:

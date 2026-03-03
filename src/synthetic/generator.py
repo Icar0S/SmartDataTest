@@ -7,8 +7,8 @@ import os
 import random
 import re
 import time
-from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 # Use relative import instead of sys.path manipulation
 try:
@@ -55,27 +55,21 @@ class SyntheticDataGenerator:
                     print(
                         f"[ERROR] Model '{model}' is not compatible with Gemini provider. Use a Gemini model like 'gemini-2.0-flash-exp'"
                     )
-                    raise ValueError(
-                        f"Model {model} is not compatible with provider {provider}"
-                    )
+                    raise ValueError(f"Model {model} is not compatible with provider {provider}")
                 elif provider == "anthropic" and (
                     model.startswith("gemini") or "qwen" in model or "llama" in model
                 ):
                     print(
                         f"[ERROR] Model '{model}' is not compatible with Anthropic provider. Use a Claude model like 'claude-3-haiku-20240307'"
                     )
-                    raise ValueError(
-                        f"Model {model} is not compatible with provider {provider}"
-                    )
+                    raise ValueError(f"Model {model} is not compatible with provider {provider}")
                 elif provider == "ollama" and (
                     model.startswith("gemini") or model.startswith("claude")
                 ):
                     print(
                         f"[ERROR] Model '{model}' is not compatible with Ollama provider. Use an Ollama model like 'qwen2.5-coder:7b'"
                     )
-                    raise ValueError(
-                        f"Model {model} is not compatible with provider {provider}"
-                    )
+                    raise ValueError(f"Model {model} is not compatible with provider {provider}")
 
             # Create LLM client based on provider
             self.llm_client = create_llm_client(
@@ -188,9 +182,7 @@ Requirements:
 
         return prompt
 
-    def _parse_csv_response(
-        self, response_text: str, num_columns: int
-    ) -> List[List[Any]]:
+    def _parse_csv_response(self, response_text: str, num_columns: int) -> List[List[Any]]:
         """Parse LLM CSV response into rows.
 
         Args:
@@ -231,9 +223,7 @@ Requirements:
 
         return valid_rows
 
-    def _coerce_types(
-        self, rows: List[List[str]], schema: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _coerce_types(self, rows: List[List[str]], schema: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Coerce string values to proper types.
 
         Args:
@@ -299,9 +289,7 @@ Requirements:
 
         # Find unique columns
         unique_cols = [
-            col["name"]
-            for col in columns
-            if col.get("options", {}).get("unique", False)
+            col["name"] for col in columns if col.get("options", {}).get("unique", False)
         ]
 
         if not unique_cols:
@@ -380,9 +368,7 @@ Requirements:
                 logs.append(f"Parsed {len(rows)} rows from CSV")
 
                 if len(rows) < num_rows * 0.8:  # At least 80% of requested rows
-                    logs.append(
-                        f"WARNING: Only got {len(rows)}/{num_rows} rows, retrying..."
-                    )
+                    logs.append(f"WARNING: Only got {len(rows)}/{num_rows} rows, retrying...")
                     continue
 
                 # Coerce types
@@ -450,9 +436,7 @@ Requirements:
             else:
                 return f"2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}"
 
-    def _generate_mock_data(
-        self, schema: Dict[str, Any], num_rows: int
-    ) -> List[Dict[str, Any]]:
+    def _generate_mock_data(self, schema: Dict[str, Any], num_rows: int) -> List[Dict[str, Any]]:
         """Generate mock data without LLM (fallback).
 
         Args:

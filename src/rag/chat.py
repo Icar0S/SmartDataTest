@@ -2,8 +2,8 @@
 
 from typing import Dict, Generator, List
 
-from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.chat_engine import CondensePlusContextChatEngine
+from llama_index.core.llms import ChatMessage, MessageRole
 
 from .config import RAGConfig
 from .ingest import DocumentIngestor
@@ -61,9 +61,7 @@ class ChatEngine:
 
         return {"text": response_text, "citations": citations}
 
-    def chat(
-        self, message: str, stream: bool = True
-    ) -> Generator[Dict, None, None] | Dict:
+    def chat(self, message: str, stream: bool = True) -> Generator[Dict, None, None] | Dict:
         """Send message to chat engine and get response.
 
         Args:
@@ -105,9 +103,7 @@ class ChatEngine:
 
         else:
             # Get complete response
-            response = self.chat_engine.chat(
-                message, chat_history=self.chat_history[:-1]
-            )
+            response = self.chat_engine.chat(message, chat_history=self.chat_history[:-1])
 
             # Add to history
             self.chat_history.append(

@@ -78,9 +78,7 @@ class SimpleRAG:
                     # Double-check: another worker may have written the file while
                     # we were waiting for the lock.
                     if docs_file.exists():
-                        print(
-                            "[INFO] documents.json created by another worker; loading from file"
-                        )
+                        print("[INFO] documents.json created by another worker; loading from file")
                         self._load_from_file(docs_file)
                     else:
                         self._auto_import_or_fallback()
@@ -98,9 +96,7 @@ class SimpleRAG:
             print(f"[INFO] Auto-importing documents from {docs_dir}...")
             self._auto_import_from_folder(docs_dir)
         else:
-            print(
-                "[INFO] docs_to_import folder not found. Loading fallback documents..."
-            )
+            print("[INFO] docs_to_import folder not found. Loading fallback documents...")
             self._load_fallback_documents()
 
     def _find_docs_to_import(self) -> Optional[Path]:
@@ -198,9 +194,7 @@ class SimpleRAG:
             self._save_documents()
         elif skipped == 0:
             # Nothing imported and nothing skipped means the folder had no usable content
-            print(
-                "[WARNING] No documents imported from docs_to_import. Loading fallbacks."
-            )
+            print("[WARNING] No documents imported from docs_to_import. Loading fallbacks.")
             self._load_fallback_documents()
 
     def _load_fallback_documents(self):

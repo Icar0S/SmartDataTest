@@ -5,10 +5,10 @@ import numpy as np
 
 def convert_to_json_serializable(obj):
     """Convert numpy/pandas types to JSON serializable types.
-    
+
     Args:
         obj: Object to convert (can be numpy/pandas types, dict, list, or primitive)
-        
+
     Returns:
         JSON-serializable version of the object
     """

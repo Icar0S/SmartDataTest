@@ -1,16 +1,17 @@
 """Flask API for Data Quality Chatbot backend."""
 
-import sys
 import os
+import sys
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, request, jsonify, abort
+from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from flask_limiter.util import get_remote_address
-from chatbot.main import process_chatbot_request
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+from chatbot.main import process_chatbot_request
 from limiter import limiter
 
 app = Flask(__name__)
@@ -22,8 +23,7 @@ app.config["RATELIMIT_DEFAULT_LIMITS"] = ["200 per day", "50 per hour"]
 
 # Allowed origins for CORS — loaded from env var with safe default
 _CORS_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "https://dataforgetest.onrender.com,http://localhost:3000"
+    "CORS_ALLOWED_ORIGINS", "https://dataforgetest.onrender.com,http://localhost:3000"
 ).split(",")
 
 CORS(
@@ -64,9 +64,7 @@ def add_security_headers(response):
     # Content Security Policy — allow only own origin + trusted CDNs
     # NOTE: 'unsafe-inline' for script-src/style-src is required for the current
     # React frontend build; tracked for removal when a nonce-based CSP is adopted.
-    _backend_url = os.environ.get(
-        "BACKEND_URL", "https://dataforgetest-backend.onrender.com"
-    )
+    _backend_url = os.environ.get("BACKEND_URL", "https://dataforgetest-backend.onrender.com")
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "
@@ -76,10 +74,9 @@ def add_security_headers(response):
         "frame-ancestors 'none';"
     )
     # HSTS (only meaningful in production/HTTPS, safe to always add)
-    response.headers["Strict-Transport-Security"] = (
-        "max-age=31536000; includeSubDomains"
-    )
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
+
 
 # Import and register blueprints with error handling
 # Critical blueprints are imported first
@@ -109,9 +106,7 @@ for feature_name, module_path, blueprint_name in blueprints_to_register:
 @app.route("/", methods=["GET"])
 def health_check():
     """Health check endpoint to verify API is running."""
-    return jsonify(
-        {"status": "Backend is running", "message": "Data Quality Chatbot API"}
-    )
+    return jsonify({"status": "Backend is running", "message": "Data Quality Chatbot API"})
 
 
 @app.route("/ask", methods=["POST"])
@@ -148,9 +143,7 @@ def ask_question():
         # Catching all exceptions to provide a stable API response
         print(f"Error in ask_question: {ex}")
         return (
-            jsonify(
-                {"error": str(ex), "dsl": {}, "pyspark_code": "", "errors": [str(ex)]}
-            ),
+            jsonify({"error": str(ex), "dsl": {}, "pyspark_code": "", "errors": [str(ex)]}),
             500,
         )
 

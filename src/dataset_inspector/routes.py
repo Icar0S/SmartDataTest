@@ -1,21 +1,20 @@
+import logging
 import os
 import tempfile
-import logging
-from flask import Blueprint, request, jsonify
+
+from flask import Blueprint, jsonify, request
 from werkzeug.utils import secure_filename
 
-from dataset_inspector.inspector import inspect_dataset, MAX_FILE_SIZE_MB
-from dataset_inspector.dsl_generator import generate_dsl_from_metadata
 from code_generator.pyspark_generator import generate_pyspark_code
+from dataset_inspector.dsl_generator import generate_dsl_from_metadata
+from dataset_inspector.inspector import MAX_FILE_SIZE_MB, inspect_dataset
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
 # Create blueprint
-dataset_inspector_bp = Blueprint(
-    "dataset_inspector", __name__, url_prefix="/api/datasets"
-)
+dataset_inspector_bp = Blueprint("dataset_inspector", __name__, url_prefix="/api/datasets")
 
 # Allowed extensions
 ALLOWED_EXTENSIONS = {"csv", "parquet", "json", "jsonl"}
@@ -111,9 +110,7 @@ def inspect_uploaded_dataset():
 
         # Create temporary file
         try:
-            tmp_file = tempfile.NamedTemporaryFile(
-                delete=False, suffix=f".{file_format}"
-            )
+            tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_format}")
             temp_path = tmp_file.name
             tmp_file.close()
         except Exception as e:
@@ -145,15 +142,11 @@ def inspect_uploaded_dataset():
             return jsonify({"error": "File is empty"}), 400
 
         if file_size > MAX_FILE_SIZE_BYTES:
-            logger.warning(
-                f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE_BYTES})"
-            )
+            logger.warning(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE_BYTES})")
             if temp_path and os.path.exists(temp_path):
                 os.unlink(temp_path)
             return (
-                jsonify(
-                    {"error": f"File too large. Maximum size: {MAX_FILE_SIZE_MB}MB"}
-                ),
+                jsonify({"error": f"File too large. Maximum size: {MAX_FILE_SIZE_MB}MB"}),
                 400,
             )
 
@@ -165,9 +158,7 @@ def inspect_uploaded_dataset():
             options["encoding"] = request.form.get("encoding")
         if request.form.get("header"):
             header_value = request.form.get("header")
-            options["header"] = (
-                header_value.lower() == "true" if header_value else False
-            )
+            options["header"] = header_value.lower() == "true" if header_value else False
         if request.form.get("sample_size"):
             try:
                 sample_size_str = request.form.get("sample_size")
@@ -199,9 +190,7 @@ def inspect_uploaded_dataset():
 
         except Exception as e:
             # Unknown error - log details but don't expose to user
-            logger.error(
-                f"Unexpected error while inspecting {filename}: {e}", exc_info=True
-            )
+            logger.error(f"Unexpected error while inspecting {filename}: {e}", exc_info=True)
             return (
                 jsonify(
                     {
@@ -221,9 +210,7 @@ def inspect_uploaded_dataset():
 
     except Exception as e:
         # Catch-all for truly unexpected errors
-        logger.error(
-            f"Unexpected error in inspect_uploaded_dataset: {e}", exc_info=True
-        )
+        logger.error(f"Unexpected error in inspect_uploaded_dataset: {e}", exc_info=True)
         # Clean up temp file if it exists
         if temp_path and os.path.exists(temp_path):
             try:
@@ -318,9 +305,7 @@ def generate_pyspark_endpoint():
             pyspark_code = generate_pyspark_code(dsl)
 
             # Suggest filename
-            dataset_name = dsl.get(
-                "name", dsl.get("dataset", {}).get("name", "dataset")
-            )
+            dataset_name = dsl.get("name", dsl.get("dataset", {}).get("name", "dataset"))
             filename = f"generated_{dataset_name}.py"
 
             logger.info(f"Successfully generated PySpark code: {filename}")
@@ -331,14 +316,10 @@ def generate_pyspark_endpoint():
             return jsonify({"error": str(e)}), 400
         except Exception as e:
             # Unknown error - log details but don't expose to user
-            logger.error(
-                f"Unexpected error while generating PySpark code: {e}", exc_info=True
-            )
+            logger.error(f"Unexpected error while generating PySpark code: {e}", exc_info=True)
             return jsonify({"error": "Failed to generate PySpark code"}), 500
 
     except Exception as e:
         # Catch-all for truly unexpected errors
-        logger.error(
-            f"Unexpected error in generate_pyspark_endpoint: {e}", exc_info=True
-        )
+        logger.error(f"Unexpected error in generate_pyspark_endpoint: {e}", exc_info=True)
         return jsonify({"error": "Failed to generate PySpark code"}), 500

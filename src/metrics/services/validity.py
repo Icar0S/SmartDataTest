@@ -1,8 +1,9 @@
 """Validity metrics calculation for data quality assessment."""
 
-from typing import Dict, Any
-import pandas as pd
+from typing import Any, Dict
+
 import numpy as np
+import pandas as pd
 
 
 def calculate_validity_metrics(df: pd.DataFrame) -> Dict[str, Any]:
@@ -30,9 +31,7 @@ def calculate_validity_metrics(df: pd.DataFrame) -> Dict[str, Any]:
             valid_values = total_values - invalid
         elif pd.api.types.is_string_dtype(df[col]):
             # For string columns, check for empty strings after stripping
-            invalid = col_data.apply(
-                lambda x: isinstance(x, str) and x.strip() == ""
-            ).sum()
+            invalid = col_data.apply(lambda x: isinstance(x, str) and x.strip() == "").sum()
             valid_values = total_values - invalid
 
         validity = (valid_values / total_values * 100) if total_values > 0 else 0

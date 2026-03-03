@@ -7,9 +7,7 @@ def generate_dsl(answers):
 
     # General Information
     dataset_name = answers.get("What is the name of the dataset you want to validate?")
-    source = answers.get(
-        "What is the source of the data (e.g., a file path, a database table)?"
-    )
+    source = answers.get("What is the source of the data (e.g., a file path, a database table)?")
     data_format = answers.get(
         "What is the format of the data (e.g., CSV, JSON, Parquet)?", ""
     )  # Added default empty string
@@ -50,18 +48,14 @@ def generate_dsl(answers):
         "",
     )
     column_names = (
-        [name.strip() for name in column_names_str.split(",")]
-        if column_names_str
-        else []
+        [name.strip() for name in column_names_str.split(",")] if column_names_str else []
     )
 
     column_types_str = answers.get(
         "What is the expected data type for each column (e.g., string, integer, float, date)? Please list them in the same order as column names, separated by commas. (e.g., integer, string, string, string)",
         "",
     )
-    column_types = (
-        [typ.strip() for typ in column_types_str.split(",")] if column_types_str else []
-    )
+    column_types = [typ.strip() for typ in column_types_str.split(",")] if column_types_str else []
 
     if not column_names:
         dsl.setdefault("errors", []).append(
@@ -144,14 +138,10 @@ def generate_dsl(answers):
     )
     if formatted_cols_str:
         try:
-            formatted_cols = [
-                item.strip().split(":") for item in formatted_cols_str.split(",")
-            ]
+            formatted_cols = [item.strip().split(":") for item in formatted_cols_str.split(",")]
             for item in formatted_cols:
                 if len(item) == 2 and item[0] and item[1]:
-                    dsl["rules"].append(
-                        {"type": "format", "column": item[0], "format": item[1]}
-                    )
+                    dsl["rules"].append({"type": "format", "column": item[0], "format": item[1]})
                 else:
                     dsl.setdefault("errors", []).append(
                         {
@@ -174,18 +164,12 @@ def generate_dsl(answers):
     )
     if range_cols_str:
         try:
-            range_rules = [
-                item.strip().split(":") for item in range_cols_str.split(",")
-            ]
+            range_rules = [item.strip().split(":") for item in range_cols_str.split(",")]
             for rule_parts in range_rules:
                 if len(rule_parts) >= 1 and rule_parts[0]:
                     col_name = rule_parts[0]
-                    min_val = (
-                        rule_parts[1] if len(rule_parts) > 1 and rule_parts[1] else None
-                    )
-                    max_val = (
-                        rule_parts[2] if len(rule_parts) > 2 and rule_parts[2] else None
-                    )
+                    min_val = rule_parts[1] if len(rule_parts) > 1 and rule_parts[1] else None
+                    max_val = rule_parts[2] if len(rule_parts) > 2 and rule_parts[2] else None
 
                     rule_dsl = {"type": "range", "column": col_name}
                     if min_val is not None:
@@ -232,18 +216,12 @@ def generate_dsl(answers):
     )
     if set_cols_str:
         try:
-            set_rules = [
-                item.strip().split(":", 1) for item in set_cols_str.split("],")
-            ]
+            set_rules = [item.strip().split(":", 1) for item in set_cols_str.split("],")]
             for rule_parts in set_rules:
                 if len(rule_parts) == 2 and rule_parts[0] and rule_parts[1]:
                     col_name = rule_parts[0]
                     values_str = rule_parts[1].replace("[", "").replace("]", "")
-                    values = [
-                        v.strip().strip("'\"")
-                        for v in values_str.split(",")
-                        if v.strip()
-                    ]
+                    values = [v.strip().strip("'\"") for v in values_str.split(",") if v.strip()]
                     if values:
                         dsl["rules"].append(
                             {"type": "in_set", "column": col_name, "values": values}
@@ -297,16 +275,10 @@ def generate_dsl(answers):
             # Now process each part to extract column and pattern
             for part in parts:
                 col_and_pattern = part.split(":", 1)
-                if (
-                    len(col_and_pattern) == 2
-                    and col_and_pattern[0]
-                    and col_and_pattern[1]
-                ):
+                if len(col_and_pattern) == 2 and col_and_pattern[0] and col_and_pattern[1]:
                     col_name = col_and_pattern[0].strip()
                     pattern = col_and_pattern[1].strip()
-                    dsl["rules"].append(
-                        {"type": "regex", "column": col_name, "pattern": pattern}
-                    )
+                    dsl["rules"].append({"type": "regex", "column": col_name, "pattern": pattern})
                 else:
                     dsl.setdefault("errors", []).append(
                         {
@@ -383,9 +355,7 @@ def generate_dsl(answers):
     )
     if cross_column_str:
         try:
-            cross_column_rules = [
-                item.strip().split(":") for item in cross_column_str.split(",")
-            ]
+            cross_column_rules = [item.strip().split(":") for item in cross_column_str.split(",")]
             for rule_parts in cross_column_rules:
                 if len(rule_parts) == 3 and all(rule_parts):
                     col1 = rule_parts[0]

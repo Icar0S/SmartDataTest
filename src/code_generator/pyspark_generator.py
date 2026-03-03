@@ -152,9 +152,7 @@ else:
             if not columns:
                 continue  # Skip if no columns specified
             cols_str = ", ".join([f"'{c}'" for c in columns])
-            cols_check = " and ".join(
-                [f'check_column_exists(df, "{c}")' for c in columns]
-            )
+            cols_check = " and ".join([f'check_column_exists(df, "{c}")' for c in columns])
             code += f"""
 print(f"\\nChecking uniqueness for columns: {cols_str}")
 if {cols_check}:
@@ -212,13 +210,9 @@ else:
 
                 range_condition = []
                 if min_val is not None:
-                    range_condition.append(
-                        f'col("{column}") < {add_float_literal(min_val)}'
-                    )
+                    range_condition.append(f'col("{column}") < {add_float_literal(min_val)}')
                 if max_val is not None:
-                    range_condition.append(
-                        f'col("{column}") > {add_float_literal(max_val)}'
-                    )
+                    range_condition.append(f'col("{column}") > {add_float_literal(max_val)}')
 
                 condition_str = " | ".join(range_condition)
                 code += f"""

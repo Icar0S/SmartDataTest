@@ -1,13 +1,13 @@
 """Flask routes for Checklist Support QA."""
 
-from pathlib import Path
-from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime
+from pathlib import Path
 
-from .models import template_to_dict, run_to_dict
-from .storage import ChecklistStorage, load_template
+from flask import Blueprint, jsonify, request, send_file
+
+from .models import run_to_dict, template_to_dict
 from .reports import generate_markdown_report, generate_pdf_report
-
+from .storage import ChecklistStorage, load_template
 
 # Create blueprint
 checklist_bp = Blueprint("checklist", __name__, url_prefix="/api/checklist")
@@ -195,8 +195,8 @@ def generate_recommendations(run_id):
 
             # Call RAG system (import here to avoid circular dependency)
             try:
-                from rag.simple_rag import SimpleRAG
                 from rag.config_simple import RAGConfig
+                from rag.simple_rag import SimpleRAG
 
                 rag_config = RAGConfig.from_env()
                 rag_system = SimpleRAG(rag_config)
@@ -216,8 +216,7 @@ def generate_recommendations(run_id):
                         "title": "Prioridades Principais",
                         "content": rec_content,
                         "sources": [
-                            r.get("metadata", {}).get("filename", "Unknown")
-                            for r in results[:3]
+                            r.get("metadata", {}).get("filename", "Unknown") for r in results[:3]
                         ],
                     }
                 )
@@ -228,9 +227,7 @@ def generate_recommendations(run_id):
                         {
                             "title": f"Recomendação: {result.get('metadata', {}).get('filename', 'Unknown')}",
                             "content": result.get("content", "")[:500] + "...",
-                            "sources": [
-                                result.get("metadata", {}).get("filename", "Unknown")
-                            ],
+                            "sources": [result.get("metadata", {}).get("filename", "Unknown")],
                         }
                     )
 

@@ -2,9 +2,10 @@
 
 import time
 import uuid
-from flask import Blueprint, request, jsonify, send_file
-from werkzeug.utils import secure_filename
+
 import pandas as pd
+from flask import Blueprint, jsonify, request, send_file
+from werkzeug.utils import secure_filename
 
 from .config import SyntheticConfig
 from .generator import SyntheticDataGenerator
@@ -159,15 +160,11 @@ def generate():
         else:
             # Generate in batches
             batches = (num_rows + batch_size - 1) // batch_size
-            all_logs.append(
-                f"Generating {num_rows} rows in {batches} batches of {batch_size}..."
-            )
+            all_logs.append(f"Generating {num_rows} rows in {batches} batches of {batch_size}...")
 
             for batch_num in range(batches):
                 batch_rows = min(batch_size, num_rows - len(all_records))
-                all_logs.append(
-                    f"Batch {batch_num + 1}/{batches}: generating {batch_rows} rows..."
-                )
+                all_logs.append(f"Batch {batch_num + 1}/{batches}: generating {batch_rows} rows...")
 
                 # Use different seed for each batch if seed is provided
                 batch_seed = seed + batch_num if seed is not None else None
@@ -291,9 +288,7 @@ def download(session_id: str, filename: str):
             if not download_name.endswith(".csv"):
                 download_name = f"{download_name}.csv"
         elif filename.endswith(".xlsx"):
-            mime_type = (
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             if not download_name.endswith(".xlsx"):
                 download_name = f"{download_name}.xlsx"
         elif filename.endswith(".json"):
@@ -314,9 +309,7 @@ def download(session_id: str, filename: str):
         )
 
         # Add additional headers to ensure proper download behavior
-        response.headers["Content-Disposition"] = (
-            f'attachment; filename="{download_name}"'
-        )
+        response.headers["Content-Disposition"] = f'attachment; filename="{download_name}"'
         response.headers["Content-Type"] = mime_type
 
         # Add cache control headers

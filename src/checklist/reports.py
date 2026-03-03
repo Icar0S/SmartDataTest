@@ -1,26 +1,26 @@
 """Report generation for checklist runs."""
 
-from typing import List, Dict, Any
 from io import BytesIO
+from typing import Any, Dict, List
 
-from .models import ChecklistTemplate, ChecklistRun, ItemStatus
+from .models import ChecklistRun, ChecklistTemplate, ItemStatus
 from .storage import load_template
 
 # Optional imports for PDF generation
 REPORTLAB_AVAILABLE = False
 try:
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
     from reportlab.platypus import (
-        SimpleDocTemplate,
         Paragraph,
+        SimpleDocTemplate,
         Spacer,
         Table,
         TableStyle,
     )
-    from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER
 
     REPORTLAB_AVAILABLE = True
 except ImportError:
@@ -62,15 +62,11 @@ def generate_markdown_report(
         if run.metadata.test_environment:
             md_lines.append(f"- **Ambiente de Teste:** {run.metadata.test_environment}")
         if run.metadata.browser_platform:
-            md_lines.append(
-                f"- **Navegador/Plataforma:** {run.metadata.browser_platform}"
-            )
+            md_lines.append(f"- **Navegador/Plataforma:** {run.metadata.browser_platform}")
         if run.metadata.test_duration:
             md_lines.append(f"- **Duração do Teste:** {run.metadata.test_duration}")
         if run.metadata.additional_notes:
-            md_lines.append(
-                f"- **Observações Adicionais:** {run.metadata.additional_notes}"
-            )
+            md_lines.append(f"- **Observações Adicionais:** {run.metadata.additional_notes}")
         md_lines.append("")
 
     # Summary
@@ -91,14 +87,10 @@ def generate_markdown_report(
 
     for dim in template.dimensions:
         dim_total = len(dim.items)
-        dim_done = sum(
-            1 for item in dim.items if run.marks.get(item.id) == ItemStatus.DONE
-        )
+        dim_done = sum(1 for item in dim.items if run.marks.get(item.id) == ItemStatus.DONE)
         dim_coverage = (dim_done / dim_total * 100) if dim_total > 0 else 0
         md_lines.append(f"### {dim.name}")
-        md_lines.append(
-            f"- **Concluídos:** {dim_done}/{dim_total} ({dim_coverage:.1f}%)"
-        )
+        md_lines.append(f"- **Concluídos:** {dim_done}/{dim_total} ({dim_coverage:.1f}%)")
         md_lines.append("")
 
     # Missing items (prioritized)
@@ -150,9 +142,7 @@ def generate_markdown_report(
         md_lines.append("")
 
         for item in dim.items:
-            status = (
-                "[DONE]" if run.marks.get(item.id) == ItemStatus.DONE else "[PENDING]"
-            )
+            status = "[DONE]" if run.marks.get(item.id) == ItemStatus.DONE else "[PENDING]"
             md_lines.append(f"#### {status} {item.code} - {item.title}")
             md_lines.append(f"**Manual:** {item.manual}")
             md_lines.append(f"**Referências:** {', '.join(item.references)}")
@@ -228,15 +218,11 @@ def generate_pdf_report(
         if run.metadata.test_environment:
             metadata_data.append(["Ambiente de Teste:", run.metadata.test_environment])
         if run.metadata.browser_platform:
-            metadata_data.append(
-                ["Navegador/Plataforma:", run.metadata.browser_platform]
-            )
+            metadata_data.append(["Navegador/Plataforma:", run.metadata.browser_platform])
         if run.metadata.test_duration:
             metadata_data.append(["Duração do Teste:", run.metadata.test_duration])
         if run.metadata.additional_notes:
-            metadata_data.append(
-                ["Observações Adicionais:", run.metadata.additional_notes]
-            )
+            metadata_data.append(["Observações Adicionais:", run.metadata.additional_notes])
 
     metadata_table = Table(metadata_data, colWidths=[2 * inch, 4 * inch])
     metadata_table.setStyle(
@@ -286,17 +272,11 @@ def generate_pdf_report(
     dim_data = [["Dimensão", "Concluídos", "Total", "Cobertura"]]
     for dim in template.dimensions:
         dim_total = len(dim.items)
-        dim_done = sum(
-            1 for item in dim.items if run.marks.get(item.id) == ItemStatus.DONE
-        )
+        dim_done = sum(1 for item in dim.items if run.marks.get(item.id) == ItemStatus.DONE)
         dim_coverage = (dim_done / dim_total * 100) if dim_total > 0 else 0
-        dim_data.append(
-            [dim.name, str(dim_done), str(dim_total), f"{dim_coverage:.1f}%"]
-        )
+        dim_data.append([dim.name, str(dim_done), str(dim_total), f"{dim_coverage:.1f}%"])
 
-    dim_table = Table(
-        dim_data, colWidths=[2.5 * inch, 1.2 * inch, 1 * inch, 1.3 * inch]
-    )
+    dim_table = Table(dim_data, colWidths=[2.5 * inch, 1.2 * inch, 1 * inch, 1.3 * inch])
     dim_table.setStyle(
         TableStyle(
             [
@@ -327,9 +307,7 @@ def generate_pdf_report(
         story.append(Paragraph("Itens Faltantes (Priorizados)", heading_style))
 
         for dim_name, item in missing_items[:10]:  # Limit to top 10 for PDF
-            story.append(
-                Paragraph(f"<b>{item.code}</b> - {item.title}", styles["Normal"])
-            )
+            story.append(Paragraph(f"<b>{item.code}</b> - {item.title}", styles["Normal"]))
             story.append(
                 Paragraph(
                     f"Dimensão: {dim_name} | Prioridade: {item.priority_weight}",

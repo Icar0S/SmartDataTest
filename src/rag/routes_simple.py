@@ -3,12 +3,13 @@
 import json
 import os
 from pathlib import Path
-from flask import Blueprint, request, jsonify, Response
+
+from flask import Blueprint, Response, jsonify, request
 from werkzeug.utils import secure_filename
 
 from .config_simple import RAGConfig
-from .simple_rag import SimpleRAG
 from .simple_chat import SimpleChatEngine
+from .simple_rag import SimpleRAG
 
 # Create blueprint
 rag_bp = Blueprint("rag", __name__, url_prefix="/api/rag")
@@ -20,9 +21,7 @@ chat_engine = SimpleChatEngine(rag_system)
 
 # Debug: Print RAG initialization info
 total_chunks = sum(len(chunks) for chunks in rag_system.document_chunks.values())
-print(
-    f"RAG System initialized: {len(rag_system.documents)} documents, {total_chunks} chunks"
-)
+print(f"RAG System initialized: {len(rag_system.documents)} documents, {total_chunks} chunks")
 print(f"Storage path: {config.storage_path}")
 print(f"Documents file: {config.storage_path / 'documents.json'}")
 print(f"File exists: {(config.storage_path / 'documents.json').exists()}")
@@ -39,9 +38,7 @@ def debug_rag():
     # LLM diagnostic information
     llm_status = {
         "configured": chat_engine.use_llm,
-        "client_type": (
-            type(chat_engine.llm_client).__name__ if chat_engine.llm_client else None
-        ),
+        "client_type": (type(chat_engine.llm_client).__name__ if chat_engine.llm_client else None),
         "provider": os.getenv("LLM_PROVIDER", "not set"),
         "model": os.getenv("LLM_MODEL") or os.getenv("GEMINI_MODEL", "not set"),
         "gemini_key_set": bool(os.getenv("GEMINI_API_KEY")),
@@ -150,9 +147,7 @@ def chat():
         # Get response from chat engine
         result = chat_engine.chat(message)
 
-        return jsonify(
-            {"response": result["response"], "citations": result["citations"]}
-        )
+        return jsonify({"response": result["response"], "citations": result["citations"]})
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         return jsonify({"error": str(e)}), 500
@@ -209,9 +204,7 @@ def chat_stream_get():
 
         if not message:
             return (
-                "data: "
-                + json.dumps({"type": "error", "content": "Message is required"})
-                + "\n\n",
+                "data: " + json.dumps({"type": "error", "content": "Message is required"}) + "\n\n",
                 400,
             )
 

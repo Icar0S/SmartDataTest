@@ -2,11 +2,12 @@
 
 import re
 import unicodedata
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
-import pandas as pd
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 
 
 def strip_accents(text: str) -> str:
@@ -156,9 +157,7 @@ def detect_encoding(file_path: Path) -> Tuple[Optional[str], Optional[str]]:
                 # Detect separator by trying to read with detected encoding
                 for sep in [",", ";", "\t", "|"]:
                     try:
-                        df_sample = pd.read_csv(
-                            file_path, encoding=encoding, sep=sep, nrows=5
-                        )
+                        df_sample = pd.read_csv(file_path, encoding=encoding, sep=sep, nrows=5)
                         if len(df_sample.columns) > 1:
                             return encoding, sep
                     except Exception:
@@ -331,9 +330,9 @@ def clean_dataframe_chunk(
             if len(sample) > 0:
                 parsed_sample = sample.apply(parse_date)
                 # If more than 50% parse successfully, apply to whole column
-                success_rate = (
-                    pd.to_datetime(parsed_sample, errors="coerce").notna()
-                ).sum() / len(sample)
+                success_rate = (pd.to_datetime(parsed_sample, errors="coerce").notna()).sum() / len(
+                    sample
+                )
                 if success_rate > 0.5:
                     original = df[col].copy()
                     df[col] = df[col].apply(parse_date)

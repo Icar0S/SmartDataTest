@@ -1,29 +1,29 @@
 """Flask routes for GOLD Dataset Testing feature."""
 
 import json
-import uuid
 import time
-from pathlib import Path
+import uuid
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, send_file
-from werkzeug.utils import secure_filename
-import pandas as pd
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
+from flask import Blueprint, jsonify, request, send_file
+from werkzeug.utils import secure_filename
 
 from .config import GoldConfig
 from .processor import (
-    read_dataset,
-    normalize_column_name,
     clean_dataframe_chunk,
     get_null_counts,
+    normalize_column_name,
+    read_dataset,
 )
-from .services.serialization_utils import convert_to_json_serializable
 from .services.file_processor import (
     process_csv_chunked,
     process_excel,
     process_parquet_chunked,
 )
-
+from .services.serialization_utils import convert_to_json_serializable
 
 # Create blueprint
 gold_bp = Blueprint("gold", __name__, url_prefix="/api/gold")
@@ -240,19 +240,25 @@ def clean_dataset():
                 sep = metadata.get("sep", ",")
 
                 process_csv_chunked(
-                    raw_file, session_id, options, encoding, sep, chunksize,
-                    config, processing_status
+                    raw_file,
+                    session_id,
+                    options,
+                    encoding,
+                    sep,
+                    chunksize,
+                    config,
+                    processing_status,
                 )
 
             elif file_format in ["xlsx", "xls"]:
                 # Load Excel file entirely, then process in memory chunks
-                process_excel(raw_file, session_id, options, chunksize, 
-                            config, processing_status)
+                process_excel(raw_file, session_id, options, chunksize, config, processing_status)
 
             elif file_format == "parquet":
                 # Process Parquet in chunks
-                process_parquet_chunked(raw_file, session_id, options, chunksize,
-                                      config, processing_status)
+                process_parquet_chunked(
+                    raw_file, session_id, options, chunksize, config, processing_status
+                )
             else:
                 processing_status[session_id]["state"] = "failed"
                 processing_status[session_id]["error"] = "Unsupported format"

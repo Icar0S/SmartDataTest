@@ -19,17 +19,16 @@ class AccuracyConfig:
 
     storage_path: Path = Path("./storage")
     max_upload_mb: int = 50
-    allowed_file_types: List[str] = field(
-        default_factory=lambda: [".csv", ".xlsx", ".parquet"]
-    )
+    allowed_file_types: List[str] = field(default_factory=lambda: [".csv", ".xlsx", ".parquet"])
     max_rows: int = 2_000_000
     request_timeout: int = 120
 
     @classmethod
     def from_env(cls) -> "AccuracyConfig":
         """Create config from environment variables."""
-        from dotenv import load_dotenv
         import os
+
+        from dotenv import load_dotenv
 
         load_dotenv()
 

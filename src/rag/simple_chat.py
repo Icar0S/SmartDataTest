@@ -30,9 +30,7 @@ class SimpleChatEngine:
             provider = os.getenv("LLM_PROVIDER", "ollama")
             # Get the actual model name based on provider
             if provider == "gemini":
-                model = os.getenv("GEMINI_MODEL") or os.getenv(
-                    "LLM_MODEL", "gemini-2.5-flash-lite"
-                )
+                model = os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
             elif provider == "anthropic":
                 model = os.getenv("LLM_MODEL", "claude-3-haiku-20240307")
             else:  # ollama
@@ -70,15 +68,11 @@ class SimpleChatEngine:
             response = self._generate_simple_response(message, context_str)
 
         # Store in history
-        self.chat_history.append(
-            {"message": message, "response": response, "citations": citations}
-        )
+        self.chat_history.append({"message": message, "response": response, "citations": citations})
 
         return {"response": response, "citations": citations, "sources": search_results}
 
-    def _generate_llm_response(
-        self, question: str, context: str, citations: List[Dict]
-    ) -> str:
+    def _generate_llm_response(self, question: str, context: str, citations: List[Dict]) -> str:
         """Generate response using LLM with RAG context."""
         if not context.strip():
             # No context found - let LLM answer from general knowledge
@@ -185,8 +179,7 @@ This information comes from the knowledge base and should provide guidance for y
             ):
                 relevance_score += 2
             if "issues" in question_lower and any(
-                term in chunk_lower
-                for term in ["error", "problem", "issue", "null", "duplicate"]
+                term in chunk_lower for term in ["error", "problem", "issue", "null", "duplicate"]
             ):
                 relevance_score += 2
             if "null" in question_lower and "null" in chunk_lower:

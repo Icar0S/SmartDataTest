@@ -1,17 +1,18 @@
 """RAG document ingestion and processing."""
 
+import uuid
 from pathlib import Path
 from typing import Dict, List, Optional
-import uuid
 
 from llama_index.core import (
     Document,
-    StorageContext,
-    load_index_from_storage,
-    VectorStoreIndex,
     Settings,
+    StorageContext,
+    VectorStoreIndex,
+    load_index_from_storage,
 )
 from llama_index.core.node_parser import SimpleNodeParser
+
 from .config import RAGConfig
 
 
@@ -37,9 +38,7 @@ class DocumentIngestor:
 
         # Load or create index
         try:
-            storage_context = StorageContext.from_defaults(
-                persist_dir=str(self.storage_path)
-            )
+            storage_context = StorageContext.from_defaults(persist_dir=str(self.storage_path))
             self.index = load_index_from_storage(storage_context)
         except Exception:  # pylint: disable=broad-exception-caught
             self.index = VectorStoreIndex([])
@@ -128,7 +127,9 @@ class DocumentIngestor:
             return file_path.read_text(encoding="utf-8")
         if suffix == ".pdf":
             # For PDF files, we'll use the built-in readers
-            from llama_index.readers.file import PDFReader  # pylint: disable=import-outside-toplevel
+            from llama_index.readers.file import (
+                PDFReader,  # pylint: disable=import-outside-toplevel
+            )
 
             reader = PDFReader()
             docs = reader.load_data(file_path)
