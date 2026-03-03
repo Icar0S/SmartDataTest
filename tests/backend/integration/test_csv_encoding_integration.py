@@ -38,10 +38,12 @@ class TestCSVEncodingIntegration(unittest.TestCase):
             # Test auto-detection (no encoding specified)
             result = inspect_csv(temp_path, {})
 
-            # Verify correct detection (chardet may return ISO-8859-1 or windows-1252
-            # depending on version/platform; both are Latin-1 compatible)
+            # Verify correct detection (chardet may return ISO-8859-1, WINDOWS-1252,
+            # windows-1252, or latin-1 depending on version/platform; compare lowercase)
             detected_enc = result["detected_options"]["encoding"]
-            self.assertIn(detected_enc, ["ISO-8859-1", "windows-1252", "latin-1"])
+            self.assertIn(
+                detected_enc.lower(), ["iso-8859-1", "windows-1252", "latin-1"]
+            )
             self.assertEqual(result["detected_options"]["delimiter"], "\t")
             self.assertEqual(len(result["columns"]), 4)
 
@@ -144,7 +146,9 @@ class TestCSVEncodingIntegration(unittest.TestCase):
             # Verify DSL contains detected options
             self.assertIn("detected_options", dsl["dataset"])
             detected_enc = dsl["dataset"]["detected_options"]["encoding"]
-            self.assertIn(detected_enc, ["ISO-8859-1", "windows-1252", "latin-1"])
+            self.assertIn(
+                detected_enc.lower(), ["iso-8859-1", "windows-1252", "latin-1"]
+            )
             self.assertEqual(dsl["dataset"]["detected_options"]["delimiter"], "\t")
 
             # Step 3: Generate PySpark code
