@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "sr
 from api import app  # type: ignore
 
 
-def test_api_workflow(csv_path):
-    """Test complete API workflow like frontend does."""
+def _run_api_workflow(csv_path):
+    """Run complete API workflow like frontend does (call directly, not via pytest)."""
     client = app.test_client()
 
     print(f"\nTesting: {os.path.basename(csv_path)}")
@@ -80,40 +80,41 @@ def test_api_workflow(csv_path):
     return True
 
 
-# Test files
-test_files = [
-    r"C:\Users\Icaro\Downloads\arrecadacao-estado.csv",
-    r"C:\Users\Icaro\Downloads\ALUNOS-DA-GRADUACAO-2025-1.csv",
-]
+if __name__ == "__main__":
+    # Test files
+    test_files = [
+        r"C:\Users\Icaro\Downloads\arrecadacao-estado.csv",
+        r"C:\Users\Icaro\Downloads\ALUNOS-DA-GRADUACAO-2025-1.csv",
+    ]
 
-print("=" * 80)
-print("INTEGRATION TEST - Simulating Frontend API Calls")
-print("=" * 80)
+    print("=" * 80)
+    print("INTEGRATION TEST - Simulating Frontend API Calls")
+    print("=" * 80)
 
-success_count = 0
-fail_count = 0
+    success_count = 0
+    fail_count = 0
 
-for csv_path in test_files:
-    if not os.path.exists(csv_path):
-        print(f"\n⚠ File not found: {csv_path}")
-        continue
+    for csv_path in test_files:
+        if not os.path.exists(csv_path):
+            print(f"\n⚠ File not found: {csv_path}")
+            continue
 
-    try:
-        if test_api_workflow(csv_path):
-            success_count += 1
-        else:
+        try:
+            if _run_api_workflow(csv_path):
+                success_count += 1
+            else:
+                fail_count += 1
+        except Exception as e:
+            print(f"\n✗✗✗ EXCEPTION for {os.path.basename(csv_path)} ✗✗✗")
+            print(f"Error: {e}")
+            import traceback
+
+            traceback.print_exc()
             fail_count += 1
-    except Exception as e:
-        print(f"\n✗✗✗ EXCEPTION for {os.path.basename(csv_path)} ✗✗✗")
-        print(f"Error: {e}")
-        import traceback
 
-        traceback.print_exc()
-        fail_count += 1
-
-print("\n" + "=" * 80)
-print("SUMMARY")
-print("=" * 80)
-print(f"✓ Success: {success_count}")
-print(f"✗ Failed: {fail_count}")
-print("=" * 80)
+    print("\n" + "=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+    print(f"✓ Success: {success_count}")
+    print(f"✗ Failed: {fail_count}")
+    print("=" * 80)

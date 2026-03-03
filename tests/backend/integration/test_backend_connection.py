@@ -19,8 +19,8 @@ def print_header(text):
     print("=" * 70)
 
 
-def test_endpoint(name, method, path, data=None, expected_status=200):
-    """Test a single endpoint"""
+def check_endpoint(name, method, path, data=None, expected_status=200):
+    """Check a single endpoint (helper — not collected by pytest)."""
     url = f"{BACKEND_URL}{path}"
     print(f"\n🔍 Testando: {name}")
     print(f"   URL: {url}")
@@ -71,40 +71,40 @@ def main():
 
     # Test 1: Health Check (Root)
     print_header("1. Health Check")
-    results.append(test_endpoint("Root Endpoint", "GET", "/"))
+    results.append(check_endpoint("Root Endpoint", "GET", "/"))
 
     # Test 2: RAG Health
     print_header("2. RAG Module")
-    results.append(test_endpoint("RAG Health Check", "GET", "/api/rag/health"))
+    results.append(check_endpoint("RAG Health Check", "GET", "/api/rag/health"))
 
     # Test 3: Accuracy Health
     print_header("3. Data Accuracy Module")
     results.append(
-        test_endpoint("Accuracy Health Check", "GET", "/api/accuracy/health")
+        check_endpoint("Accuracy Health Check", "GET", "/api/accuracy/health")
     )
 
     # Test 4: Synthetic Data Health
     print_header("4. Synthetic Data Module")
-    results.append(test_endpoint("Synthetic Health Check", "GET", "/api/synth/health"))
+    results.append(check_endpoint("Synthetic Health Check", "GET", "/api/synth/health"))
 
     # Test 5: GOLD Health
     print_header("5. GOLD Module")
-    results.append(test_endpoint("GOLD Health Check", "GET", "/api/gold/health"))
+    results.append(check_endpoint("GOLD Health Check", "GET", "/api/gold/health"))
 
     # Test 6: Metrics Health
     print_header("6. Metrics Module")
-    results.append(test_endpoint("Metrics Health Check", "GET", "/api/metrics/health"))
+    results.append(check_endpoint("Metrics Health Check", "GET", "/api/metrics/health"))
 
     # Test 7: Dataset Inspector Health
     print_header("7. Dataset Inspector Module")
     results.append(
-        test_endpoint("Dataset Inspector Health", "GET", "/api/datasets/health")
+        check_endpoint("Dataset Inspector Health", "GET", "/api/datasets/health")
     )
 
     # Test 8: Checklist Health
     print_header("8. Checklist Module")
     results.append(
-        test_endpoint("Checklist Health Check", "GET", "/api/checklist/health")
+        check_endpoint("Checklist Health Check", "GET", "/api/checklist/health")
     )
 
     # Summary
