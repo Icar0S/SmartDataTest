@@ -1,5 +1,6 @@
 """Flask routes for Dataset Metrics feature."""
 
+import gc
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -133,6 +134,18 @@ def upload_dataset():
         # Read dataset to get preview
         df = read_dataset(file_path)
 
+        # Validate row count
+        if len(df) > config.max_rows:
+            return (
+                jsonify(
+                    {
+                        "error": f"Dataset too large: {len(df)} rows exceeds maximum of {config.max_rows} rows for current plan.",
+                        "suggestion": "Please reduce dataset size or upgrade to a higher plan.",
+                    }
+                ),
+                413,
+            )
+
         # Get sample data
         sample = df.head(config.sample_size).to_dict(orient="records")
         sample = convert_to_json_serializable(sample)
@@ -187,6 +200,19 @@ def analyze_dataset():
         if not file_path.exists():
             return jsonify({"error": "File not found"}), 404
 
+        # Check row count before loading full dataset
+        row_count = processing_status[session_id]["rows"]
+        if row_count > config.max_rows:
+            return (
+                jsonify(
+                    {
+                        "error": f"Dataset too large: {row_count} rows exceeds maximum of {config.max_rows} rows for current plan.",
+                        "suggestion": "Please reduce dataset size or upgrade to a higher plan.",
+                    }
+                ),
+                413,
+            )
+
         # Read dataset
         df = read_dataset(file_path)
 
@@ -196,12 +222,26 @@ def analyze_dataset():
         # Convert to JSON serializable
         report = convert_to_json_serializable(report)
 
+        # Free memory after analysis
+        del df
+        gc.collect()
+
         # Store report in session
         processing_status[session_id]["report"] = report
         processing_status[session_id]["analyzed_at"] = datetime.now().isoformat()
 
         return jsonify(report)
 
+    except MemoryError:
+        return (
+            jsonify(
+                {
+                    "error": "Analysis failed due to insufficient memory.",
+                    "suggestion": "Please use a smaller dataset or upgrade to Professional plan for more memory.",
+                }
+            ),
+            507,
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

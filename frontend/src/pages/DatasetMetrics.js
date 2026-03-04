@@ -41,6 +41,14 @@ const DatasetMetrics = () => {
       return;
     }
 
+    // Validate file size (max 10MB)
+    const maxSizeMB = 10;
+    const fileSizeMB = selectedFile.size / (1024 * 1024);
+    if (fileSizeMB > maxSizeMB) {
+      setError(`Arquivo muito grande (${fileSizeMB.toFixed(2)}MB). Limite: ${maxSizeMB}MB para o plano atual.`);
+      return;
+    }
+
     setFile(selectedFile);
     setError(null);
     setReport(null);
@@ -129,7 +137,16 @@ const DatasetMetrics = () => {
       const data = await response.json();
       setReport(data);
     } catch (err) {
-      setError(err.message);
+      let errorMessage = err.message;
+
+      // Handle specific error codes
+      if (errorMessage.includes('insufficient memory') || errorMessage.includes('507')) {
+        errorMessage = 'Memória insuficiente para processar este dataset. Tente um arquivo menor ou considere fazer upgrade do plano.';
+      } else if (errorMessage.includes('413') || errorMessage.includes('rows exceeds maximum') || errorMessage.includes('too large')) {
+        errorMessage = 'Dataset muito grande para o plano atual. Limite: 50.000 linhas ou 10MB.';
+      }
+
+      setError(errorMessage);
     } finally {
       setIsUploading(false);
       setIsAnalyzing(false);
@@ -245,7 +262,7 @@ const DatasetMetrics = () => {
                   Arraste seu dataset aqui ou clique para selecionar
                 </p>
                 <p className="text-gray-500 text-sm mb-4">
-                  Formatos suportados: CSV, XLSX, XLS, Parquet (máx 50MB)
+                  Formatos suportados: CSV, XLSX, XLS, Parquet (máx 10MB, 50k linhas)
                 </p>
                 <input
                   ref={fileInputRef}

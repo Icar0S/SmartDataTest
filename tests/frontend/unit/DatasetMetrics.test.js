@@ -69,6 +69,19 @@ describe('DatasetMetrics Component', () => {
       expect(screen.getByText(/Tipo de arquivo inválido/)).toBeInTheDocument();
     });
 
+    test('shows error for file over 10MB', () => {
+      renderWithRouter(<DatasetMetrics />);
+
+      // Create mock file over 10MB
+      const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.csv', { type: 'text/csv' });
+      const input = screen.getByLabelText('Selecionar arquivo');
+
+      fireEvent.change(input, { target: { files: [largeFile] } });
+
+      expect(screen.getByText(/muito grande/i)).toBeInTheDocument();
+      expect(screen.getByText(/10MB/i)).toBeInTheDocument();
+    });
+
     test('shows analyze button after file selection', () => {
       renderWithRouter(<DatasetMetrics />);
       

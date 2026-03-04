@@ -191,7 +191,9 @@ class TestMetricsConfig:
         """Test default configuration."""
         config = MetricsConfig()
 
-        assert config.max_upload_mb == 50
+        assert config.max_upload_mb == 10
+        assert config.max_rows == 50_000
+        assert config.max_memory_mb == 200
         assert config.sample_size == 10
         assert ".csv" in config.allowed_file_types
 
