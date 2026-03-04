@@ -60,6 +60,13 @@ if exist "%ROOT_DIR%.venv\Scripts\activate.bat" (
     echo [AVISO] Ambiente virtual nao encontrado. Usando Python do sistema.
 )
 
+REM Instalar dependencias de desenvolvimento se pytest nao estiver disponivel
+python -m pytest --version >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] Instalando dependencias de desenvolvimento...
+    pip install -r "%ROOT_DIR%requirements-dev.txt" -q
+)
+
 REM Adicionar src ao PYTHONPATH
 set "PYTHONPATH=%SRC_DIR%;%ROOT_DIR%;%PYTHONPATH%"
 

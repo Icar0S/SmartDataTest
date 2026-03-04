@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "dataforgetest"
+version = "1.0.0"
+description = "Automated data quality testing for Big Data systems using LLMs and RAG"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.12"
+
+# ── pytest ─────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests/backend"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--tb=short"
+markers = [
+    "security: Security tests (OWASP coverage)",
+    "performance: Performance and benchmark tests",
+    "integration: Integration tests requiring multiple components",
+    "e2e: End-to-end tests requiring a running server",
+]
+
+# ── coverage ───────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/**/tests/*",
+    "tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    'if __name__ == .__main__.:',
+    "pass",
+]
+
+# ── black ──────────────────────────────────────────────────────────────────
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+exclude = '''
+/(
+    \.venv
+  | node_modules
+  | storage
+  | uploads
+)/
+'''
+
+# ── isort ──────────────────────────────────────────────────────────────────
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["src", "tests"]
+
+# ── pylint ─────────────────────────────────────────────────────────────────
+[tool.pylint.main]
+source-roots = ["src"]
+ignore = ["tests", "utilities", ".venv", "storage"]
+
+[tool.pylint."messages control"]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0903",  # too-few-public-methods
+    "W0212",  # protected-access (needed in tests)
+    "E0401",  # import-error (false positives for local imports)
+    "C0413",  # wrong-import-position (necessary due to sys.path manipulation)
+    "R0914",  # too-many-locals
+    "R0912",  # too-many-branches
+    "R0915",  # too-many-statements
+    "R1702",  # too-many-nested-blocks
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.design]
+max-locals = 20
+max-branches = 20
+max-statements = 70

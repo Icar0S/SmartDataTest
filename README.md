@@ -45,17 +45,17 @@ DataForgeTest is a comprehensive solution for automating data quality testing in
 ### Automated Setup (Windows)
 
 **🎯 First Time Setup**
-```bash
-setup_start.bat
+```bat
+scripts\dev\setup.bat
 ```
+- Checks Python version
 - Installs all dependencies
-- Configures environment
-- Starts services
+- Starts services with health-check polling
 - Opens browser automatically
 
 **⚡ Daily Development**
-```bash
-dev_start.bat
+```bat
+scripts\dev\start.bat
 ```
 - Quick service startup
 - No dependency checks
@@ -526,12 +526,39 @@ cd DataForgeTest
 # Backend development
 python -m venv .venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Frontend development  
 cd frontend
 npm install
 npm start
+```
+
+### Project Structure
+
+```
+DataForgeTest/
+├── src/                    # Backend Flask API and modules
+├── frontend/               # React frontend
+├── tests/                  # Automated tests (backend + frontend)
+├── utilities/              # RAG debug and maintenance scripts
+├── docs/                   # Technical documentation
+│   ├── archive/            # Historical documents
+│   └── assets/             # Images and diagrams
+├── scripts/                # Automation scripts
+│   ├── dev/                # Development startup scripts
+│   └── deploy/             # Deployment scripts
+├── docs_to_import/         # Documents for RAG knowledge base
+├── .github/                # CI/CD workflows
+├── docker-compose.yml      # Local Docker stack
+├── Dockerfile              # Container definition
+├── render.yaml             # Render.com deployment config
+├── pyproject.toml          # Python project and tool configuration
+├── requirements.txt        # Production dependencies
+├── requirements-dev.txt    # Development and test dependencies
+├── CHANGELOG.md            # Version history
+├── CONTRIBUTING.md         # Contribution guide
+└── run_integration_tests.bat  # Local test pipeline
 ```
 
 ### Code Quality

@@ -376,3 +376,38 @@ For issues or questions:
 4. Test all features work correctly
 5. Set up monitoring and alerts
 6. Configure backups
+
+---
+
+## 🇧🇷 Resumo em Português
+
+O backend do DataForgeTest está totalmente configurado para deploy e pronto para conectar com o frontend na Vercel (https://data-forge-test.vercel.app/).
+
+### Opções de Deploy
+
+**Render.com (Recomendado):**
+1. Acesse https://render.com e faça cadastro com GitHub
+2. Clique em "New +" → "Web Service" → conecte `Icar0S/DataForgeTest`
+3. O Render detecta o Dockerfile automaticamente
+4. Adicione `LLM_API_KEY` em "Advanced" se for usar recursos de IA
+5. Clique em "Create Web Service" e aguarde 5-10 minutos
+
+**Railway.app (Alternativa):**
+1. Acesse https://railway.app → "Deploy from GitHub repo"
+2. Selecione `Icar0S/DataForgeTest` — detecta Dockerfile automaticamente
+3. Gere o domínio em Settings → Generate Domain
+
+**Docker Local:**
+```bash
+docker compose up -d
+# OU
+docker build -t dataforgetest-backend .
+docker run -d -p 5000:5000 dataforgetest-backend
+```
+
+### Próximos Passos Após o Deploy
+
+1. Copie a URL gerada pelo Render/Railway
+2. Crie `frontend/vercel.json` com a URL do backend
+3. Configure monitoramento de uptime (ex: UptimeRobot)
+4. Revise configurações de CORS e secrets

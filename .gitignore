@@ -1,14 +1,18 @@
 # Ignore Python cache files
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 /node_modules
 
 # Ignore virtual environment
 .venv/
+venv/
 
 # Ignore IDE-specific files
 .idea/
-.vscode/
+.vscode/settings.json
+*.swp
+*.swo
 
 # Ignore data files
 data/
@@ -22,9 +26,27 @@ storage/
 !storage/vectorstore/
 !storage/vectorstore/documents.json
 .env
+.env.local
 
 # Ignore uploads directory
 uploads/
 
 # Ignore test results directory
 test-results/
+*.log
+
+# Node.js (root — no real package here)
+/package-lock.json
+
+# Python build artifacts
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# RAG Documents (large binary files — use import script)
+docs_to_import/*.pdf
+docs_to_import/*.docx
+

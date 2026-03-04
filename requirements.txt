@@ -16,7 +16,3 @@ reportlab
 gunicorn
 requests
 PyPDF2
-locust>=2.20.0
-pytest-benchmark>=4.0.0
-pytest>=7.4
-pytest-html>=4.1.1
