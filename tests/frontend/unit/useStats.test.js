@@ -96,4 +96,20 @@ describe('useStats', () => {
       expect.objectContaining({ method: 'GET' })
     );
   });
+
+  test('falls back gracefully when AbortSignal.timeout is unavailable', async () => {
+    const originalTimeout = AbortSignal.timeout;
+    // Simulate environments where AbortSignal.timeout does not exist
+    delete AbortSignal.timeout;
+    try {
+      jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => MOCK_RESPONSE,
+      });
+      const { result } = renderHook(() => useStats());
+      await waitFor(() => expect(result.current.tests).toBe('971+'));
+    } finally {
+      AbortSignal.timeout = originalTimeout;
+    }
+  });
 });

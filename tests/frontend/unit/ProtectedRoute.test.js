@@ -86,4 +86,11 @@ describe('ProtectedRoute', () => {
       })
     );
   });
+
+  test('LoadingScreen shows "Loading..." label when language is en-US', () => {
+    mockUseLanguage.mockReturnValue({ language: 'en-US', changeLanguage: jest.fn() });
+    renderProtectedRoute({ isAuthenticated: false, hasProfile: false, isLoading: true });
+    expect(screen.getByTestId('loading-screen')).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
 });

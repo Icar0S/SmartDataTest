@@ -61,6 +61,11 @@ describe('getSession', () => {
     expect(getSession()).toBeNull();
   });
 
+  test('returns null and clears key when JSON is malformed', () => {
+    localStorage.setItem(SESSION_KEY, 'not-valid-json{{{');
+    expect(getSession()).toBeNull();
+  });
+
   test('returns null when session is expired', () => {
     const expired = {
       userId: 'user-1',
@@ -122,6 +127,12 @@ describe('saveProfile', () => {
     saveProfile(profileData);
     const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
     expect(stored.profile).toEqual(profileData);
+  });
+
+  test('does nothing when there is no active session', () => {
+    // No session in localStorage
+    expect(() => saveProfile({ role: 'tester' })).not.toThrow();
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 });
 
