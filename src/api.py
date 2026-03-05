@@ -90,6 +90,8 @@ blueprints_to_register = [
     ("synthetic", "synthetic.routes", "synth_bp"),
     # RAG last (has complex initialization)
     ("rag", "rag.routes_simple", "rag_bp"),
+    # Auth (login validation)
+    ("auth", "auth.routes", "auth_bp"),
 ]
 
 for feature_name, module_path, blueprint_name in blueprints_to_register:

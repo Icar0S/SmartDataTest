@@ -19,7 +19,7 @@ jest.mock('../../../frontend/src/data/users', () => ({
       id: 'user-1',
       name: 'Admin User',
       email: 'admin@dataforgetest.com',
-      passwordHash: '$2b$10$hashedpassword',
+      password: 'admin123',
       role: 'admin',
       avatar: null,
     },

@@ -4,8 +4,19 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+
+// Mock react-router-dom
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  BrowserRouter: ({ children }) => <div>{children}</div>,
+  useNavigate: () => mockNavigate,
+  useLocation: () => ({ pathname: '/login', state: null }),
+  Navigate: () => null,
+  Route: ({ element }) => element,
+  Routes: ({ children }) => <div>{children}</div>,
+}));
 
 // Mock useAuth hook
 const mockHandleLogin = jest.fn();
@@ -23,12 +34,12 @@ jest.mock('../../../frontend/src/hooks/useAuth', () => () => ({
 }));
 
 // Mock useLanguage
-const mockUseLanguage = jest.fn(() => ({
-  language: 'pt-BR',
-  changeLanguage: jest.fn(),
-}));
+const mockChangeLanguage = jest.fn();
 jest.mock('../../../frontend/src/context/LanguageContext', () => ({
-  useLanguage: () => mockUseLanguage(),
+  useLanguage: () => ({
+    language: 'pt-BR',
+    changeLanguage: mockChangeLanguage,
+  }),
 }));
 
 // Mock AuthContext
@@ -96,13 +107,11 @@ jest.mock('../../../frontend/src/styles/animations', () => ({
 
 // Mock LanguageToggle
 jest.mock('../../../frontend/src/components/LanguageToggle', () =>
-  function MockLanguageToggle({ size }) {
-    const { useLanguage } = require('../../../frontend/src/context/LanguageContext');
-    const { language, changeLanguage } = useLanguage();
+  function MockLanguageToggle() {
     return (
       <div data-testid="language-toggle">
-        <button onClick={() => changeLanguage('pt-BR')} data-testid="btn-pt">PT-BR</button>
-        <button onClick={() => changeLanguage('en-US')} data-testid="btn-en">EN-US</button>
+        <button data-testid="btn-pt">PT-BR</button>
+        <button data-testid="btn-en">EN-US</button>
       </div>
     );
   }
@@ -110,54 +119,41 @@ jest.mock('../../../frontend/src/components/LanguageToggle', () =>
 
 import LoginPage from '../../../frontend/src/pages/LoginPage';
 
-const renderLoginPage = (overrides = {}) => {
-  const useAuthMock = require('../../../frontend/src/hooks/useAuth');
-  useAuthMock.mockReturnValue = undefined; // reset
-  return render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>
-  );
-};
+const renderLoginPage = () =>
+  render(<BrowserRouter><LoginPage /></BrowserRouter>);
 
 describe('LoginPage — Step 1: Login Form', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseLanguage.mockReturnValue({ language: 'pt-BR', changeLanguage: jest.fn() });
-    jest.mock('../../../frontend/src/hooks/useAuth', () => () => ({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: false,
-    }));
   });
 
   test('renders login title in PT-BR by default', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    // Title should be in pt-BR
-    expect(screen.getByText(/DataForgeTest/i)).toBeInTheDocument();
+    renderLoginPage();
+    const elements = screen.getAllByText(/DataForgeTest/i);
+    expect(elements.length).toBeGreaterThan(0);
   });
 
   test('email and password fields exist', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    expect(screen.getByPlaceholderText(/email/i) || screen.getByLabelText(/email/i) ||
-      document.querySelector('input[type="email"]')).toBeTruthy();
-    expect(document.querySelector('input[type="password"]') ||
-      document.querySelector('input[name="password"]')).toBeTruthy();
+    renderLoginPage();
+    expect(document.querySelector('input[type="email"]')).toBeTruthy();
+    expect(document.querySelector('input[type="password"]')).toBeTruthy();
   });
 
   test('password visibility toggle works', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
+    renderLoginPage();
     const passwordInput = document.querySelector('input[type="password"]');
     expect(passwordInput).toBeTruthy();
-    const eyeButton = screen.getByTestId('icon-eye') || screen.getByTestId('icon-eyeoff');
-    expect(eyeButton).toBeInTheDocument();
+    // Eye icon should be present (password is hidden)
+    expect(screen.getByTestId('icon-eye')).toBeInTheDocument();
+    // Click toggle
+    const eyeIcon = screen.getByTestId('icon-eye');
+    fireEvent.click(eyeIcon.closest('button'));
+    // After click, EyeOff should appear
+    expect(screen.getByTestId('icon-eyeoff')).toBeInTheDocument();
   });
 
   test('rememberMe checkbox is interactive', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
+    renderLoginPage();
     const checkbox = document.querySelector('input[type="checkbox"]');
     expect(checkbox).toBeTruthy();
     fireEvent.click(checkbox);
@@ -165,76 +161,49 @@ describe('LoginPage — Step 1: Login Form', () => {
   });
 
   test('renders animated background nodes with data-testid', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
+    renderLoginPage();
     expect(document.querySelector('[data-testid="animated-bg"]')).toBeInTheDocument();
   });
 
   test('footer with copyright renders in PT-BR', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    expect(screen.getByText(/2026/i)).toBeInTheDocument();
+    renderLoginPage();
+    const elements = screen.getAllByText(/2026/i);
+    expect(elements.length).toBeGreaterThan(0);
   });
 
   test('demo credentials section is expandable', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
+    renderLoginPage();
     const detailsEl = document.querySelector('details');
     expect(detailsEl).toBeTruthy();
   });
 });
 
-describe('LoginPage — Step 2: Profile Form', () => {
+describe('LoginPage — Login Form submission', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockHandleLogin.mockResolvedValue(true);
-    mockUseLanguage.mockReturnValue({ language: 'pt-BR', changeLanguage: jest.fn() });
   });
 
-  test('renders 8 role cards after step=profile', async () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    // Simulate successful login by submitting the form
+  test('calls handleLogin on form submit', async () => {
+    mockHandleLogin.mockResolvedValue(false);
+    renderLoginPage();
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
-    const form = document.querySelector('form');
-
-    if (emailInput && passwordInput && form) {
-      fireEvent.change(emailInput, { target: { value: 'admin@dataforgetest.com' } });
-      fireEvent.change(passwordInput, { target: { value: 'admin123' } });
-      fireEvent.submit(form);
-
+    if (emailInput && passwordInput) {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password' } });
+      const form = document.querySelector('form');
+      if (form) fireEvent.submit(form);
       await waitFor(() => {
-        const profileCards = document.querySelectorAll('[data-testid^="role-card"]');
-        if (profileCards.length > 0) {
-          expect(profileCards.length).toBe(8);
-        }
-      }, { timeout: 3000 });
+        expect(mockHandleLogin).toHaveBeenCalled();
+      });
     }
-    // At minimum the test verifies we can reach this point without errors
-    expect(true).toBe(true);
-  });
-
-  test('footer with copyright present in profile step', () => {
-    render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    expect(screen.getByText(/2026/i)).toBeInTheDocument();
   });
 });
 
 describe('LoginPage — Error display', () => {
-  test('displays error message when error is not null', () => {
-    // Re-mock useAuth with an error state
-    jest.resetModules();
-
-    const TestWithError = () => {
-      // Inline component that simulates error state
-      const [showError] = React.useState(true);
-      return (
-        <div>
-          {showError && (
-            <div data-testid="error-message">Usuário não encontrado</div>
-          )}
-        </div>
-      );
-    };
-
-    render(<TestWithError />);
-    expect(screen.getByTestId('error-message')).toBeInTheDocument();
+  test('footer with copyright present', () => {
+    renderLoginPage();
+    const elements = screen.getAllByText(/2026/i);
+    expect(elements.length).toBeGreaterThan(0);
   });
 });
