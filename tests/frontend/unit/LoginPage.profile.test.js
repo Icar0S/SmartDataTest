@@ -56,6 +56,13 @@ jest.mock('../../../frontend/src/context/LanguageContext', () => ({
 
 jest.mock('../../../frontend/src/hooks/useAuth', () => () => mockUseAuth());
 
+jest.mock('../../../frontend/src/hooks/useStats', () => () => ({
+  tests: '970+',
+  datasets: '1180+',
+  coverage: '86%',
+  responseSla: '<2s',
+}));
+
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,

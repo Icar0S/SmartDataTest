@@ -33,6 +33,13 @@ jest.mock('../../../frontend/src/hooks/useAuth', () => () => ({
   isLoading: false,
 }));
 
+jest.mock('../../../frontend/src/hooks/useStats', () => () => ({
+  tests: '970+',
+  datasets: '1180+',
+  coverage: '86%',
+  responseSla: '<2s',
+}));
+
 // Mock useLanguage
 const mockChangeLanguage = jest.fn();
 jest.mock('../../../frontend/src/context/LanguageContext', () => ({

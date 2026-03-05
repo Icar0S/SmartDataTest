@@ -27,6 +27,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageToggle from '../components/LanguageToggle';
 import useAuth from '../hooks/useAuth';
+import useStats from '../hooks/useStats';
 import {
   floatingNode,
   popIn,
@@ -266,6 +267,8 @@ function StatCard({ icon: Icon, label, value, color }) {
 }
 
 function RightPanel({ t }) {
+  const { tests, datasets, coverage, responseSla } = useStats();
+
   return (
     <div className="hidden md:flex flex-col flex-1 gap-5 p-8 overflow-y-auto">
       {/* Section A — Pipeline */}
@@ -323,10 +326,10 @@ function RightPanel({ t }) {
         variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
         className="grid grid-cols-2 gap-3 flex-1"
       >
-        <StatCard icon={TestTube} label={t.statsLabels.tests} value="98+" color="text-purple-400" />
-        <StatCard icon={Database} label={t.statsLabels.datasets} value="15000+" color="text-blue-400" />
-        <StatCard icon={BarChart3} label={t.statsLabels.coverage} value="99%" color="text-green-400" />
-        <StatCard icon={Zap} label={t.statsLabels.response} value="<2s" color="text-yellow-400" />
+        <StatCard icon={TestTube} label={t.statsLabels.tests} value={tests} color="text-purple-400" />
+        <StatCard icon={Database} label={t.statsLabels.datasets} value={datasets} color="text-blue-400" />
+        <StatCard icon={BarChart3} label={t.statsLabels.coverage} value={coverage} color="text-green-400" />
+        <StatCard icon={Zap} label={t.statsLabels.response} value={responseSla} color="text-yellow-400" />
       </motion.div>
     </div>
   );
