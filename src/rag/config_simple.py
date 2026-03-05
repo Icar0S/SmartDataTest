@@ -13,7 +13,7 @@ class RAGConfig:
     storage_path: Path = Path("storage/vectorstore")
     chunk_size: int = 512
     chunk_overlap: int = 50
-    top_k: int = 4
+    top_k: int = 8
     max_upload_mb: int = 10
     allowed_file_types: List[str] = field(
         default_factory=lambda: [".pdf", ".txt", ".md", ".csv", ".docx"]
@@ -43,6 +43,6 @@ class RAGConfig:
             storage_path=storage_path,
             chunk_size=int(os.getenv("CHUNK_SIZE", "512")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "50")),
-            top_k=int(os.getenv("TOP_K", "4")),
+            top_k=int(os.getenv("TOP_K", "8")),
             max_upload_mb=int(os.getenv("MAX_UPLOAD_MB", "10")),
         )

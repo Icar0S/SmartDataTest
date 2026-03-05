@@ -39,8 +39,98 @@ class SimpleChatEngine:
         else:
             print("[WARNING] No LLM configured. Using simple template responses.")
 
+    # Keywords that signal the user wants to see the full source/document list
+    _LIST_SOURCES_KEYWORDS = {
+        # Portuguese
+        "fontes",
+        "fonte",
+        "documentos",
+        "documento",
+        "arquivos",
+        "arquivo",
+        "listar",
+        "liste",
+        "liste",
+        "quais",
+        "todas",
+        "todos",
+        "base",
+        "bases",
+        # English
+        "sources",
+        "source",
+        "documents",
+        "files",
+        "list",
+        "all",
+        "what",
+        "show",
+        "available",
+    }
+    _LIST_SOURCES_TRIGGERS = [
+        # Portuguese patterns
+        "lista",
+        "listar",
+        "liste",
+        "fontes de dados",
+        "seus documentos",
+        "suas fontes",
+        "base de conhecimento",
+        "knowledge base",
+        # English patterns
+        "list all",
+        "list your",
+        "show all",
+        "what sources",
+        "what documents",
+        "what files",
+        "all sources",
+        "all documents",
+    ]
+
+    def _is_list_sources_intent(self, message: str) -> bool:
+        """Detect whether the user wants a full listing of the knowledge-base sources."""
+        msg = message.lower()
+        # Check for multi-word trigger phrases first
+        for trigger in self._LIST_SOURCES_TRIGGERS:
+            if trigger in msg:
+                return True
+        # Fall back to keyword combination: needs a list-verb + a source noun
+        words = set(msg.split())
+        list_verbs = {
+            "liste",
+            "listar",
+            "liste",
+            "list",
+            "show",
+            "mostra",
+            "mostre",
+            "quais",
+            "which",
+            "what",
+        }
+        source_nouns = {
+            "fontes",
+            "fonte",
+            "documentos",
+            "documento",
+            "arquivos",
+            "sources",
+            "source",
+            "documents",
+            "files",
+            "base",
+            "bases",
+        }
+        return bool(words & list_verbs) and bool(words & source_nouns)
+
     def chat(self, message: str) -> Dict:
         """Process a chat message with RAG context."""
+
+        # ── Special intent: list all knowledge-base sources ───────────────────
+        if self._is_list_sources_intent(message):
+            return self._handle_list_sources(message)
+
         # Search for relevant context
         search_results = self.rag.search(message)
 
@@ -72,6 +162,54 @@ class SimpleChatEngine:
 
         return {"response": response, "citations": citations, "sources": search_results}
 
+    def _handle_list_sources(self, message: str) -> Dict:
+        """Return all documents in the knowledge base as a formatted list."""
+        all_sources = self.rag.get_sources()
+        total = len(all_sources)
+
+        if total == 0:
+            response = "A base de conhecimento está vazia no momento."
+            return {"response": response, "citations": [], "sources": []}
+
+        # Build a numbered list grouped by origin file extension
+        lines = [f"A base de conhecimento contém **{total} documentos**:\n"]
+        for idx, src in enumerate(sorted(all_sources, key=lambda s: s["filename"]), start=1):
+            fname = src["filename"]
+            size_kb = round(src.get("size", 0) / 1024, 1)
+            lines.append(f"{idx}. {fname} ({size_kb} KB)")
+
+        plain_list = "\n".join(lines)
+
+        # If LLM available, ask it to present the list nicely
+        if self.use_llm:
+            try:
+                prompt = (
+                    f"The user asked: {message}\n\n"
+                    f"Here is the complete list of documents in the knowledge base:\n"
+                    f"{plain_list}\n\n"
+                    "Please present this list in a clear, organised way for the user."
+                )
+                response = self.llm_client.generate(
+                    messages=[{"role": "user", "content": prompt}],
+                    system="You are a helpful assistant. Present document lists clearly.",
+                    max_tokens=2048,
+                    temperature=0.3,
+                )
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[WARNING] LLM error in list-sources: {e}")
+                response = plain_list
+        else:
+            response = plain_list
+
+        # Build lightweight citations so the UI source panel still works
+        citations = [
+            {"id": idx + 1, "text": src["filename"], "metadata": {"filename": src["filename"]}}
+            for idx, src in enumerate(all_sources)
+        ]
+
+        self.chat_history.append({"message": message, "response": response, "citations": citations})
+        return {"response": response, "citations": citations, "sources": []}
+
     def _generate_llm_response(self, question: str, context: str, citations: List[Dict]) -> str:
         """Generate response using LLM with RAG context."""
         if not context.strip():
@@ -100,7 +238,7 @@ Please answer based on the context above. Use citations [1], [2], etc. when refe
             response_text = self.llm_client.generate(
                 messages=[{"role": "user", "content": user_message}],
                 system=system_prompt,
-                max_tokens=1024,
+                max_tokens=2048,
                 temperature=0.7,
             )
             return response_text
@@ -165,7 +303,7 @@ This information comes from the knowledge base and should provide guidance for y
         question_lower = question.lower()
         relevant_chunks = []
 
-        for chunk in chunks[:4]:  # Limit to first 4 chunks
+        for chunk in chunks[: self.rag.config.top_k]:  # respect configured top_k
             chunk_lower = chunk.lower()
 
             # Score relevance based on keyword matches
@@ -199,7 +337,7 @@ This information comes from the knowledge base and should provide guidance for y
             relevant_chunks.sort(key=lambda x: x[0], reverse=True)
             formatted_info = []
 
-            for i, (score, chunk) in enumerate(relevant_chunks[:3]):
+            for i, (score, chunk) in enumerate(relevant_chunks[: self.rag.config.top_k]):
                 # Format chunk nicely
                 sentences = chunk.split(". ")
                 if len(sentences) > 3:
