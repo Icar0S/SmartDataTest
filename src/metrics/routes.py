@@ -131,15 +131,18 @@ def upload_dataset():
         # Save file
         file.save(file_path)
 
-        # Read dataset to get preview
-        df = read_dataset(file_path)
+        # Read only up to max_rows+1 rows to avoid loading a huge file into
+        # memory before the size check (prevents worker OOM / SIGKILL).
+        df = read_dataset(file_path, nrows=config.max_rows + 1)
 
-        # Validate row count
+        # Validate row count — fail fast before building the sample
         if len(df) > config.max_rows:
+            del df
+            gc.collect()
             return (
                 jsonify(
                     {
-                        "error": f"Dataset too large: {len(df)} rows exceeds maximum of {config.max_rows} rows for current plan.",
+                        "error": f"Dataset too large: exceeds {config.max_rows} row limit for current plan.",
                         "suggestion": "Please reduce dataset size or upgrade to a higher plan.",
                     }
                 ),
@@ -150,22 +153,30 @@ def upload_dataset():
         sample = df.head(config.sample_size).to_dict(orient="records")
         sample = convert_to_json_serializable(sample)
 
+        # Capture values needed for the response before releasing the DataFrame
+        columns = list(df.columns)
+        total_rows = len(df)
+
+        # Free memory as soon as we have what we need
+        del df
+        gc.collect()
+
         # Store session info
         processing_status[session_id] = {
             "file_path": str(file_path),
             "filename": filename,
             "uploaded_at": datetime.now().isoformat(),
-            "rows": len(df),
-            "columns": len(df.columns),
+            "rows": total_rows,
+            "columns": len(columns),
         }
 
         return jsonify(
             {
                 "sessionId": session_id,
-                "columns": list(df.columns),
+                "columns": columns,
                 "sample": sample,
                 "format": file_ext.lstrip("."),
-                "rows": len(df),
+                "rows": total_rows,
             }
         )
 

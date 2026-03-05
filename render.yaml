@@ -18,6 +18,10 @@ services:
         value: 1000000
       - key: ACCURACY_MAX_UPLOAD_MB
         value: 50
+      - key: MAX_UPLOAD_MB
+        value: 5
+      - key: METRICS_MAX_ROWS
+        value: 10000
       - key: GOLD_REQUEST_TIMEOUT
         value: 300
     disk:

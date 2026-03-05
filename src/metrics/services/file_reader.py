@@ -1,15 +1,19 @@
 """File reading utilities for data quality metrics."""
 
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
 
-def read_dataset(file_path: Path) -> pd.DataFrame:
+def read_dataset(file_path: Path, nrows: Optional[int] = None) -> pd.DataFrame:
     """Read dataset from file with robust CSV handling.
 
     Args:
         file_path: Path to the dataset file
+        nrows: Maximum number of rows to read. If None, reads all rows.
+               Pass ``max_rows + 1`` during upload to detect oversized
+               datasets without loading the entire file into memory.
 
     Returns:
         DataFrame containing the dataset
@@ -20,22 +24,27 @@ def read_dataset(file_path: Path) -> pd.DataFrame:
     file_ext = file_path.suffix.lower()
 
     if file_ext == ".csv":
-        return read_csv_robust(file_path)
+        return read_csv_robust(file_path, nrows=nrows)
     elif file_ext in [".xlsx", ".xls"]:
-        df = pd.read_excel(file_path)
+        df = pd.read_excel(file_path, nrows=nrows)
     elif file_ext == ".parquet":
         df = pd.read_parquet(file_path)
+        if nrows is not None and len(df) > nrows:
+            df = df.iloc[:nrows]
     else:
         raise ValueError(f"Unsupported file format: {file_ext}")
 
     return df
 
 
-def read_csv_robust(file_path: Path) -> pd.DataFrame:
+def read_csv_robust(file_path: Path, nrows: Optional[int] = None) -> pd.DataFrame:
     """Robust CSV reading with multiple fallback strategies.
 
     Args:
         file_path: Path to CSV file
+        nrows: Maximum number of rows to read. Pass ``max_rows + 1`` during
+               upload validation so the caller can detect oversized files
+               without loading the whole dataset into memory.
 
     Returns:
         DataFrame with successfully parsed data, or empty DataFrame if file is empty
@@ -124,7 +133,10 @@ def read_csv_robust(file_path: Path) -> pd.DataFrame:
         try:
             print(f"Trying CSV reading strategy {i}: {strategy}")
 
-            df = pd.read_csv(file_path, **strategy)
+            read_kwargs = dict(strategy)
+            if nrows is not None:
+                read_kwargs["nrows"] = nrows
+            df = pd.read_csv(file_path, **read_kwargs)
 
             # Check if we got a reasonable result
             if df.empty and file_path.stat().st_size > 0:
@@ -149,7 +161,7 @@ def read_csv_robust(file_path: Path) -> pd.DataFrame:
     # If all strategies fail, try chunk-based reading as last resort
     try:
         print("Attempting chunk-based reading as last resort...")
-        result = read_csv_chunked(file_path)
+        result = read_csv_chunked(file_path, nrows=nrows)
         if result is not None:
             return result
     except Exception as e:
@@ -160,12 +172,17 @@ def read_csv_robust(file_path: Path) -> pd.DataFrame:
     raise ValueError(f"Failed to read CSV file with all strategies:\n{error_summary}")
 
 
-def read_csv_chunked(file_path: Path, chunk_size: int = 10000) -> pd.DataFrame:
+def read_csv_chunked(
+    file_path: Path, chunk_size: int = 10000, nrows: Optional[int] = None
+) -> pd.DataFrame:
     """Read CSV in chunks and combine, handling malformed lines.
 
     Args:
         file_path: Path to CSV file
         chunk_size: Size of each chunk
+        nrows: Maximum number of rows to read. Reading stops as soon as this
+               limit is reached so callers can detect oversized files without
+               loading the entire dataset into memory.
 
     Returns:
         Combined DataFrame
@@ -184,6 +201,11 @@ def read_csv_chunked(file_path: Path, chunk_size: int = 10000) -> pd.DataFrame:
             low_memory=False,
         ):
             if not chunk.empty:
+                if nrows is not None and total_rows + len(chunk) > nrows:
+                    # Take only as many rows as needed to reach the limit
+                    chunks.append(chunk.iloc[: nrows - total_rows])
+                    total_rows = nrows
+                    break
                 chunks.append(chunk)
                 total_rows += len(chunk)
 
@@ -197,14 +219,16 @@ def read_csv_chunked(file_path: Path, chunk_size: int = 10000) -> pd.DataFrame:
     except Exception as e:
         # Final fallback: try with python engine and more flexible settings
         try:
-            df = pd.read_csv(
-                file_path,
-                encoding="utf-8",
-                sep=None,  # Let pandas auto-detect
-                engine="python",
-                on_bad_lines="skip",
-                skipinitialspace=True,
-            )
+            read_kwargs: dict = {
+                "encoding": "utf-8",
+                "sep": None,  # Let pandas auto-detect
+                "engine": "python",
+                "on_bad_lines": "skip",
+                "skipinitialspace": True,
+            }
+            if nrows is not None:
+                read_kwargs["nrows"] = nrows
+            df = pd.read_csv(file_path, **read_kwargs)
             if df.empty:
                 raise ValueError("Empty DataFrame from python engine")
             return df
