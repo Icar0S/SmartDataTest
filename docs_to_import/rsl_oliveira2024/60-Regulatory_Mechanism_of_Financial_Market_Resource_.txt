@@ -1,0 +1,196 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+Hindawi
+Mobile Information Systems
+Volume 2022, Article ID 4339456, 12 pages https://doi.org/10.1155/2022/4339456
+Research Article
+Regulatory Mechanism of Financial Market Resource Management Driven by Big Data
+Wangsong Xie 1 and Jianjun Cao2
+1Business School, Wuxi Taihu University, Wuxi 214064, Jiangsu, China
+2Human Resources Department, Wuxi Taihu University, Wuxi 214064, Jiangsu, China
+Correspondence should be addressed to Wangsong Xie; xiewangsong@126.com
+Received 15 April 2022; Revised 31 May 2022; Accepted 23 June 2022; Published 30 July 2022 Academic Editor: YangGao
+Copyright © 2022 Wangsong Xie and Jianjun Cao. is is an open access article distributed under the Creative Commons AttributionLicense, which permitsunrestricteduse, distribution, andreproductioninanymedium, providedthe originalworkis properly cited.
+In order to further understand the current situation of the financialmarket and better supervise the resource management of the financialmarket, combined with big data and cloud computing technology, through the construction of big data cloud platform resource management system and the integration of various technical computing frameworks, we can realize the effective supervision of big data resources in the financial market. Using J2EE technology, this paper analyzes, designs, implements, and tests the investment data management system, analyzes the content of the software engineering subject, and obtains the demand function description of the business. According to the software development process and the actual situation of enterprise investment, this paper expounds the basic requirements of the investment data management business, system architecture requirements, user use case status, and the operation and configurationenvironment of the investment data management system.
+ ispaperanalyzesthetechnicalcharacteristicsandoperationindicatorsofthesoftware,andestablishesthedataflowforthedata related to investment data management, such as information statistics, data query, information classification and so on. Finally, thesystem isverified,operatedand tested,and thebusiness usecases andparameters ofthesystem aretestedaccordingtothetwo indicators of software testing. e basic functions of the investment data management realized by the system are correct, the design is reasonable, the operation is stable, the operation response time is short, the operation accuracy is high, and the data access efficiency is good.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+1. Introduction
+Today, with the advent of the information network era, data and information are becoming more and more important, especially for all areas of life. e understanding of big data directly affectsthe development of an enterprise or industry. With the advancement of communication and dataization, the integration of financeand big data industries in the new economic era is crucial. e emergence and continuous improvement of big data can increase the transparency of financialmarkets. With the help of new technologies such as big data and cloud computing, financial services can dis- cover more important and useable data from big data and enhance this data to promote the health of the financial system. At the same time, big data can support research on Internet business management and financial markets, help
+financial markets achieve greater influence, better avoid business risks, and improve the performance of financial service businesses [1]. However, with the continuous in- crease of financial market resources, especially the fact that more and more idle funds of the public are handed over to financial institutions for asset management, the supervision of financial institutions is becoming more and more im- portant. Under the dual influence of internal and external regulatory policies and regulators, the financial market urgently needs to strengthen the construction of resource management and supervision mechanism, as shown in Figure 1. Based on this, the article combines big data and cloudChinatechnologytoachievebettermanagementofbig data in the finance industry and maintain multi-inclusive management and integration by creating a big data cloud platform experience. At present, the research and discussion
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+2
+A collection of  Portfolio 
+investment Fund manager investment
+Investors a Securities a Investors b Fund Securities b
+Investor’s c Fund trustee Securities c Figure 1: Financial market resource management.
+mainly focus on restricting the investment of asset man- agement business in nonstandard business. e system re- cently introduced at the regulatory level also reflects the opinions and clear attitude of standardizing nonstandard asset investment [2]. At present, the development trend of the financial industry is mixed operation and financial in- novation. Nonstandard assets have played an important role in activating the financial market, enriching financial in- struments and serving the investment and financing of the real economy. e return to simplicity can only be relative, and the return to simplicity of financial derivatives is completely inconsistent with the reality of development.
+2. Literature Review
+Huanget al.[3] studied theinvestment system of enterprises and made some achievements in the research process [3]. Sultanaw et al. [4] put forward the theory of “reference design model” for the investment management system in South Korea. e theory adopts a strategic way to sort and manage the investment information, and handles the in- formation security problems in the task of the management system through effectivemeans. It forms a unique theory for the actual investment management system [4]; Phi- boonbanakit and Horanont [5] solved the demand analysis of investment management system, improved the quality of system analysis report from the aspect of reliability, com- bined analysts and business personnel, and eliminated some obstacles between them [5]. Qu [6] believed that the essence of the model is based on the “cooperation mechanism.” Process capital analysis can solve existing problems and solve problems in investment management level assessment from the perspective of cooperation and collaboration [6]. Yan et al. [7] said thatthe investment management system is carried out around services, through high-quality services, shaping and strengthening a good public image of invest- ment, creating a favorable public opinion environment, striving for favorable investment policies, and finally real- izing the long-term development of investment manage- ment [7]. Watson et al. [8] believed that the investment management platform, as an important part of digital
+Mobile Information Systems
+investment, is a scientific management guarantee for real- izing investment, involving all links and multi-level com- prehensive application of investment management. e investment management system with scientificmanagement asthecore,effectivelysupportstheimplementationofdigital enterprises, improves the management efficiency of enter- prise parks, and becomes an irreplaceable platform for in- vestment management of enterprises [8]. Hyers [9] said that for capitalist countries, the main goal of market supervision is simple and clear, that is, to maintain market order by relying on mandatory laws, systems and norms, and its market supervision behavior is controlled by the nature of capitalism. erefore, with the development of capitalist market and the change of government functions, there are various studies on market supervision [9]. For example, Connolly Barker et al. [10] believed that market regulation is the comprehensive control of various factors in the market by the government in order to ensure social stability and sustainable economic development, to standardize market behavior, and to ensure orderly operation of the market and maintain stable economic development [10]. Keane et al. [11] said that market regulation is a passive government behavior. Since the market cannot spontaneously maintain good order, the government needs to participate in regu- lation. erefore, market regulation must have mandatory elements. With the continuous development of the market, the market supervision implemented by the government must achieve dynamic follow-up, that is, the government supervision can meet the needs of market development [11]. Guan et al. [12] believed that if the market supervision implemented by the government cannot meet the needs of the current market, it will lead to the lack of supervision in some supervision and many problems; although the gov- ernment’s market supervision comprehensively includes market factors, if the supervision is too frequent, or even the supervision strength exceeds the market bearing capacity, it will restrict the benign self-development of the market to a certain extent [12]. Maddumala et al. [13] said that the characteristic of market supervision is that functional de- partments not only supervise in accordance with relevant lawsandregulations,butalsomanageallaspectsandlinksin the market. Due to the characteristics of socialist economy, the government also supervises its own market behavior to comprehensivelyensurethestabilityandorderofthemarket [13].
+Based on this research, this paper proposes a regulatory mechanism based on big-data-driven financial market re- sourcemanagement.Inthispaper,usingtheJ2EEtechnique, analyzed, designed, implemented, and tested the investment data management system, to analyze the content of the software engineering project, get the business requirements function description, based on the software development process, according to the actual situation of enterprise in- vestment, the basic requirements of the investment data management business, the system architecture require- ments, the status of the user use case are expounded. For the operation and configurationenvironment of the investment data management system, the technical characteristics and operation indexes of the software are analyzed, and the data
+Mobile Information Systems
+related to investment data management, established the data process, such as information statistics, data query, infor- mation classification, and other contents, at last, verify the running and tested the system, according to the two aspects of the software testing indicators, service case and param- eters of the test system. e basic functions of the system are correct, with reasonable design, stable operation, short operation response time, high operation accuracy, and good data access efficiency. e test results show that the in- vestment data management system of the investment en- terprise operates normally, and the various operating parameters of the software meet the design requirements and software engineering standards.
+3. Design of Supervision Platform for Financial Market Resource Management
+3.1. System Functional Requirements.According to the construction objectives, the basic functions of the invest- ment data management platform are shown in Figure 2 below.
+(1) Design the enterprise basic information manage- ment module, the main functions are: manage the basic situation of the enterprise, list statistics of subordinate enterprises, and manage the basic business of the enterprise;
+(2) Management and investment project information module: manage high-risk financial investment projects, foreign investment projects, and fixedasset investment projects;
+(3) e investment summary and analysis module in- cludes enterprise basic information summary, for- eign investment project summary, and fixed asset investment project summary;
+(4) Management of investment implementation: quar- terly progress of major projects, annual imple- mentation of projects, annual implementation of fixed asset investment projects, foreign investment projects, and high-risk financial investment;
+(5) Statistical risk data, investment risk management module shows the risk of investment projects;
+(6) e system login module provides user login. At the same time, only the system administrator can add, modify, and delete business operators. e system administrator can only add from the database [14].
+3.2.SystemUseCaseStatus.Use case diagram is a key factor in the software development engineering. It reflects the relationship between all users and system business functions in a system. e drawing of use case diagram will clearly reflecttheoperationpermissionsofdifferentusers,asshown in Figure 3.
+ e administrator of the investment data management
+system can handle the following businesses in the system: managing investment risk, managing investment project information, managing enterprise information, managing
+3
+system data, managing investment execution, user login, investmentsummary,and analysis,etc., einvestmentuser of the investment data management system can handle the following businesses in the system: management of invest- ment risk, management of investment project information, management of enterprise information, management of investment execution, user login, investment summary analysis, and other permissions [15].
+3.3. System Data Flow Requirements
+3.3.1. Top Level Data Flow.As shown in Figure 4, the top- level data flow is designed to display the data interaction process and reflecttheinvestmentdata managementsystem.  e main business data processed are: investment execution data, project risk basic data, enterprise basic data, invest- ment project data, and user basic data. e data flow fully shows the flow direction of system design.
+3.3.2. Query Data Flow. As shown in Figure 5, the data information of the investment data management system for investment enterprises mainly deals with the query data, including project risk data, investment department data, system user data, and investment execution data. rough the query flow chart, the final query flow direction of the investment data is the storage table of the database, which is themainfeatureofaninformationmanagementsystem[16].
+3.3.3. System Login Data Flow.AsshowninFigure6,theuser login process of the investment data management system is established, and the window provided for user login is dis- played on the operation interface. In the test process, input their own login information first. After confirming that the information is input correctly, operate the “login” button below. e interface program will analyze whether the user informationexistsandverifytheiruseridentity. etestshows that if the login information is operated correctly, the main interface of the investment data management system will be opened,otherwise,theinterfacewitherrormessagewillappear.
+3.4. Overall System Design
+3.4.1. Network Structure Design.Since the design should meet the actual needs, the solution of the investment data management system of the investment enterprise should realize the management and analysis of the investment data management information when designing the investment data management system, and the selected network equipment should meet the requirements. is is a relatively advanced model in the industry and is composed of the data network system [17]. e manager manages the data in the database.Forthenetworkproductswidelyusedintheworld, when selecting the products of internationally well-known manufacturers and designing the network equipment of the investment data management system, the principle of safety, stability, and reliability shall be followed to ensure the smooth implementation of investment data management.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+4 Mobile Information Systems
+Functional structure of financial investment data management system
+Manage 
+Enterprise basic  Investment  Investment  Investment 
+Investment  System information  summary  Execution  Risk 
+Project  login management  analysis  Management  Management 
+Information  module module module Module Module
+Module
+Figure 2: Functional structure of financial investment data management system.
+data management system User login
+System data management
+Enterprise Information  Management 
+investment project  management
+Enterprise administrator investment user
+Investment summary analysis
+Investment execution
+Investment Risk Management
+Figure 3: Use case diagram of financial investment data management system.
+Investment 
+Investment  Execution  Investment 
+Corporate  project  Information Risk 
+Information information Information User Info
+data exchange
+Figure 4: Top level data flow diagram of financial investment data management system.
+Mobile Information Systems 5
+Teaching information
+Laboratory Information
+query 
+Data query data 
+processing entry
+Personnel information
+Instrument and equipment information
+Figure 5: Data flow diagram of data information query.
+physical  enter the input Check  Compare  perform  Complete  Enter the  system 
+login  system main  
+Certification databases login 
+verification page
+Figure 6: System security access data flow diagram.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+ e investment data management business data takes the front-endswitchasthebufferlibrary,integratesthedatainto the central database through the data exchange platform, accesses all hosts to the server in the internal LAN, and accesses the system with the external Internet. VPN tech- nology can be used on the Internet. For users without an external network, the data center is deployed on the external network of the enterprise. e resources of the investment data management data center can be accessed safely through theInternetnetwork,andtheusersofthenetworkcanaccess in the same network [18]. e remote control of the client can be realized through the network data exchange. e investment data management system of the investment enterprisecanactivelyinitiatetheconnectiontothenetwork and has the wired communication function between the server and the client. It can obtain the current system status oftheclientandthedataoftheinvestmentdatamanagement businessinrealtime,soastorealize thecontrollabilityofthe whole investment data management information trans- mission process.
+3.4.2. System Function Structure Design
+(1) First, Software Data Layer. Data layer maintenance is the application-oriented data existing in the system. rough the storage medium, the system-related information is stored in a certain medium and saved in a regular way. e
+upper end of the system can carry out various effective operations on the information in the database through the program software, so as to achieve the business function, data storage, and data access of the client of the investment management system. Its main core operation is the input and output of data. If these two points are handled well, the business function of a management system can be handled accurately [19]. In the investment data management system studied in this paper, various tables of relevant data are stored in the database environment. e client can call and access the information of enrollment management, plan management, personnel management, and so on.
+(2) Second, Software Middle Layer. In the investment data management system of investment enterprises, in addition to the traditional data storage mode, the database access middleware technology is also designed and used. A layer of middlewaresystemisdesignedbetweenthedatabaseandthe logic layer. Its main function is to quickly connect the business layer and the database. rough the connection of this interface, the encapsulated function events will be called when the data is input and output, which reduces the programming of the program end. It also improves the data transmission efficiency and realizes stable high-level appli- cations in the process of communication interaction. It is of great value for maintaining, transplanting, and upgrading the management system in the future expansion [20].
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Mobile Information Systems
+9
+3.4.3. Software Presentation Layer.In the business layer, the interface of software client is designed and developed through J2EE technology, and the operation code is pro- grammed. According to the design of investment data management module, the management function is designed in detail. According to the business needs, the enterprise network is established: investment summary and analysis module, investment project management module, invest- ment risk management module, investment execution module, data management module, user login module, enterprise information management module, etc., As shown in Figure 7.
+3.4.4. Risk Management Module. e design of investment project risk management function is shown in Figure 8. By analyzing the risk data existing in the implementation of the investment project, the risk problems that have been han- dled can be updated and deleted. e system user can add, view, analyze, and process the risk data of the investment project. e function of data binding, display, management, and maintenance of investment project risk realizes the maintenance of the investment risk data. Realizethedataupdate,asshowninFigure9.Executethe update operation, enter new data in it, and update the data through the inputable dialog box after completing the input. According to the security strategy of hierarchical pro- tection and combined with the characteristics of manage- ment business, the community management system should be divided according to the construction of security pro- tection system of each security domain, external network platform domain, and internal network platform domain
+[21]. e terminal machine room shall ensure safety and security: fire prevention, anti-theft, dust prevention, wa- terproof, anti-static, and anti-power failure. e security system design of the investment data management system followsthesecuritysystemmodel.Undertheguidanceofthe unifiedhierarchical protection security strategy, the security system design of the whole online management platform is divided into several important contents, such as the con- struction of security technology security system, emergency response system, and security management security system.  e construction of security technology guarantee system includes security infrastructure (including unified authen- tication, password service system, trusted timestamp service system, etc.,), and security service system (monitoring and detection system, etc.,). e construction of emergency response system includes emergency response objects, processes, institutions, and other aspects. e construction of safety management guarantee system includes organi- zation, system, management means, safety audit, and so on.
+4. Key Technologies of Resource Management for Big Data Drive
+4.1. Big Data Platform Computing Framework. ere aremany computing frameworks for different scenarios of big data processing, including MapReduce parallel computing model, spark memory computing framework, and some
+streaming computing frameworks. MapReduce parallel computing model is mainly used in large-scale batch com- puting scenarios. Due to its poor performance in iterative algorithms, spark memory computing framework appears. Spark memory computing framework greatly improves the performance of data mining and machine learning algo- rithms [22]. e streaming computing framework mainly dealswiththeapplicationscenarioswithstrongreal-timeand interactive requirements. Different computing frameworks havetheirownadvantages.Alarge-scalesystemoftenfacesa variety of application scenarios, and a variety of computing frameworkscanplaytheirrespectiveroles. ispapermainly uses MapReduce parallel computing model. Traditional parallel computing models include data parallel model and messageparallelmodel,dataparallelmodelssuchasHPFand message passing models such asMPI and PVM.Whenusing the traditional parallel computing model to write programs, users need to intervene in the division of data and the syn- chronization of tasks and the burden of programmers is heavy. In order to reduce the programming difficulty of parallel processing massive data, MapReduce program can run on a cluster composed of cheap commercial machines because it does not care about the performance of a single node and has high fault tolerance [23]. MapReduce parallel computingmodel shields thedetailedimplementationofthe underlying parallel program. Users only need to use map function and reduce function to define their own business processing logic, which is simple and easy to learn, freeing programmers from the heavy burden of traditional parallel programming model, and greatly promoting the develop- ment of massive data processing and analysis ability.
+4.2. Joint Optimization of System Resources
+4.2.1. Virtual Machine and Physical Server Model. is paperassumesthatCPprovidesatotalofKdifferenttypesof VMs,wherek∈k:�{1,2,..., K}representsthektypeofVM. Each type of VM is preset with differenttypes and quantities
+of resource requirements, such as CPU, memory, and hard disk, and g(k) is used to represent the demand for VM
+resources of type k. In addition, this chapter assumes that there are m physical servers in the DC, and the resource capacity of each physical server m∈M:�{1, 2,..., M} is
+denoted by c (m).
+4.2.2. Virtual Machine Request Model.It is assumed that there are a total of H differenttypes of VM requests arriving, and each request type h∈H corresponds to different types and quantities of VMs. At the same time, this chapter as- sumesthatthenumberofdifferenttypesofVMsrequiredby each VM request is randomly distributed and independent of each other, and uses r (l, k) to represent the number of VMs of typekrequired by VM request l. erefore, the total resource requirement of VM request l can be expressed by formula (1):
+rl � 􏽘r(l,k)g(k). (1)
+k
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Mobile Information Systems
+
+System front desk
+middle layer
+System background
+Network Public Opinion Database
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Mobile Information Systems
+
+Figure 7: Overall functional architecture of the system.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Mobile Information Systems
+11
+Start
+Investment execution
+no
+Is there a risk
+yes
+Display risk data
+end
+Figure 8: Risk management operation process.
+4.2.3. Income Model.Usually, the CP will bring certain benefits for each VM request it receives. is chapter as- sumesthatinstantiatingaVMoftype kcanbring p(k)toCP per unit time. Although the CP can actively reject some VMrequests so that there are enough remaining resources to accommodate subsequent VM requests with higher revenue value, rejecting VM requests will still bring certain negative impacts to it, such as affecting its reputation, etc., [24]  erefore, this paper introduces a “penalty” mechanism to characterize the indirect loss caused when the CP rejects a VM request, and uses φ (k) to represent the unit time loss caused by the CP rejecting a VM of type k. us, the actual benefitthat CP obtains from VM request l can be expressed by (2) and (3):
+R(l) � 􏽘ρ(k)r(l,k)τ(l). (2)
+k
+means l is accepted
+Start
+Enter new information
+no Is the input data 
+canonical?
+yes
+Execute update function
+Data Update
+end
+Figure 9: Risk data update operation flow chart.
+R(l) � −􏽘ρ(k)r(l,k)τ(l). (3)
+k
+means l is rejected.
+4.2.4. Virtual Machine Request Joint Optimization Decision Making Problem. e core problem of the joint decision optimizationofVMaccesscontrolandresourceallocationis to design a strategy that can evaluate the impact of the current resource allocation decision on the future resource
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Mobile Information Systems
+21
+π  sl􏼁� π( slsup) ∈A( sl)⎧⎪⎨⎪⎩R sl,π  sl􏼁􏼁+ c sl􏽘+1∈SP sl + 1|sl,π  sl􏼁􏼁Vπ sl + 1􏼁⎪⎭. (9)
+⎫⎪⎬
+ e strategy obtained by the above formula is the op-
+considered, when any VM request l reaches the DC and the CP adopts the decision, the conditional state transition probability of the system in the case of the next random event can be expressed as three cases by the following formula, as shown in formulas (10)–(12):
+timal decision π∗(s1) corresponding to each state.
+Any VM request can arrive and any VM request can leave. Since this paper assumes that the decision of any VM request is determined when it arrives, the state of the system will not change at the middle time of two adjacent random
+utilization and the potential benefits of CP, so that the comprehensive optimization decision that is the most conducive to improve the long-term benefits of CP can be selected for the currently arrived VM requests. erefore, under the joint optimization strategy, for any VM request that arrives, CP needs to consider whether it needs to be acceptedand how toallocateresources toit afteracceptance, and judge the probability of resource blocking or resource wastebyquantitativelyevaluatingtheimpactofthisdecision on subsequent decision-making. Maximize the benefits of the final decision [25].
+ e goal of VP problem is to design an optimal decision function π∗, so as to maximize the expected discounted
+revenue (EDR) of CP in a long time, as shown in (6):
+maxRπs0 � Eπs0⎧⎨⎩􏽘∞ Rl sl,π  sl􏼁􏼁ctP s + 1|s ,a 􏼁� λh + 1 � h,s + 1 � s + a (10)
+events. erefore, CP nly needs to make corresponding decisions on the VM request when it arrives. us, the state transition probability of the system can be defined as the probability that the next random event is the arrival of VM request or the departure of any deployed VM request under a given system state and its corresponding decision. Since the resource reallocation of deployed VM requests is not
+l l l λ sl,al􏼁,pl l l l,
+P s + 1|s ,a 􏼁� nh′μh′ + 1 � 0,s + 1 � s + a −ah′
+l l l λ  sl,al􏼁l l l l l′ ,
+,p
+(11)
+⎭. (6)
+⎫⎬
+l�1
+ e joint optimal strategy of virtual machine access control and placement can be expressed as (7):
+π∗ � argmaxRπs0, π ∈II. (7)
+
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.

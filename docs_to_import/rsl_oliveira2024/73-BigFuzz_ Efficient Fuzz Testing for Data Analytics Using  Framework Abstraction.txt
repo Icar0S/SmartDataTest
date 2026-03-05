@@ -1,0 +1,148 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using
+Framework Abstraction
+Qian Zhang Jiyuan Wang Muhammad Ali Gulzar
+University of California, Los Angeles University of California, Los Angeles Virginia Tech
+zhangqian@cs.ucla.edu wangjiyuan@g.ucla.edu gulzar@cs.vt.edu
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Rohan Padhye
+Carnegie Mellon University rohanpadhye@cmu.edu
+ABSTRACT
+As big data analytics become increasingly popular, data-intensive scalable computing (DISC) systems help address the scalability is- sue of handling large data. However, automated testing for such data-centric applications is challenging, because data is often in- complete, continuously evolving, and hard to know a priori. Fuzz testing has been proven to be highly effective in other domains such as security; however, it is nontrivial to apply such traditional fuzzing to big data analytics directly for three reasons: (1) the long latencyofDISCsystemsprohibitstheapplicabilityoffuzzing:naïve fuzzing would spend 98% of the time in setting up a test environ- ment; (2) conventional branch coverage is unlikely to scale to DISC applications because most binary code comes from the framework implementation such as Apache Spark; and (3) random bit or byte level mutations can hardly generate meaningful data, which fails
+to reveal real-world application bugs.
+We propose a novel coverage-guided fuzz testing tool for big data analytics, called BigFuzz. The key essence of our approach
+is that: (a) we focus on exercising application logic as opposed to increasingframeworkcodecoveragebyabstractingtheDISCframe- work using specifications. BigFuzz performs automated source to source transformations to construct an equivalent DISC application suitable for fast test generation, and (b) we design schema-aware data mutation operators based on our in-depth study of DISC ap- plication error types. BigFuzz speeds up the fuzzing time by 78 to 1477X compared to random fuzzing, improves application code coverage by 20% to 271%, and achieves 33% to 157% improvement in detecting application errors. When compared to the state of the
+art that uses symbolic execution to test big data analytics, BigFuzz is applicable to twice more programs and can find 81% more bugs.
+KEYWORDS
+fuzz testing, big data analytics, test generation
+Permission to make digital or hard copies of part or all of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for third-party components of this work must be honored. For all other uses, contact the owner/author(s).
+ASE ’20, September 21–25, 2020, Australia ©2020 Copyright held by the owner/author(s).ACM ISBN 978-1-4503-6768-4/20/09. https://doi.org/10.1145/3324884.3416641
+Miryung Kim
+University of California, Los Angeles miryung@cs.ucla.edu
+ACM Reference Format: QianZhang,JiyuanWang,MuhammadAliGulzar,RohanPadhye,andMiryung Kim. 2020. BigFuzz: Efficient Fuzz Testing for Data Analytics Using Frame- work Abstraction. In 35th IEEE/ACM International Conference on Automated Software Engineering (ASE ’20), September 21–25, 2020, Virtual Event, Aus- tralia. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3324884. 3416641
+1 INTRODUCTION
+Emerging technologies are producing much data and the impor- tanceofdata-centricapplicationscontinuestogrow.Data-intensive scalablecomputing(DISC)systems,suchasGoogle’sMapReduce[30], Apache Hadoop [1], and Apache Spark [2], have shown great promises to address the scalability challenge of big data analytics. Although DISC systems are becoming widely available to industry, DISC applications are difficult to test and debug. Data scientists of- ten test DISC applications in their local environment using sample data only. These applications are thus not tested thoroughly and may not be robust to bugs and failures in the production setting.
+The correctness of DISC applications depends on their ability
+to handle real-world data; however, data is inherently incomplete, continuously evolving, and hard to know a-prior. Motivated by the successes of systematic test generation tools [33,34,62], a few have been proposed for dataflow-based DISC applications [38, 45, 52]. For example, BigTest [38] uses symbolic execution to automati- cally enumerate different path conditions of a DISC application and generate concrete inputs using an SMT solver. However, its applica- bility is limited to the dataflow operators (e.g., map, reduce, join, etc.) where symbolic execution is supported, and limited by the path exploration capability of the underlying symbolic execution engine and an SMT solver. In other words, developing a robust test generation tool for DISC applications remains an open problem.
+In recent years, coverage-guided mutation-based fuzz testing has emerged as one of the most effective test generation techniques for large software systems [17, 49]. Such fuzz testing techniques are based on implicit assumptions that it takes a relatively short amount of time to repetitively run programs with different inputs and arbitrary byte level mutations are likely to yield reasonable inputs. In fact, most fuzzing techniques start from a seed input, generate new inputs iteratively by mutating the previous inputs, andaddnewinputstotheinputqueueiftheyexerciseanewbranch.
+* This research was done, while the third and fourth authors were graduate students at UCLA and UC Berkeley respectively.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+However, our experience tells us that fuzzing cannot be applied to big data analytics directly. First, the long latency nature of DISC systems prohibits the efficacy of traditional fuzzing. While tradi- tional fuzzing techniques assume thousands of invocations per second, for example, Apache Spark applications would need about 10 to 15 seconds to initialize the Spark context for each run—job scheduling, data partitioning, and serialization all contribute to increased latency. Second, low-level mutations (e.g., flipping a bit or byte) in existing naïve fuzzers can hardly explore corner cases that represent realistic application bugs. Lastly, grammar-aware fuzzers[35,43,70]existtoreducethetimerequiredforconstructing meaningful inputs. However, they require a user to provide gram- mar rules and, by definition, they do not produce inputs violating the user-provided grammar rules.
+In this paper, we lay the groundwork for embodying a coverage- guided, mutation-based fuzz testing approach for big data analytics. The key insight behind BigFuzz is that fuzz testing of DISC applica- tions can be made tractable by abstracting framework code and by analyzing application logic in tandem. Our key idea is to perform source-to-source transformation of a DISC application to a seman- tically equivalent, yet a framework-independent program that is more amenable to fuzzing.
+Based on the insight that a DISC application developer writes ap- plicationlogicintermsofuser-definedfunctionsandconnectsthem usingdataflowoperatorsintheDISCframework, BigFuzz focuseson exercising application logic as opposed to the DISC framework im- plementation. BigFuzz uses a two-level instrumentation method to monitor application-specific coverage, while modeling the different outcomes of dataflow operations. As such combination of behav- ior modeling is independent of the underlying DISC framework implementation, we can abstract the framework with executable specificationsandgenerateaSparkcontextfreeprogramtomitigate the long latency caused by the DISC framework. An application de- veloper is not required to write any custom specifications, because the specifications for dataflow operators such as mapand reduce do not need to be re-written for each application. BigFuzz fully automates this process of constructing a semantically equivalent DISC application through source to source transformation.
+As opposed to random bit or byte-level input mutations, we de- sign schema-aware mutation operations guided by real-world error types. These mutation operations increase the chance of creating meaningful inputs that map to real-world errors. To inform the design of such data mutation operators, we conducted a systematic study on common error types and root causes in Apache Spark and Hadoop applications using two complementary sources: Stack Overflow[3]andGithub[4].Thestudyidentifiedtencommonerror types, which we map and encode in terms of six different mutation operators in BigFuzz.
+We evaluate BigFuzz on a benchmark of twelve Apache Spark ap- plications. We comparethe time togenerate test inputsand theiras- sociated error-finding capabilities against two baseline techniques: random fuzzing, and symbolic-execution based testing. With frame- work abstraction, BigFuzz is able to speed up the fuzzing time by 78 to 1477X compared to random fuzzing. Schema-aware mutation operations can improve application code coverage by 20 to 200% with valid inputs as seeds, which leads to 33 to 100% improvement in detecting application errors, when compared to naive random
+fuzzing. Even without valid input seeds, BigFuzz improves applica- tioncodecoverageby118to271%anderrordetectionby58to157%, demonstrating its robustness. We show that BigFuzz is applicable to twice more applications and can find 81% more bugs than the state of the art, BigTest.
+In summary, this work makes the following contributions:
+(1) We propose a fuzz testing technique called BigFuzz that targets DISC applications by automatically abstracting the dataflow behavior of the DISC framework with executable specifications. This novel approach can also be generalized to other systems with long latency.
+(2) We propose an automated instrumentation method to moni- tor application logic in conjunction with how dataflow op- erators are exercised in terms of their dataflow equivalence class coverage.
+(3) Wepresentschema-awaremutationoperationsthatareguided by real-world errors encountered in DISC applications. To our knowledge, we are the first to design a fuzz testing tech- nique by empirically studying and codifying mutations that correspond to real-world DISC bugs.
+(4) Our experimental evaluation on 12 Apache Spark applica- tions demonstrates that BigFuzz outperforms prior work in terms of code coverage and error-detection capability.
+We provide access to artifacts of BigFuzz at https://github.com/ qianzhanghk/BigFuzz.
+2 BACKGROUND
+Apache Spark. BigFuzz targets Apache Spark, a widely used data intensive scalable computing system but can generalize to other DISC frameworks. Spark achieves scalability by creating Resilient Distributed Datasets (RDDs), an abstraction of distributed collec- tion[73].ProgrammerscantransformRDDsinparallelusingdataflow operations, e.g.,val newRDD = RDD.map(s => s.length).Dataflow operators such as filter, map, and reduce are implemented as higher-order functions that take a user-defined function (UDF) as an input argument. The actual evaluation of an RDD occurs when an action such as count or collect is called. For example, a Spark application developer writes application logic in terms of UDFs and connects them using dataflow APIs. To execute the program, Spark first translates a program into a Directed Acyclic Graph (DAG), where vertices represent various operations on the RDDs, and then executes each stage in a topological order.
+Thecommonindustrypracticefortestingsuchbigdataanalytics applications remains running them locally on a randomly sampled dataset.Testingwithsampledataisoftenincompletewhichleadsto rare buggy cases in production runs. Often Spark programs run for days and then crash without an obvious reason. Additionally, the start up latency associated with invoking the Spark frameworkand Block Manager Mastercan take several seconds for simply setting up an execution environment and repetitive data partitioning, job scheduling, serialization, and deserialization to support distributed execution all contribute to increased latency. Thus random fuzzing would be prohibitively expensive to test big data analytics.
+Fuzz Testing. Fuzz testing such as AFL [17] has been proven to be highly effective in synthesizing test inputs that achieve high code coverage and find bugs. Given an input program, it instruments
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+Figure 1: Approach Overview of BigFuzz
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+1	 val loan = sc.textFile("account_history.csv")
+2	 // Input with zipcode, base loan, years, and rate
+3	 .map{ line => val cols = line.split(",") 4 (cols(0),cols(1).toFloat,
+5 cols(2).toInt,cols(3).toFloat) }
+6	 //Return zipcode, base loan, years, and rate
+7	 . map{ s =>
+8 val a = s._2
+9 for(i <- 1 to s._3)
+10 a = a * (1 + s._4)
+11 (s._1, a) }
+12	 // Return zipcode and final loan
+13	 val locations = sc.textFile("zipcode.csv")
+14	 //input with zipcode and city
+. map{ s =>
+1516➊ val cols = s.split(",")
+17 (cols(0), cols(1) }
+18 //Return zipcode and city
+19	 .filter{ s => s._2 == "New York" }
+20	 val output = loan.join(locations)
+21	 . map{ s =>
+22 if(s._2._1 > 10000) ("Property Loan",10000) 23 else if(s._2._1 > 1000) ("Car Loan",1)
+24 else ("Credit Debt",1) }
+25 //Return three categories based on the loan amount 26 .reduceByKey( _+_ )
+1	 ArrayList<String> results0 = LoanSpec.read(inputFile1);
+2	 ArrayList<Tuple4> results1 = LoanSpec.map1 (results0);
+3	 ArrayList<Tuple2> results2 = LoanSpec.map2 (results1);
+4	 ArrayList<String> results3 = LoanSpec.read(inputFile2);
+5	 ArrayList<Map3> results4 = LoanSpec.map3 (results3);
+6	 ArrayList<Map3> results5 = LoanSpec.filter1 (results4); ➊
+7	 ArrayList<Join2> results6 = LoanSpec.join1(results5, results2);
+8	 ArrayList<Map1> results7 = LoanSpec.map4 (results6)
+9	 ArrayList<Map1> results8 = LoanSpec.reduceByKey1 (results7)
+(b) A transformed program LoanType.java with executable specifications
+1 public ArrayList<Map3> map3(ArrayList<String> input){
+2 ArrayList<Map3> output = new ArrayList<>(); ➊ 3 for (String item: input){
+4 output.add( Map3.apply(item) );}
+5 return output;}
+(c) Specification implementation of map3in LoanTypeSpec.java
+1 public class Map3 {
+2 static final Map3 apply(String line2) {
+3 String cols[]=line2.split(",");
+4 return new Map3(cols[0],cols[1]); }
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+(a) A DISC application LoanType.scala (d) The extracted UDF from lines 14 to 16 of Figure 2a is represented as Map3.java
+Figure 2: Example code transformation and framework abstraction
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+the program’s bytecode, iteratively generates new inputs by mu- tating several bits or bytes of the seed input, and collects coverage feedback by executing the instrumented program with new inputs. All inputs that exercise a new code branch are then be saved for further mutation. The implicit assumption underlying such itera- tive fuzzing is that the target program can run fast, (i.e., thousands of invocations per second); unfortunately, this assumption is false for many long latency applications such as big data analytics. For example, initializing the Spark context in local model to initiate a distributed data pipeline takes 19 seconds, which correspond to 98% of the total execution time with a typical testing input. The long latency prohibits the applicability of fuzzing for efficient test generation. Besides, naively monitoring branch coverage in DISC applications is unlikely to exercise application logic adequately, since most binary code comes from the DISC framework imple- mentation (e.g., roughly 700 KLOC for Apache Spark). Under this circumstance, naive attempt to increase code coverage may eventu- ally run out of memory. Furthermore, random byte-level mutations can hardly generate meaningful structured or semi-structured data to explore application logic effectively.
+3 APPROACH
+BigFuzz contains three components that work in concert to make coverage-guided fuzz testing tractable for big data analytics. Fig- ure 1 shows (A) abstraction of dataflow implementation using source-to-source transformation with extracted user-defined func- tions, discussed in Section 3.1, (B) two-level instrumentation for coverage monitoring, discussed in Section 3.2), and (C) input muta- tionsgearedtowardsbigdataanalyticerrorsbasedonourempirical study,discussedinSection3.3.Thisapproachisbasedontheinsight that(1)wecanreducelonglatencyofDISCapplicationsbyabstract- ingdataflowimplementationinaDISCframeworkusingexecutable specifications and (2) we can focus on exercising application logic rather than the entire framework by monitoring code coverage of user-defined functions in tandem with equivalence classes of ab- stracted dataflow behavior. Although BigFuzz is designed for Spark programs, its key idea can generalize to other DISC frameworks such as Hadoop by rewriting the dataflow operator APIs to our current set of corresponding specification implementation.
+3.1 Framework Abstraction for Fuzzing
+As discussed in Section 2, DISC applications have high latency, making them not suitable for traditional fuzz testing because they
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+Table 1: Dataflow Operator and Corresponding Equivalence Classes
+ 
+Spark Dataflow OperatorTransformed OperatorEquivalences Classesdef filter(udf:T→ Boolean): RDD[T]
+Return an RDDthat satisfies a predicate udf:T→BooleanArrayList<T> filter (ArrayList<T> Input)
+Return an ArrayList of elements passing udf where udf:T → Booleean is implemented in filterF1: Non-Terminating: ∃t.udf (t) = trueF2: Terminating: ∃t.udf (t) = f alsedef join[W](other: RDD[(K,W)]):Rdd[(K,(V,W))] Return an RDDcontaining all pairs of elements with matching keys in this and other RDDs.ArrayList<T> join (ArrayList<T1> L, ArrayList<T2> R) Return an ArrayList of elements from left ArrayList tL ∈L and right ArrayList tR ∈R, with matching keys tL,key = tR,keyJ1: Non-Terminating: ∃tL,tR.tL,key = tR,keyJ2: Terminating: ∃tL,∀tR.tL,key! = tR,keyJ3: Terminating: ∃tR,∀tL.tR,key! = tL,keydef map[U](udf:T→U)
+Return a new RDD by applying udf:T→ U t of this RDD.ArrayList<T> map (ArrayList<U> Input)
+Return a new ArrayList by applying a udf:T→ Uto this ArrayList where udf:T→ Uis implemented in map.M: Non-Terminating: always non-terminateddef reduceByKey(udf:(V,V) → V) : RDD [K,V] Merge the values for each key using an associative reduce function.ArrayList<T> reduceByKey (ArrayList<T> Input) Merge the values for each key using udf:(V,V) → V where udf:(V,V) → Vis implemented in reduceByKeyR: Non-Terminating: always non-terminated 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+spendseveralsecondsjusttoinitializeSpark’sexecutioncontextfor each run. Theoretically, the long start-up latency can be somewhat reduced by sharing one Spark execution environment for multiple runs;however,suchpracticeisstillnotenoughtoachievemillionsof executions per minute, because each run still needs to pass through
+a data partitioner, a query optimizer, a job scheduler, and a data serializer/deserializer, etc.
+In DISC frameworks, the implementation of dataflow and rela- tional operators is influenced by and universally agreed upon the semantics of such operators [68]. For example, although a dataflow operator join may have a specialized physical implementation in each framework (e.g., hash join), it has the same consistent logical semantics across all DISC frameworks. BigFuzz takes advantage of this observation, rewrites a DISC application into an equivalent applicationthatusesdataflowspecifications,andmonitorsdifferent equivalence class coverage of dataflow operations. For example, filter has two equivalence classes—one passing the filter predi- cate and the other not passing the filter. Because dataflow operators are deterministic and state-less [72], the transformed program is guaranteed to be equivalent to the original program. For example, map{x => (x,1)} will always give the same output for the same input for both the spec-based program and the original program.
+We map each dataflow operator’s implementation to a corre- sponding simplified yet semantically-equivalent implementation, which we call executable specifications. Such specifications help eliminate the dependency on the framework’s code, transforming
+a DISC application into an equivalent, simplified Java program that can be invoked numerous times in a fuzzing loop.
+BigFuzz automates this process of rewriting in two steps: (1) UDF extraction and (2) source to source transformation. Figure 2 illus- tratesthisprocessusinganexampleDISCapplicationthatidentifies thefrequencyofeachloantypewithinametropolitanarea.Thispro- gram is a variation of one of the DISC Benchmark [38]. We formu- lateadistributed,RDD-basedimplementationusingSpark’sAPIs(➊ in Figure 2a) to a simplified, executable specification of mapin Fig- ure 2c. Table 1 shows a few sample mappings between Spark RDD’s dataflow implementation APIs, equivalent spec-implementations using ArrayList, and a set of corresponding equivalence classes for each dataflow operator.
+Step 1. User-Defined Function (UDF) Extraction. To re-write a DISC application to use executable specifications only, BigFuzz de- composes the application into two components: (1) a direct acyclic graph (DAG) of dataflow operators and (2) a list of corresponding UDFs. Internally, BigFuzz decompiles the bytecode of the original
+application into Java source code and traverses Abstract Syntax Tree(AST)tosearchforamethodinvocationcorrespondingtoeach dataflow operator. The input arguments of such method invoca- tions represent the UDFs, which are stored as separate Java classes as shown in Figure 2d.
+Step2.SourcetoSourceTransformation. BigFuzz usestheDAG extracted in the previous step to reconstruct the DISC application in the same, interconnected dataflow order using executable specifi- cations. Such dataflow spec implementation takes in an ArrayList object as input, applies the corresponding UDF on each element of the input list, and returns an output ArrayList. For example, class LoanSpec.map3 (➊ in Figure 2b) represents the equivalent spec implementation using ArrayList that corresponds to map
+• in Figure 2a. It takes in results3 from its upstream opera- tors and returns an ArrayList result4 for downstream operator, LoanSpec.filter1. BigFuzz selects the corresponding UDFs from
+the list of UDFs extracted from step 1 and weaves them with the equivalent specifications shown in column 2 of Table 1. For exam- ple, Java classMap3has method apply mapping to the original UDF
+• in Figure 2a, and this method is invoked on each element of the input list as seen in Figure 2c.
+The above rewriting from a Spark application in Scala or Java to an equivalent Java application reduces the latency of running a DISC application, while retaining the same semantics. It also makes it easier to collect guidance metrics such as branch coverage by leveraging existing tools JQF [55], which takes Java bytecode as input and collects various guidance metrics for fuzz testing.
+3.2 Application Specific Coverage Guidance
+Priorworkfindsthatbranchcoverageisaneffectiveguidancemech- anism for feedback-guided fuzz testing, pushing test generation towards hard-to-reach corners [17, 44, 56]. Generally, feedback- guided fuzzing techniques instrument a program’s bytecode to label each constituent branch and if an input exercises a previously- unseen branch of the program, this input is appended in an input queue and the branch coverage is fed back into the fuzzer.
+However, we observe that such branch coverage guidance mech- anism cannot be applied to fuzz testing of big data analytics for two reasons. First, it cannot differentiate user-defined functions from framework code and can thus push test generation naively toward exploring the internals of DISC framework, as opposed to applica- tion logic. Second, it cannot effectively monitor different equiva- lence classes of dataflow operators though prior studies [38,45,52] argue that numerous errors originate from untested equivalence
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+BigFuzz: Efficient Fuzz Testing for Data Analytics Using Framework Abstraction ASE ’20, September 21–25, 2020, Australia
+Table 2: Data Collection for Error Type Study.
+and thus individual data records stop at this filter. BigFuzz in- struments “TraceLogger.get().emit(new FilterEvent(arm))” in specification implementation of filter to emit FilterEvent with a specific arm to the trace logger. In this way, BigFuzz retains the DISC framework’s behavior on the original application code, while abstracting its coverage guidance mechanism to the level of equivalence classes for individual dataflow operator uses. Coverage Guidance for User-Defined Function. DISC applica- tiondeveloperwritesapplicationlogicintermsofuser-definedfunc- tions (UDFs) and connects them using dataflow operators. These UDFs are standard library based Scala or Java implementations. To restrict normal coverage guidance to the body of UDFs (e.g., Figure2d),BigFuzz usesaselectiveinstrumentationschemeinASM, while ignoring all other dependent libraries. This combination of monitoring dataflow equivalence coverage together with control flow events in the body of UDFs constitutes the joint dataflow and user-defined function path coverage (JDU path coverage), which essentially represents the behavior of application logic.
+KeywordTotalInspectedStackOverflow-Sparkapache spark exception2430top 150apache spark error3780top 200apache spark wrong/ unexpected/inconsistent result/output143143StackOverflow-Hadoophadoop exceptions2567top 100hadoop error9585This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.

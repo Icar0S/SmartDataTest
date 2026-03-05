@@ -1,0 +1,115 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+SAT-ETL-Integrator: an extract- transform-load software for satellite big data ingestion
+Badr-Eddine Boudriki Semlali Chaker El Amrani Guadalupe Ortiz
+Badr-Eddine Boudriki Semlali, Chaker El Amrani, Guadalupe Ortiz, SAT-ETL-Integrator: an extract-transform-load software for satellite big data ingestion,  J. Appl. Remote Sens.14(1), 018501 (2020), doi: 10.1117/1.JRS.14.018501
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Semlali, El Amrani, and Ortiz: SAT-ETL-Integrator: an extract-transform-load software...
+SAT-ETL-Integrator: an extract-transform-load
+software for satellite big data ingestion
+Badr-Eddine Boudriki Semlali,a,* Chaker El Amrani,a and
+Guadalupe Ortizb
+aAbdelmalek Essa di University, LIST Laboratory, Faculty of Sciences and Techniques,
+Tangier, Morocco
+bUniversity of Cadiz, UCASE Research Group, Escuela Superior de Ingenier a, Cadiz, Spain
+Abstract. Satellite data are used in several environmental applications, particularly in air quality supervising, climate change monitoring, and natural disaster predictions. However, remote sensing (RS) data occur in huge volume, in near-real time, and are stored inside complex structures. We aim to prove that satellite data are big data (BD). Accordingly, we propose a software as an extract-transform-load tool for satellite data preprocessing. We focused on the ingestion layer that will enable an efficient RSBD integration. As a result, the developed software layer receives data continuously and removes∼86% of the unused files. This layer also eliminates nearly 20% of erroneous datasets. Thanks to the proposed approach, we successfully reduced storage space consumption, enhanced the RS data accuracy, and integrated preprocessed datasets into a Hadoop distributed file system.' 2020 Society of Photo-Optical Instrumentation Engineers (SPIE) [DOI: 10.1117/1.JRS.14.018501]
+Keywords: remote sensing big data; ingestion layer; extract transform load software; data integration.
+Paper 190597 received Sep. 5, 2019; accepted for publication Jan. 7, 2020; published online Jan. 25, 2020.
+1 Introduction
+Recently, the world has witnessed a great rise in industrial, agricultural, and transport activities. This development certainly helps to improve the economic and the social status of countries. But it also causes many environmental issues that affect the quality of human health and the safety of our planet, such as the appearance of the ozone hole, the increase in climate changes, and the degradation of air quality (AQ) by the emission of many anthropogenic pollutants, such as carbon monoxide (CO), carbon dioxide (CO2), nitrogenous oxides (NOx), and methane (CH ).1 Thus remote sensing (RS) techniques are one of the proposed solutions enabling a
+4
+near-real-time (NRT) tracking of the pollutant plumes emitted from the industrial and agricul- tural areas,2 ozone precursor estimation, aerosol optical depth (AOD) monitoring, and climate
+change monitoring. In addition, they provide a potential input data for AQ models.
+Generally, RS technique refers to the use of satellite data to measure ocean, Earth, and atmospheric components without making physical contact with them through the electro- magnetic energy (EME).3 At present, there are more than 3000 satellites in orbit4 used for many purposes, such as military, Earth observation, weather, and forecasting support. All of these satellites are equipped with manyactiveand/or passivesensors within different temporal, spatial, and spectral resolutions ranging from low to very high.5
+Basically, satellite sensors measure data, then the satellite processing unit corrects the erroneous data using specific algorithms including SPECAN and Doppler.6 Afterward, data are
+transmitted into ground stations through downlink channels to be distributed into a broadcast or a multicast.
+In this study, we collect data from the European Organization for the Exploitation of Meteorological Satellites (EUMETSAT) via the Mediterranean Dialogue Earth Observatory (MDEO) ground station installed at Abdelmalek Essa di University of Tangier in Morocco.7
+*Address all correspondence to Badr-Eddine Boudriki Semlali, E-mail:badreddine.boudrikisemlali@uae.ac.ma 1931-3195/2020/$28.00 ' 2020 SPIE
+We also acquired RS data from the Earth Observation System Data and Information System (EOSDIS) of the National Aeronautics and Space Administration (NASA), the Infusing Satellite Data into Environmental Applications (NESDIS) of the National Oceanic and Atmospheric Administration (NOAA), and The Copernicus Open Access Hub (previously known as Sentinels Scientific Data Hub) built and operated by the European Space Agency (ESA), provided complete, free, and open access to Sentinel-1, Sentinel-2, Sentinel-3, and Sentinel-5P user products, starting from the in-orbit commissioning review. The acquired RS data comes from many polar and geostationary satellites and various sensors.
+These data are stored in specific complex scientific file extensions: the binary universal form for the representation (BUFR) of meteorological data, the network common data form (NetCDF), and the hierarchical data format (HDF5). The daily volume of the received RS data reaches 40 gigabits (GB) and exceeds 15 terabits (TB) per year. Furthermore, the speed with which data are received is very fast, at a rate of 30,000 files per day. Accordingly, and according to attribute definition (venue, volume, variety, veracity, velocity, and so on), the data may be classified as big data (BD).8 Based on these aforementioned brief statistics, we are going to confirm that satellite data are BD.
+Consequently, remote sensing big data (RSBD) turns out to be an extremely challenging problem to be dealt with, including an efficient, rapid, and NRT processing. In addition, RSBD for environmental observation is regarded as a data intensiveprocess because thevolume, complexity, and the velocity exceed the usual processing systems and architectures.9
+For this reason, we have adopted the Hadoop BD architecture to split the problems of RSBD. The proposed design includes six interactives layers, which are the data sources, the ingestion layer, the Hadoop storage, monitoring layer, and the visualization layer. In this paper, we will focus only on the ingestion layer. This phase is very critical because it is responsible to collect unprocessed RS data, to manage enormous volume of input data, to extract, to filter, and to integrate refined RS data into a Hadoop Distributed File System (HDFS).
+As a result, the developed extract transform load (ETL) tool has efficiently processed and extracted potential values with high accuracy and with a low storage volume in a moderate execution time. Furthermore, the developed software has performed all steps automatically and processes global RS data.
+The remainder of this paper is organized as follows: Secs2, 3, and 4 enumerate, respectively, the issues, the main focus of this paper, and a review of some related works, Sec.5 presents the different aspects and characteristics of RSBD, Sec.6 goes into the details concerning the challenges of RSBD and explains the architecture developed for the ingestion layer, Sec.7 provides the results and discusses the experimental analysis.
+2 Issues
+RS data are widely used for several environmental applications, particularly in air pollution and climate change monitoring. However, the exploitation of these data contains many challenges, which are as follows:
+The specifications of RS data, including the venue, the volume, and the velocity are complex in terms of processing.
+Satellite data should be processed in NRT to keep their freshness.
+Satellite data sometimes contain errors, gaps, and invalid datasets. It is recommended to remove them before the storage step.
+The existing architectures and solutions have some limitations and drawbacks in RS data ingestion.
+3 Main Focus of This Paper This study has the following aims.
+Understanding the nature and the characteristics of the used satellite data and proofing that we are working with RSBD.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Journal of Applied Remote Sensing 018501-2 Jan  Mar 2020 Vol. 14(1)
+Semlali, El Amrani, and Ortiz: SAT-ETL-Integrator: an extract-transform-load software...
+Developing a software as an ingestion layers for RS data integration regarded as similar to an ETL tool which knows from data warehouse.
+Storing the refined RS datasets into an HDFS.
+4 Background and Related Works
+The general architecture of satellite data processing consists of three logical groups of servers: receiving servers, preliminary processing and thematic processing servers, and data storage servers accommodating large daily volume of data. There are some examples of the satellite data receiving platforms as follows:
+The Office of Satellite and Product Operation of NOAA.
+The EUMETCast service of EUMETSAT.
+The ground segment system developed by ESA within the European Remote Sensing program.
+The receiving servers collect the data in NRT from satellite without any modules of process- ing. For instance, there are as follows:
+The Fairbanks (POES) and the Wallops (GOES) grounds station of NOAA.
+The Command and Data Acquisition (Polar system) and the Primary Ground Station (Geostationary system) of EUMETSAT.
+The preliminary processing performs radiometric calibration of the received data using spe- cific software such as SPECAN and Doppler. This stage of processing provides data of level 1. We can site some of the existing satellites processing center in the world as follows:
+The Satellite Operation Control Center of NOAA.
+The Environmental Satellite Processing Center of NOAA.
+The Earth Observing System and Operation System of NASA. The Science Data Processing Segment of NASA.
+The Central Facility (CF) of EUMETSAT.
+The Data Processing Ground Segment of ESA.
+Second, the processing server provides refined products, particularly atmospheric chem- istry, atmospheric temperature, humidity, fire, smoke, and so on to the customers through a website interface. These platforms offer to the end users easy online searching, exploring, and filtering based on keyword, satellites, instruments, organizations, projects, processing level, and temporal and/or spatial delimiters. Moreover, they visualize datasets into interactive maps in NRT and make data available for downloading via file transfer protocol (FTP) or hypertext transfer protocol (HTTP) servers. The primary goal of these platforms is to maximize the scientific return for mission, research, and decision makers. All these services are free and open to all users for any scientific purpose. The following list includes some of the pioneer platforms.
+The Earth Science Data Systems Program of NASA.10
+The Comprehensive Large Array-data Stewardship System of NOAA.11 The Copernicus Open Access Hub operated by ESA.12
+The Product Navigator of EUMETSAT.13
+The finalstep of processing consists of storing the processed satellite data into data centers as data storage system group. There are four big satellite data centers in the world, which are:
+the EOSDIS of NASA,
+the NESDIS of NOAA,
+the EUMETSAT Data Center,
+the European Space Astronomy Centre Science Data Centre.
+Currently, RS data are widely used in many scientific disciplines such as environmental and social sciences. This has led to an increase of RS data that will continue to scale exponentially. Thus the processing of the RS data includes many challenges, beginning from the acquisition
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Journal of Applied Remote Sensing 018501-3 Jan  Mar 2020 Vol. 14(1)
+Semlali, El Amrani, and Ortiz: SAT-ETL-Integrator: an extract-transform-load software...
+to the visualization step,14 as follows: (1) satellite data are measured in NRT from satellite sensors, then transmitted to ground datacenters through downlinks, so the big protest is how to download these data from their sources within a high speed to keep their freshness. (2) Such data should be preprocessed inside an ingestion layer to be integrated into scalable servers with big storage capacity. (3) The treatment of RS data requires permanent and functional clusters; accordingly, this consumes more energy, so the electrical power should also be economized. (4) It is very possible to find many duplicated datasets, so the elimination of redundancy will help to hold only potential values. (5) In addition, satellite data are pervasive; they generate a huge volume of data with high velocity that storage system cannot continuously host, so it is necessary to remove old RS data by creating a model that decides which data to keep and which to discard. (6) Satellite data include many noisy and erroneous datasets due to the uncer- tainty of sensors. Accordingly, developing an efficient data-refining software will be beneficial for enhancing the satellite data accuracy. (7) RSBD processing demands some knowledge in probability and statistics in order to employ deep learning (DL), machine learning, and neural network algorithms to unlock new insights.
+Despite the existing aforementioned strong architectures, platforms, and systems from big organizations such as the NASA, NOAA, EUMETSAT, and the ESA, we can find some lim- itations and challenges of processing. In addition, sometimes their technologies are exceeded by the complexity and the huge volume of the acquired RS data.9
+RSdataprocessingisbecomingasignificantfieldofresearch. Manyinvestigationshavebeen made on different architectures. These research studies aim principally as follows:
+To optimize algorithms and processing patterns, JIN Hailiang combined the index and the Hibert curve to establish the index for the image data. Then the method of MapReduce parallel processing was used to write and query RS images. The experimental results showed that the method can effectively improve the data writing and query speed and has good scalability.15
+Toinclude parallel computingtechniques,16 tostoreandprocessRSBD withinadistributed Hadoop platform,17 and to manage RSBD with the streaming processing tools.18
+To propose a combination of streaming and MapReduce for analysis of time series data, they tested their proposal by applying the break detection algorithm BFAST to MODIS imagery. Then they evaluated the computing performance and requirements quality attrib- utes. Their results revealed that the combination of Hadoop and R can handle complex analysis of RS time series.
+To come up with an empirical model of DI index to estimate RS applications.9 Muhammad Mazhar designed a real-time BD analytical architecture for RS satellites applications (Rathore et al., 2015).
+Winda Astriani performed an ETL model to create multidimensional data cube. The ETL application of using Geokettle expected to provide data warehouse developers with per- forming automatic preprocessing data that allows regulating the insertion of new data and updating data without generating a lot of queries.19
+RS data are regarded as BD according to the attribute definition based to the eight salients (venue, volume, velocity, value, veracity, vocabulary, validity, and variety). So that adopting a BD analytics architecture is very crucial to make the processing efficient, to gain insights, and to make better decisions.
+Our study focuses mainly on air pollution and climate change monitoring requiring tremen- dous RS data coming in NRT from many satellites and sensors within different temporal and spatial resolutions (SPRs). The nature of these data is complex and their volume is huge.6 Thus building a BD architecture for RS data will help absolutely in data acquisition, filtering, storage, processing, and visualization.
+This paper introduces an ingestion layer as a software system consisting of different com- ponents which fill the gaps between external data sources and the HDFS. This software can be regardedas anETL for raster satellitedata, which allows efficienthandlingof acquired data from several sources and integrating them in an optimized way into an HDFS and separates storage issues from algorithm and application issues.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Journal of Applied Remote Sensing 018501-4 Jan  Mar 2020 Vol. 14(1)
+Semlali, El Amrani, and Ortiz: SAT-ETL-Integrator: an extract-transform-load software...
+5 Remote Sensing Big Data: Aspects and Specification
+This section describes the characteristics of the satellite data used in terms of volume, velocity, variety, and so on to demonstrate that RS data are BD.
+5.1 Satellite Big Data: Aspects and Features
+Generally, RS techniques are defined as the technologies measuring the surface, ocean, and atmospheric components without making a physical contact with it through EME20; satellites
+are regarded as the key instrument of this technique.
+A satellite can be defined as an artificial machine placed into a specific orbit; this orbit can be polar passing by Sun-synchronous orbits (SSO), which combines altitude and inclination in such a way that the satellite passes over any given point of the planet s surface at the same local solar time. Geostationary orbit is placed with an altitude of∼36;000 km directly over the equator and revolves in the same direction that Earth rotates (west to east). At this altitude, one orbit takes 24 h.21 We can cite three types of orbital altitude, which are the low earth orbit (LEO), the medium earth orbit, and the high earth orbit.22
+Satellites are equipped with passivesensors such as LIDAR, RADAR, scatter meter, sounder, and laser altimeter detecting sunlight radiation reflected from the earth and thermal radiation in the visible and infrared of the electromagnetic spectrum. In addition, they do not emit their own radiation but receive natural light and thermal radiation from the Earth s surface.
+The second type is the active sensors (e.g., radar and laser scanners) emitting an artificial radiation to monitor the earth surface or atmospheric features. Moreover, they do not depend on daylight and are minimally affected by clouds, dust, fog, wind, and bad weather conditions.5
+Furthermore, satellite sensors have other specifications, particularly the SPR, which means the Earth is surface-scanned by the instrument, ranging from low to very high.
+In addition, satellite sensors have a specific frequency to across the same geolocation, called the temporal resolution (TMR), which varies as high, medium, and low TMR.
+Satellite sensors continuously measure environmental variables and parameters. Afterward, the satellite processing unit corrects the enormous measured data using some algorithms includ- ing Doppler or SPECAN. This correction concerns the SPR and the geo-localization errors.6 Datawillbetransmittedintoantennasinground stationsthroughdownlink channels.Theground stations process RS data in order to remove imperfections, ensure geometric corrections, and apply data calibrations. This step will generate RS data of level 2 (L2) and level 3 (L3) of processing.
+In our research, we aim to apply RS techniques to track pollutant plumes emitted from indus- trial and agricultural activities, detect wildfires, monitor climate changes, and supply Moroccan forecasting agencies in NRTin order to prevent damages and help decision makers. In this inves- tigation, we collect data from the EUMETSAT via the MDEO ground station installed at Abdelmalek Essa di University of Tangier in Morocco.23 We also acquired RS data from the EOSDIS of NOAA, the NESDIS of NOAA, and the Copernicus platform.24
+From the statistical data in Table1 and according to Fig. 1, we can determine that there are manysourcesprovidingRSdatafrom varioussatellites(venue),wherein all ofthesesatellites are for environmental monitoring and meteorological application. These satellites are polar passing by an SSO excepting the geostationary Meteosat second generation (MSG).25 The majority of these satellites were launched in this last decade; for instance, the MetOp B in 2012,26 the Suomi National Polar-orbiting Partnership (NPP) in 2011, Sentinel-3A in 2016, and the Sentinel-5P in 2017.27 The MetOp C will be launched by the 2019. Their TMR is high, making 16 orbits daily within an average of 1 h of latency.28
+In our case study, the acquired RS data are stored in different scientificfile formats, including the BUFR, Binary, NetCDF, and the HDF5 (variety). These files have some special structure and models to store datasets (vocabulary). Furthermore, these channels afford an enormous file in NRT. We notice that the daily rate of MDEO is about 20,000 files, the NESDIS reaches 8000 files, the EOSDIS stretch 7000 files, and the Copernicus produces an average of 200 files (veloc- ity). The total amount of collected volume by the four sources sums up to about 37 GB per day andexceeds14TBperyear(volume).Inaddition,satellitedatahavebecomeveryusefulinmany
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Journal of Applied Remote Sensing 018501-5 Jan  Mar 2020 Vol. 14(1)
+Semlali, El Amrani, and Ortiz: SAT-ETL-Integrator: an extract-transform-load software...
+Table 1 Sources channel and characteristics of the used satellite data in the case study.
+ 
+OrganizationSatellite (sensors)Product nameLatency (min)File is format(Files/ day)Data amount (MB/day)CopernicusSentinel 3 (OLCI)Sentinel-315NetCDF4114,000CopernicusSentinel5P (TROPOMI)Sentinel-5P15NetCDF 854400MDEOMetOp (IASI, AMSU)EPS-Africa30BUFR, Bin90002200MDEOMetOp (ATVOS)EPS-Global30Bin1000180MDEOMSG (SEVIRI)Data_Channel_330GRIB,HDF5300240MDEONPP (OMPS, VIIRS)NPP-330NetCDF,Bin10001100MDEOMetOp (GOME-2)SAF-Africa30BUFR, HDF52000700MDEOMetOp (ASCAT, GOME-2)SAF-Europe30BUFR, Bin,
+HDF550003800NASAAQUA (AIRS)AIRS2SUP_NRT.00615HDF56405400NASAAQUA (AMSU)MCDAODHD360HDF544NASAAURA (MLS)ML2CO_NRT.00415HDF59025NASAAURA (MLS)This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Journal of Applied Remote Sensing 018501-6 Jan  Mar 2020 Vol. 14(1)

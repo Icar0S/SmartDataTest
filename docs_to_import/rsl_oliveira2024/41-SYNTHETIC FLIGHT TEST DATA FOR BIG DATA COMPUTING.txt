@@ -1,0 +1,127 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+SYNTHETIC FLIGHT TEST DATA FOR BIG DATA 
+COMPUTING 
+Bob Baggerman 
+Avionics Test and Analysis Corp (ATAC) 4540 East Highway 20 
+Niceville, FL 32578 
+bob.baggerman@avtest.com 
+ABSTRACT 
+There is currently quite a bit of development taking place within the DoD flight test  range community in “Big Data” computing. A problem plaguing development is a lack of suitable data sets for development and test of software analysis tools. Most actual flight test data has restricted distribution and so isn't available for many developers. Also, it can be difficult to find actual recorded flight test data which have “interesting” properties such as specific flight profiles and events. 
+Synthesized IRIG 106 Chapter 10 format flight test data solves these problems by providing data files to developers that are very similar to what might be expected from an actual flight test. Synthetic data files are complete and properly formed data files that contain fake but realistic flight test data as if it had been recorded during an actual flight test.  The data in these data files is designed to provide interesting test cases for software tool developers to use. 
+INTRODUCTION 
+The Department of Defense (DoD) has been pursuing cloud based storage and processing solutions for flight test data. Storing and processing flight test data in the cloud is a fundamentally different kind  of  processing  environment  that  will  require  new  software  tools  and  techniques  to  be developed. Development of these new analysis software tools and techniques requires test data that isn’t readily available to developers. Software tools for creating carefully crafted synthesized (i.e. synthetic) data files have been developed to create useful synthetic flight test data sets. 
+Big Data is typically defined by the three “V”s, volume, velocity, and variability. The volume of data refers to data sets that are too large to be processed and viewed all at once on a single computer. The velocity of data refers to the speed  at which data is coming in and must be processed. The variability of data refers to the wide assortment of data sources and formats to consider.  Current  modern  flight  test  programs  certainly  strain  under  volume  and  velocity constraints. For most DoD flight test programs the bulk of the recorded data is in IRIG 106 Chapter 10 format. 
+Up until recently flight test data analysis has primarily involved the analysis of single or a small number of recorded flight test data files. There are numerous applications that will read, interpret, and display recorded data from a single flight test. Cloud based computing will allow new, more sophisticated types of analysis to be done. For the first time “big data” kinds of analysis can be performed on a large number of data sets. 
+Whereas up until now flight test data analysis addressed question of how a system under test performed in the most recent flight test, cloud-based big data analytics (BDA) analytics allow more sophisticated analysis across multiple data set. Below are several examples of types of analytics that could be accomplished in a cloud based BDA environment. 
+As we consider synthetic data it is important to keep in mind that the System Under Test (SUT) is the Big Data Analytics platform. These synthetic data sets are to support BDA development and software test. 
+EXAMPLES OF BIG DATA ANALYSIS 
+Nominal Flight Path Calculation 
+Consider an instrument approach flown to 32 at China Lake Naval Air Weapons Station (NAWS)  airport. This approach is depicted in Figure 1 below. When flying this approach it is important to pass the final approach fix KATIE at or above 4400’. Interesting analysis questions might be “what is the average altitude error and standard deviation over the final approach fix (FAF)” or “what flights were more than 3 Standard Deviations from the correct Altitude at the FAF?”  
+Synthetic data with the necessary variability can be easily generated to support development of this kind of analysis. 
+
+
+Figure 1 - Example flight path for approach 
+Flight Segments for Analysis 
+Next consider the need to identify flight paths for various test runs as shown in Figure 2 below. To measure system the performance of an aircraft system under test (for example a targeting system) it is necessary to identify segments of flight test data that demonstrate performance. An interesting analysis question would be “what flight segments were flown on the test range on headings from 180 degrees to 270 degrees between 3000’ and 6000’ feet altitude MSL within a given latitude and longitude box?” The ability to describe flight segments of interest and then find them in a large set of recorded data files allows regression analysis over the evolution of the system.  
+Carefully crafted synthetic data as shown in Figure 2 supports development of this kind of data search. 
+
+
+
+
+
+Figure 2 - Example flight path segments 
+Flight Segments for EW analysis 
+Lastly consider the case for Radar Warning Receiver (RWR) testing as shown in Figure 3 below. RWR  testing  typically  involves  many  test  runs  over  multiple  flights.  To  measure  system performance improvements test analysis may be performed for flight test performed over a period of months or years. An interesting analysis questions would be “What flight segments were flown on a particular range between 5/1/2020 and 5/14/2020 where the RWR detected a particular radar threat?” and “What was the Average and Standard Deviation of Detection Range to the Target?” 
+Synthetic data with the necessary flight paths and simulated radar threat responses can be easily generated to support development of this kind of analysis. 
+
+
+
+
+Figure 3 - Example flight path segments for radar test 
+Each of these example analysis scenarios described above necessitate sample data to test against.   Currently developers lack realistic data set to develop with for two reasons, 
+1) Most actual flight test data is restricted distribution in some fashion. Most of it is classified at some level but even most unclassified data is at least Controlled Unclassified Information (CUI) with limited distribution. Development teams lack people and facilities with the appropriate access to controlled data. 
+2) Existing real world data sets lack “interesting” features for developers to test search and analyze algorithms. Most actual flight test data does not present good test cases for software development, test, and validation. 
+Synthetic flight test data solves these problems by providing data that has unrestricted distribution and is well crafted to provide useful test cases.  
+TYPES OF SYNTHETIC DATA 
+In the analysis examples discussed above it is necessary to have very specific data sets to test and validate new analysis software. Because of this synthetic data is synthesized several different ways depending on the purpose of the underlying test. 
+Contrived Data – This data is unrealistic flight test data but instead presents data types and values useful for testing correct decoding and conversion of IRIG 106 values. For example, a flight data file with ARINC 429 data has recently been  created with integer and  floating point  values. Messages with minimum values, maximum values, specific positive values, specific negative values, and zero values were created to verify correct decoding. 
+Synthesized Data – This data attempts to mimic realistic flight test data but with very controlled flight conditions. For example, a flight data file with aircraft navigation MIL-STD-1553 data messages derived from an aircraft simulation software program has been created. This flight data file is completely software created but realistically mimics the position, attitude, and speed of an actual test aircraft flying a typical mission on a test range with specific altitude, speed, and heading parameters. 
+Repurposed Data – This data recasts previously recorded flight data into IRIG 106 format. NASA had a program to record flight data on regional commercial jets. There are data files for about 220,000 over several years. Each flight data file records over 150 different flight parameters useful for including in derived IRIG 106 format data files for big data analytics. 
+Other  data  sources  for  this  effort  were  also  considered.  The  FAA  Automatic  Dependent Surveillance–Broadcast (ADS-B) as a source for real-time actual flight data was considered but ADS-B is limited in the number of flight parameters available. Flight data from a computer based flight simulator such as X-Plane and Microsoft Flight simulator was considered but these operate in real time and would take a considerable amount of effort for a human to fly a large number of flight scenarios to support all the flight data files necessary for BDA. Lastly there are also some unclassified sources of actual flight test data but the amount of data and efficacy is limited. 
+SYNTHETIC FLIGHT TEST DATA GENERATION 
+Various software applications have been written for generating each of the different types of synthetic data described above. In each case there is a source of “truth” data which is then processed to generate IRIG 106 Chapter 10 data files for test. 
+Contrived Data 
+Contrived data is not realistic data but instead contains very specific data fields. In the case of contrived data the contents of the resultant Chapter 10 data file are specified in minute detail.  
+Contrived data is generated from a content definition data file. The content definition data file contents are written by hand in XML format. Although being laborious, usually only a few well- crafted data types and fields are necessary to validate a software data decoder or processor. The IRIG 106 Chapter 10 Programming Handbook (RCC Document 123-16) Appendix P “XML Mapping” provides the information and definition of the data file contents in XML format.  
+An example of a contrived dataset definition is shown in Figure 4 below. In this example ARINC 429 data messages were defined in various formats including signed and unsigned integer with minimum, maximum, and zero values. 
+Once an appropriate XML content definition data file has been authored, the XML is converted into a Chapter 10 format data file using the FLIDAS software application from Data Bus Tools GmbH. 
+         
+Synthesized Data 
+In the case of synthesized data the contents of the resultant Chapter 10 data file are derived from pre-calculated aircraft state data. The goal of the pre-calculated aircraft state data is to provide aircraft state that is both realistic, deterministic, and carefully controlled. The Government Off the Shelf (GOTS) BlueMax6 simulation software available from DSIAC is used to pre-calculate realistic simulated flight data based on a provide detailed input scenario file. 
+BlueMax6 calculates realistic aircraft dynamic state based on an input scenario file. This scenario file describes the desired flight path at a high level of abstraction. The aircraft type and some initial information such as initial position, heading and speed are first specified. Then the flight path is defined as a series of various types of waypoints and maneuvers, eventually ending in a landing maneuver. A portion of an example scenario file is shown in Figure 5. The flight path shown in Figure 2 was generated from a BlueMax6 scenario. 
+BlueMaxRunTitle A-10 China Lake Echo Range Aircraft A-10A 
+CallSign FOLK1 
+EntityID 0:0:0:0 
+ZuluTime 00:00:00.00 
+DtedTerrain On 
+InitialPitch 0 
+InitialPositionLL 35.6959:N 117.6915:W InitialAltitudeMSLf 2110 
+InitialTrueHeading 154.5 
+InitialAirspeedKtas 50 
+InitialThroPosition Auto 
+InitialGearPosition Down 
+OutputFileName A-10__China_Lake__Echo_Range__ OutputRateSec 0.04 
+ManeuverLimits Autopilot AutopilotMaxRoll 45 AutopilotMinPitch -10 AutopilotMaxPitch +25 
+CmdAltitudeMSLf 2300 CmdGearPosition 2200 CmdAirspeedMach BestRateOfClimb CmdFlapPosition Auto CmdSegmentEndMode Acquisition CmdFlySegment  
+WriteMessage Low Pass Takeoff CmdTrueHeading 154.5 CmdGroundRangeNm 2 CmdAltitudeMSLf 2300 CmdThroPosition 300 CmdFlapPosition 0 CmdSlatPosition 0 CmdFlySegment  
+WriteMessage China Lake Skytop CmdWaypointLL 35.700833:N 117.499167:W CmdWaypointNavMode Direct CmdAltitudeMSLf 6000 
+CmdAirspeedKtas 300 
+CmdFlySegment 
+Figure 5 – Example BlueMax6 scenario file. 
+BlueMax6 generates an output file with calculated values of aircraft state at regular time intervals. For most synthesized data runs a time step of 40 msec (50 Hz) is chosen.  BlueMax6 currently has 497 different aircraft state values available for output. Besides aircraft attitude, position, velocities, and accelerations other values such as throttle position, landing position, and others are also output and used in the synthesized flight data file. 
+To convert BlueMax6 output files to Chapter 10 data files several conversion software programs have been developed. Each software program written is a command line console application written in C++. The current software is targeted for the Windows environment but is sufficiently generic that it could be easily ported to other operating systems such as Linux. The source code for these software programs are readily available from github. 
+There are two approaches to generating Chaptert 10 files from BlueMax6 data. In the direct conversion approach BlueMax6 data is read and directly converted into a Chapter 10 data file. This data file includes synthesized data in MIL-STD-1553, Pulse Code Modulation (PCM), and ARINC-429 data types.  
+When video is to be included in the Chapter 10 file a second conversion approach is used. When video is to be generated BlueMax6 data is first read and stored in a SQLite database. A playback application is used to read navigation data from the database, send aircraft position and attitude data to the X-Plane flight simulator application, and for each navigation point perform a screen capture. Each screen capture is then processed by the ffmpeg digital video encoder library and converted into an MPEG Transport Stream (TS) series of video packets. These TS video packets are then stored back in the SQLite database. This process is repeated for each channel of video desired. This process is depicted in Figure 6. 
+Video generation is currently a very slow process. With current desktop hardware and a software- only encoder it runs at about one-half real time. For this reason video isn’t necessarily generated for synthesized data sets. From a test and software validation standpoint video data is usually of limited utility. 
+Once BlueMax6 data has been stored in the SQLite database along with optional video it is processed and converted into a Chapter 10 data file. This process is depicted in Figure 7. The conversion software is a simple fixed time slice simulation engine. Data is read periodically from the SQLite database and stored in a state variable matrix, various simulation modules such as those used to generate navigation data use and add to the state variable matrix, and data formatter modules are used to synthesize and write the output Chapter 10 data. 
+
+Figure 6 – Preprocessing and synthetic video generation 
+
+Figure 7 – Synthetic Chapter 10 data file generation 
+Repurposed Data 
+In the early 2000’s NASA had a program to record and make generally available flight data from a number of commercial regional jets. Flight data was recorded onboard a single type of regional jet operating in commercial service over a three-year period. NASA makes this data available on their DASHlink website.
+The recorded data includes 186 flight parameters. Detailed aircraft dynamics, system performance, and other engineering parameters are included. Data files for over 220,000 flights were recorded and are available. Figure 8 shows a set recorded flight paths. Figure 9 show a set of recorded flight paths in the vicinity of Detroit’s Wayne County airport. 
+Although the NASA recorded data sets aren’t carefully controlled, the large number of recorded flights flying on regular routes makes this data set useful for testing big data types of analysis. 
+
+
+
+
+
+
+
+
+
+
+Figure 8 – Example of NASA recorded flights across the country 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Figure 9 – Example of NASA recorded flights near Detroit 
+NASA makes these data files available in Matlab format. A python script was written to convert these Matlab format files into Comma Separated Value (CSV) format files for later processing. After conversion to CSV format, conversion to Chapter 10 format is accomplished in the same manner as conversion from BlueMax6 data previously shown in Figure 6 and Figure 7. 
+CONCLUSIONS 
+The DoD move to cloud computing is enabling development of Big Data Analytics capabilities. Development of new software tools and techniques  will  require large  quantities  of data and especially data with interesting features. Synthesized flight test data may be the only practical way to provide the quantities and types of data necessary for software development. 
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.

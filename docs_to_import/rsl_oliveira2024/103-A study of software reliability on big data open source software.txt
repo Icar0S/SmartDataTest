@@ -1,0 +1,114 @@
+﻿Int J Syst Assur Eng Manag
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+Software (OSS). The Open Source Software is now a movement and has seen an exponential growth in spread and depth; riding the wave of phenomenal growth in net- works and internet related technologies. The origin of OSS can be traced back to 1970s, when Richard Matthew Stallman, often known by his initials, RMS propounded the concept of OSS. RMS believed that both software and
+& Ranjan Kumar
+ranjan301@gmail.com
+Subhash Kumar subhashkumar@andc.du.ac.in
+Sanjay K. Tiwari tiwari.dr.sanjay@gmail.com
+https://doi.org/10.1007/s13198-019-00777-x
+ORIGINAL ARTICLE
+A study of software reliability on big data open source software
+Ranjan Kumar Department of Computer Science, Aryabhatta College
+(University of Delhi), Benito Juarez Marg,
+software development, intrinsically by their nature belongs to the body of knowledge for the humankind and thus must be shared freely. RMS introduced the free version of the
+New Delhi 110021, India
+ • Subhash Kumar Department of Physics, Acharya Narendra Dev College
+(University of Delhi), Govindpuri, Kalkaji,
+widely used Unix operating system under GNU (Stallman 1998). Freedom the core concept of OSS, according to RMS was seen as a fundamental component of free speech
+New Delhi 110019, India
+ • Sanjay K. Tiwari Post Graduate Department of Mathematics, Magadh
+University, Bodh Gaya, Gaya, Bihar 824234, India
+and strongly advocated sharing of the software s code and
+123
+
+
+Received: 9 May 2018/Revised: 10 December 2018
+  The Society for Reliability Engineering, Quality and Operations Management (SREQOM), India and The Division of Operation and Maintenance, Lulea University of Technology, Sweden 2019
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Int J Syst Assur Eng Manag
+Abstract With the increasing use of Open Source Soft- ware (OSS) in high speed networking, parallel processing and distributed computing, OSS has emerged as main- stream in the last decade and is now being broadly accepted even by the traditional proprietary software development companies. The major advantages of OSS over traditional software development are less development cost, avail- ability of source code, quality and security. Software reli- ability an important attribute of software quality, is defined as the probability that a software will operate free of failures or breakdown for a specified time under speci- fied conditions (IEEE Std. 1633-2016). Investigation of Software reliability with the help of software reliability models (SRM) undertakes the estimation and prediction of the failure phenomenon of a software. In this paper we have investigated whether Non-homogeneous Poisson process (NHPP) based software reliability models fit in the big data open source software fault/bug data. We have extracted real and latest bug/fault data of Hadoop and
+Spark open source big data applications, from bug track- ing/management tool Jira. For this purpose, we have also compared these models on different goodness-of-fit and prediction criteria based on collected failure data to ascertain whether a best fitted model can also be a best predictor. It is found that the best model fitting the failure data is not a best predictor model.
+Keywords Bug  Goodness of fit  NHPP  OSS 1 Introduction
+The last decade has witnessed rapid and profound devel- opment in computer networking and internet related tech- nologies. This has heralded a new dimension to the entire gamut of software development. It has given a decisive impetus to the development of an entirely new ecosystem wherein the development process of software is essentially concurrent and distributed in nature the Open Source
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Int J Syst Assur Eng Manag
+the associated idea. The salient attributes of open source software involves possession of certain sacred and free rights viz. right to use, right to reproduce, right to modify and right to distribute the software. It has to be realized that  free  in this praxis is not synonymous in the economic sense, rather it refers to free  as in freedom to do certain acts in the software development process and doing away with restrictions which generally accompany the propriety software. This model of software development results in a more robust and reliable software; which is not only reli- able but also more efficient and productive. This model promotes transparency in projects and thereby minimizes risk in the development process of the software. The phi- losophy and practice of OSS was firmlyestablished by Eric Raymond in his seminal paper  The Cathedral and the Bazaar   (Raymond 1999). In this essay and later a book Eric Raymond likened the propriety software to the the Cathedral  model whereas the OSS development to the Bazaar  model and argued that these two models are based on antagonistic assumptions about the nature of the debugging task in software. The process of development of OSS imparts myriads of advantage to its products when compared to the commercial propriety software. The OSS are found to have fewer bugs, have better reliability, are free from vendor s lock-in periods and thus are free from vendor dependence. The OSS possesses better and quick support as they belong to the community rather than to a firm.These products also have educational value. A critical analysis of the claims of the suitability of OSS due to these factors has been taken up (Ven et al. 1998). It has been found out that indeed certain factors like economical products, availability of source code, support by the com- munity, independence from vendor lock-in and maturity of software do put OSS to advantage vis-a‘-vis commercial software.
+Having said that, the quality of software remains a prime concern. It is important because it brings out the extent up to which the software meets the user s requirement. Therefore, qualitative and quantitative assessment of the software has attracted a lot of attention. Studies which discern the quality of the software include empirical studies and mathematical modeling. Out of the various tools available for quantitative assessment of software, the exponential model also known as reliability growth model and Software Reliability Model (SRM) are ubiqui- tously utilized. While the exponential model models the appearance of defects at the backend of the development for projecting failure pattern in the field, the SRM fixes a definite probability for the software causing a system failure over some specified operating period. A large body of empirical data supports both of these models.
+Software Reliability Model (SRM) has emerged as a key indicator as well as predictor for determining the quality of
+software as soon as the software is launched in the market. By definition, SRM is a mathematical expression which provides the generic form for appearance of bug in the software as a function of bug detection, bug correction and the operational environment (Std 1633). SRM is utilized to assess as well as predict reliability of a product. For assessment of reliability SRM seeks to fitthe data extracted for the failure of software using various statistical tech- niques like linear regression or non-linear regression. The choice of technique obviously depends upon the behavior of extracted data. For the purpose of predicting the relia- bility of the software, the expected number of bugs is estimated through fitted SRM (Lyu 1996; Yamada 2014).
+The issue of reliability in case of OSS has also received some attention. Several hypotheses have been proposed to investigate the relationship, if any, between reliability and openness (Joode and Bruijne 2006). A study on OSS pro- ject s bug data has however, concluded that the traditional software reliability growth model cannot be applied for the assessment of the reliability growth of OSS because the software development paradigm of an OSS is intrinsically different from proprietary software and further goes on to suggest an alternative approach for assessment of OSS products (Zou and Davis 2008). OSS has been subjected to quality assessment quantitatively using alternative approaches (Tamura and Yamada 2009, 2010; Zhou 2005). Studies on bug tracking data of few popular OSS reveals that the OSS projects as well as closed source projects (CSS) show similar reliability growth pattern (Singh et al. 2010a, b). This has been further confirmed by the Non- homogeneous Poisson process (NHPP) based reliability models wherein similar reliability growth curve have been reported for OSS as well as CSS (Singh et al. 2010c, d). This raises the relevant question that if from a reliability point of view, the OSS behaves in the same way as CSS, then which model is most appropriate for its assessment? The bug detection rate of two OSS projects examined with in house developed software using two SRMs found that the two OSS projects exhibited different profiles of bug arrival behavior (Syed-Mohamad 2008). By analyzing six OSS projects bug data Zhou (2005) found that OSS and CSS projects exhibit a similar pattern of reliability growth. They used general Weibull model to fit bug occurrence of OSS projects. The Weibull distribution has also been also suggested by Rossi (2010) as the best model for OSS by analyzing the bug occurrence behavior of three OSS pro- jects applying SRM. On the contrary, Rahmani (2010) discovered a fundamentally different result by using 3 models and dataset of 5 OSS projects bug data. They found that the Weibull was the worst model. By modeling of the bug reports using nonparametric techniques for the six OSS projects bug data Zou (2008) observed that exponential smoothing methods and Generalized Additive models are
+better suited for reliability of OSS products. For reliability classification of OSS products, SRMs can be used suitably (Li et al. 2011).
+It is evident that a plethora of models for software reliability is available in the market as well as in the lit- erature. Many of these models are based on Non Homo- geneous Poisson Process (NHPP). In these models, failure process is assumed to follow a non-homogeneous Poisson process. These SRMs generally have an intensity function or the rate of bugs/failures in the software given by a power law polynomial and display a great degree of flexibility in application. For the commercially available traditional software, these NHPP models have been found to be suc- cessful and have been widely utilised for software relia- bility studies. However, it remains to be discerned whether these models for software reliability can also be used gainfully for the same purpose in case of OSS. The aim of the present study is to investigate the suitability of NHPP based SRMs on OSS in general and Big data OSS Spark and Hadoop in particular. The rest of the paper is organised as follows. In Sect. 2, some chosen SRMs which are widely used and are based on NHPP are introduced along with their characteristic functions. These models undergo evaluation or validation in Sect. 3 on two data sets on bugs/failures of two popular Big data OSS Hadoop and Spark. In this section, analysis of the data sets includes parameter estimation for the respective models. This is followed by comparison of models using Goodness-of fit criterion. The analysis also probes the assessment and predicting abilities of these SRMs for the representative datasets of the bugs reported in the chosen big data OSS. Here the criterion of goodness of fit implies how well a model predicts the dataset which has already been utilized to estimate its parameters, while how well a model predicts new data points is said to be its predictive capability i.e., predicting unseen data in future. Section 4, presents the results and interpretation of the analysis carried out in the present investigation.
+2 NHPP models
+NHPP models considers the number of faults per unit time as an independent Poisson random variable which evolve by a non homogeneous Poisson process (Yamada 2017). NHPP models have been very successful and are amongst the widely applied models for software reliability studies. The reasons behind popularity of NHPP are follows:
+(i) These are categorized by a mean value function, m(t), which help in calculating expected number of bugs up to time t very easily.
+(ii) Parameters of the model can also be computed very easily.
+(iii) NHPP models are closed under time transforma- tion and superposition (Lai and Garg 2012).
+Here we consider five well known conventional NHPP models to measure and evaluate them on two well estab- lished big data open source projects viz. Hadoop and Spark. Analysis is carried out to findout (i) whether they fit on them and (ii) whether a best goodness-of-fit model can also be a best predictor model. The five models chosen for present study are briefly described below:
+2.1 Goel Okumoto (GO) model (Goel and Okumoto 1979)
+It is an exponential NHPP model developed by Goel and Okumoto in 1979. It was proposed on the assumption that whenever a bug is detected, it is corrected in no time and all detected bugs are mutually independent to each other.
+2.2 Kapur and Garg (KG) model (Kapur and Garg 1992; Kapur et al. 2011)
+The model, proposed by Kapur and Garg in 1992 assumes that during the debugging process some additional errors/faults may also be corrected, while removing the bonafide failures. While the bonafide failures are termed as independent faults, the additionally removed faults are deemed to be dependent faults.
+2.3 Yamda delayed S-shaped (YDS) model (Yamada et al. 1983)
+Yamda proposed this model in the year 1984 with a modification of NHPP model. It is also considered as generalized exponential model with the assumption that the behavior of bug arrival pattern first increases and then decreases to obtain S-shaped curve. A software bug detection process is described by failure detection process and bug isolation process.
+2.4 In ection S-shaped model (ISM) (Ohba and Osaki 1984)
+The model was developed by Ohba in 1984 and it is based on the dependency of faults with the assumptions: a) bug detection rate of each bug is constant, b) the isolated fault can be fully removed and some faults cannot be detected before removing some other faults.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+123
+Int J Syst Assur Eng Manag
+2.5 Pham—Nordmann—Zhang (PNZ) model (Pham et al. 1999)
+This model was proposed by Pham in the year 1999 which considered imperfect debugging situations with the assumption that during debugging new bug can appear with the constant bug detection rate.
+The mean value function, mðtÞand intensity function kðtÞare the two characteristic functions which constitutes the building block of all the above models based on NHPP. While mðtÞis the mean value function of the expected number of faults/bugs which have been detected/removed in the time interval [0, t], the failure intensity function
+kðtÞ ¼dmðtÞ measures the instantaneous rate of change of
+dt
+the expected number of failures i.e., mðtÞat time t, given that the system has not failed up to time t. Table 1, enu- merates the characteristic functions of the NHPP models chosen in the present study. Here n is total number of expected fault, f is bug detection rate, c is bug inclusion rate and q represents the dependent bug detection rate.
+3 Model evaluation/validation
+Once mathematical models have been selected, they are evaluated for its ability to fit the historical failure data of the software i.e., Goodness of fit.Additionally, they need to be further evaluated for their ability to predict occurrences of failures of the software in future i.e., predictive capa- bility. For this purpose, it involves estimation of the unknown parameters of the chosen models. As the NHPP- based software reliability are described by non-linear functions, Non-linear least square (NLLS) and Maximum likelihood estimate (MLE) techniques are used to estimate the unknown parameters for these models on actual data- sets for software failures (Kapur et al. 1999). After esti- mation of the parameters are validated on the given dataset to find out their fitting and predictive capabilities. We have
+carried out data analysis on two real datasets of under consideration models using R language which is not only an open source software but also one of the most efficient and popular data analysis tool.
+3.1 Data set
+Among several open source software related to Big Data, we have selected here two most widely used and estab- lished tools for analyzing big data Hadoop and Spark. Among the repositories of the issues for Hadoop and Spark, the present study focused on only those issues that were declared  bug  . Other type of issues like  improvement  ,
+  wish  ,  new feature  ,  task   or  patch   were excluded
+so that we could deal exclusively with proper failures. Among the data classified as bugs, we have further filtered it and selected the bugs having status as  closed  . This means those bugs which have been resolved and verifiedby the reporter have been only considered in the analysis. The dataset was also further processed and cleaned with reso- lution defined something like  cannot reproduce  ,  du- plicate  ,  won t fix   or others. Table 2 illustrates our choice of data after processing.
+Data have been downloaded from issues tracking and management tool Jira s website (Apache Website 2018). Although Hadoop has four components, we have only considered and extracted Hadoop common component s bug data. Total of 406 failures were observed in dataset D1 and 375 failures in D2. Detailed month wise bug detection pattern for Hadoop and Spark are shown in Fig. 1.
+3.2 Parameter estimation
+For calculation of the estimated bugs it is important to first compute the values of unknown parameters in the mean value function. Parameter estimation is generally done by using two estimation techniques; Non Linear Least Square (NLLS) and Maximum Likelihood Estimate (MLE) (Kapur et al. 2011). Since data is irregular in nature, we have used
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+123
+Int J Syst Assur Eng Manag
+Table 1 Summary of NHPP 
+Model Model name Mean value function m(t) models with mean value 
+function GO Goel-Okumoto (Goel and Okumoto 1979) mðtÞ ¼n 1  e ft
+KG Kapur Garg model (Kapur and Garg 1992)
+a 1  eð ðfþqÞtÞ mðtÞ ¼ 
+1 þ q eð ðfþqÞtÞ
+f
+YDS Yamda Delayed S-shaped (Yamada et al. 1983) mðtÞ ¼n 1  ð1 þ ftÞe ft ISM Inflection S-shaped (Ohba and Osaki 1984) nð1 e ft Þ
+mðtÞ ¼ 1þ ce  ft
+PNZ Pham PNZ model (Pham et al. 1999) mðtÞ ¼nð1 e 1ftþÞdeð1  ftf Þþcnt
+c
+
+Table 2 Collection of bug data for two OSS
+OSS ProjectDatasetIssue typeStatusResolutionPeriodHadoop Common SparkD1 D2Bug BugClosed ClosedFixed FixedApril 2014 to Dec. 2017(45 months) Sept. 2012 to Dec. 2017 (64 months 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+123
+Int J Syst Assur Eng Manag
+
+Fig. 1 Bug arrival pattern of Hadoop and Spark
+the nonlinear function in R to calculate value of estimated parameters. It uses maximum likelihood method. The result of computed estimated value of parameters of dataset D1 and D2 are shown in Tables 3 and 4.
+3.3 Comparison criteria of models
+For the purpose of comparison among the various NHPP based SRMs considered here vis-a‘-vis their suitability in fitting to the bug data of the two OSS under investigation, the following criteria have been utilised.
+3.3.1 Goodness-of-fit criterion
+Goodness-of-fit denotes  how good does a mathematical model fit to a given data  .
+3.3.1.1 Akaike information criterion (AIC) AIC is used to select the best model among all those models whose unknown parameters are estimated by maximum-likelihood method.
+Table 3 Estimated parameters for dataset D1
+ 
+ModelnfcdqGO417.4580.1056KG401.0140.0640.147YDS400.2380.2447ISM401.0140.2112.295PNZ355.580.3070.0044.806Table 4 Estimated parameters for dataset D2
+ 
+ModelnfcdqGO287.470.058KG363.0650.000120.266YDS620.950.037ISM363.0650.2662373.89This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+123

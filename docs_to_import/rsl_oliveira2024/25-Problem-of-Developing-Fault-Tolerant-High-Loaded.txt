@@ -1,0 +1,170 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+On the Problem of Developing a Fault-Tolerant  High-Loaded Cluster of Support for an Intelligent Transportation System  
+Mikhail Gorodnichev, Marina Moseva  
+Mathematical Cybernetic and Information Technologies 
+Moscow Technical University of Communications and Informatics  Moscow, Russia 
+m.g.gorodnichev@mtuci.ru; m.s.moseva@mtuci.ru  
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
+
+Abstract—  The  study  considers  methods  and  means  of constructing  architectures  of  big  data  processing  systems  for intelligent  transportation  systems.  When  developing  a  large intelligent transportation system (for example, within a large city, region  or country), there are  issues including redundancy and duplication  of  stored  data.  The  purpose  of  this  paper  is  to improve  the  performance  of  big  data  processing  system  for intelligent transportation system. The work gives an overview of the  main  approaches  and  tools  for  solving  problems  of development of systems for processing big data, in particular, we considered  the  conceptual  apparatus  in  the  field  of  ongoing research,  analyzed  the  practical  approaches  to  the  distributed storage and processing of big data, and reviewed the theoretical basis of the functioning of data lakes. Also, the work carried out the development of a prototype software system for processing big  data  for  intelligent  transport  system,  in  particular,  the proposed  methodology  for  building  a  decentralized  ITS, describing the main implemented services, as well as testing the prototype software. 
+Keywords — big data, intelligent transportation system, fault- tolerant, high-loaded cluster, processing. 
+I. INTRODUCTION
+Current use of the term "big data" tends to refer to the use of predictive analytics, user behavior analytics, or some other advanced data analytics techniques that extract value from big data, and rarely to the specific size of the data set [1]. There is no doubt that the amount of data now available is indeed large, but that is not the most important characteristic of this new data ecosystem.  Data  set  analysis  can  find  new  correlations  for "identifying  trends  in  business,  preventing  disease,  fighting crime,  and  so  on."  Researchers,  business  executives, practitioners,  advertising  and  government  representatives regularly face challenges with big data sets in areas such as Internet  search,  financial  technology,  health  care  analytics, geographic information systems, urban informatics, intelligent transportation systems, etc. [2] 
+Big data storage, processing, and exchange systems operate under  two  basic  models:  centralized  (classical)  and decentralized (distributed) [3]. Decentralized systems are more reliable  and  tamper-proof,  however,  they  are  more  complex and require the presence of well-established mechanisms for 
+interaction of all system elements. The emergence and rapid development  of  decentralized  systems  based  on  blockchain technology [16, 17] has provoked an explosion of interest in research in this area, and we can assume that this trend will continue in the near future. 
+The analysis of existing means of decentralized data storage and exchange has shown that in the Russian segment of the Internet  as  well  as  in  the  foreign  ones,  there  are  solutions providing  the  user  with  data  storage  and  exchange  services using  cloud  technologies  (for  example,  Yandex.Cloud, SberCloud, etc.). However, the vast majority of such solutions when  implementing  the  data  storage  mechanism,  user documents are stored entirely on remote servers, which may lead  to  data  loss  in  case  of  incorrect  operation  of  the decentralized system. 
+The research carried out in this paper considers methods and means of constructing architectures of big data processing systems  for  intelligent  transportation  systems.  The development of a large intelligent transportation system (for example,  within  a  large  city,  region  or  country)  raises, including the issues of redundancy and duplication of stored data (including the framework of data lakes). It seems relevant to  consider  the  Raft  protocol  as  the  basis  for  large  data processing systems, which allows you to control the number of duplicate  data  blocks  (files,  documents,  etc.)  and  notify developers  in  case  of  memory  shortage  (or,  for  example, problems  with  servers).  As  the  analysis  of  Russian  literary sources  showed,  the  issues  of  using  Raft  protocol  when creating decentralized systems for big data processing in the Russian  scientific  environment  are  poorly  studied,  which determines the novelty of this direction. 
+The multifaceted nature of the topic under study implies the use  of  regulatory  and  scientific  resources  in  the  field  of organization of big data systems, Russian and foreign scientific literature  on  the  general  principles  of  intelligent  transport systems, and other topics revealing the theoretical and practical significance of the subject area. The problems of development and research of conceptual foundations of principles of big data storage  and  processing  are  mainly  devoted  to  the  works  of foreign scientists B. Inmon, C. Walker, T. John, P. Misra, P. Simon, I. Terrizzano, P. Schwarz, etc. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
+
+979-8-3503-4829-3/23/$31.00 ©2023 IEEE
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
+
+II. RELATED WORK
+The problems of big data processing are combined in the academic discipline of Data Science [4]. Data science includes methods for processing data under conditions of large volumes and high level of parallelism, statistical methods, methods of intelligent analysis, etc. Data science as an academic discipline can be represented as Euler circles.  
+Big  data  is  a  field  that  deals  with  ways  to  analyze, systematically extract information, or otherwise work with data sets that are too large or complex for traditional application software to handle [5]. 
+The current use of the term "big data" tends to refer to the use of predictive analytics, user behavior analytics, or some other  advanced  data  analytics  techniques  that  extract  value from big data, and rarely to the specific size of the data set. It's worth noting that the amount of data now available is really big, but that's not the most important characteristic of this new data ecosystem. By analyzing datasets, there is an opportunity to  find  new  correlations  for  "identifying  trends  in  business, preventing  disease,  fighting  crime,  etc."  [6].  Researchers, business executives, practitioners, advertising and government representatives  regularly  face  challenges  when  dealing  with large  data  sets  in  areas  such  as  Internet  search,  financial technology,  health  care  analytics,  geographic  information systems, urban informatics, business informatics, etc.  
+The  size  and  number  of  data  sets  available  is  growing rapidly as data is collected by devices such as mobile devices, Internet of Things information devices, antennas, logging tools, cameras, microphones, radio frequency identification (RFID) readers, and wireless sensor networks [7]. International Data Group Inc. (IDC) reports that global data volume has shown exponential  growth  from  4.4  zettabytes  to  44  zettabytes between 2013 and 2020, and by 2025, data volume could be 163 zettabytes or higher. 
+Under  the  real-time  mode  is  understood  the  mode  of information  processing,  in  which  the  interaction  of  the information processing system with the external processes in relation to it is provided at a rate commensurate with the rate of these processes. 
+Examples of the main applications of real-time systems are as follows: 
+1) onboard equipment of space systems;  
+2) measurement and control systems;  
+3) radar and navigation systems;  
+4) automatic process control systems in industry;  
+5) banking systems. 
+Real time systems are divided into hard real time system, HRTS and soft real time system, SRTS. 
+Hard real-time systems include on-board control systems, emergency  protection  systems,  emergency  event  recorders, safety systems, monitoring and control systems, etc. Soft real- time systems include interactive systems, vending machines, data processing systems from weather stations, etc. The main difference between hard real time systems and soft real time systems  can  be  expressed  in  the  following:  hard  real  time 
+system will never be late in reacting to an event, and soft real time system should not be late in reacting to an event. 
+In the field of big data there is also the concept of Datalake, the idea of which is to store data on the servers of a given "lake" in a raw format [8]. A distributed (decentralized system) is understood as a system in which all servers are the same, i.e., there are no "leaders" and "wards," and the main idea is to combine private servers into a common cluster, which serves as one big server. 
+
+Fig. 1.  Functional architecture of ITS 
+
+Fig. 2.  Physical architecture of the ITS 
+An  intelligent  transport  system  is  a  management  system that integrates modern information and telematics technologies and  is  designed  for  automated  search  and  adoption  to implement  the  most  effective  management  scenarios  for  the transport and road complex of the region, a particular vehicle or  group of  vehicles  to ensure a  given  population  mobility, maximize  road  network  use  indicators,  improve  safety  and efficiency of transport. 
+The big data technologies underlying Data Science include [9-10]: 
+1) MapReduce  is  a  distributed  computing  model  used 
+when processing large data sets in computer clusters or on computers with multicore processors. 
+2) NoSQL  -  a  number  of  approaches  aimed  at 
+implementing  database  stores  that  provide  scalability,  high availability and flexibility. 
+3) Hadoop is a set of utilities, libraries and frameworks 
+for developing and executing distributed programs running on computer clusters. 
+4) Hardware  solutions  -  configured  solutions  for 
+processing large amounts of data. 
+These  technologies  implement  the  basic  principles  of working with large amounts of data: 
+a) horizontal scalability (the increase in data volume is 
+directly  proportional  to  the  increase  in  the  number  of processed computers forming the computing cluster); 
+b) fault tolerance (replication of information on several 
+computers of the computing cluster). 
+Technologies for processing large amounts of distributed data also lie in the field of scientific research, e.g. Defense Advanced Research Projects Agency - DARPA, Russian Direct Investment  Fund,  Scientific  Research  Steering  Committee, China, etc. 
+Practical technologies for processing large amounts of data include,  for  example,  HIVE  database  management  system, Deep  Exploration  and  Filtering  of  Text  system,  XDATA system  for  intelligent  processing  of  large  amounts  of unstructured data, Big Mechanism system, etc. 
+For example, the XDATA system aims to solve practical problems by developing computational methods and software tools  for  processing  and  analyzing  large,  unstructured,  and incomplete  data  [11].  During  the  development  of  XDATA, distributed  database  technologies,  statistical  processing methods, and information visualization. 
+III. CLUSTERING APPROACHES
+The  idea  behind  clustering  is  to  combine  two  or  more servers into one group of servers called a cluster [12]. 
+The architecture based on a single server is the easiest to understand and implement. As a rule, such architecture plays an important role in proving the relevance of a new concept and the workability of an idea [13]. Implementation of a single- server architecture requires a small amount of computational resources, and most of the time is spent on thinking about the idea itself. 
+The  advantages  of  using  a  single-server  architecture include: 
+a) easy implementation and quick deployment; 
+b) ease of maintenance throughout the entire life cycle; 
+c) relatively low cost. 
+The disadvantages of using a single-server architecture can include: 
+a) low resistance to heavy loads; 
+b) oversimplification  of  the  system  -  if  you  need  to 
+implement  macroservices  in  cloud  solutions,  you  need  to completely adjust your deployment approach; 
+c) does not support multiple services simultaneously, 
+limitations are imposed by the number of cores in the servers; 
+d) because multiple services use the same processor, 
+one service can affect the performance of another. 
+An architecture based on several servers has the notion of multi-server. In the case of solving the problem of paralleling calculations in database management systems and others for multiprocessor platforms it is necessary to run several database servers, including those on different processors (and each of the  servers  should  be  multithreaded).  This  model  is  called multithreaded  multiserver  architecture  and  is  related  to paralleling  the  execution  of  a  single  user  query  by  several server processes. 
+
+Fig. 3.  Variant of data module interaction structure within a distributed ITS 
+The  Raft  algorithm  is  considered  in  the  scientific community  as  a  fairly  simple  and  proven  approach  used  in building both decentralized repositories [14, 15]. 
+The advantages of the Raft approach include: 
+a) there  are  only  three  states  for  cluster  servers: 
+Follower, Candidate, Leader; 
+b) simple functionality to implement; 
+c) a proven solution; 
+d) High resilience when servers fail. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
+
+The disadvantages of the Raft approach include: 
+a) an additional layer of data management; 
+b) it is quite difficult to detect defects in the system; 
+c) the  results  of  individual  scientific  studies  show  a 
+slower performance than, for example, when using the TCP protocol together with TLS. Despite these disadvantages, the Raft  algorithm  offers  a  conceptual  idea  that  ensures  the reliability  of  the  most  decentralized  system  of  big  data processing. 
+IV. ARCHITECTURE OF A BIG DATA PROCESSING SYSTEM FOR AN ITS
+The task of this paragraph is to elaborate in as much detail as possible the architectural issues of functioning of intelligent transport systems using big data technologies. The architectural options  presented  below  are  purely  theoretical  in  nature, however,  it  seems  appropriate  to  conduct  this  generalizing study for future developers of transportation systems. 
+The proposed version of the reference architecture of the Big Data Processing System for the Intelligent Transportation System (EASOBD-ITS) allows to identify ways of planning, developing and deploying applications in the subject area under consideration and to facilitate the implementation of big data analytics  solutions  for  transportation  organizations. EASOBDD-ITS  contains  a  description  of  the  system  to  be deployed,  including  the  technology  stack  and  integration protocols EASOBD-ITS includes the stages of data collection, storage, extraction, processing and use, agreed with the ITS domain services. 
+
+Fig. 4.  UML-diagram of storage classes 
+The reference architecture is described by representations, each  reflecting  the  problems  of  a  particular  system.  The representations  facilitate  summarization  and  discussion  of architectural  issues  by  stakeholders.  Specifically,  the representations included in the EASOBD-ITS are functional, process, and integration. 
+The  functional  representation  describes  services  (sets  of common  functions),  connectors  (communication  between services) and groups of services. The representation area (A) defines how services provide information through channels. 
+Zone  (B)  describes  the  server  services  that  integrate  the considered  ITS  reference  architecture  with  Geographic Information Services (GIS). The Analytics Zone (C) describes the types of analyses that must be performed and maintained in the Data Storage Zone (D) and the Analytical Sustainability Assessment  Zone  (E).  The  Analytical  Stability  Assessment Zone  offers  services  such  as  distributed  file  system,  SQL, NoSQL storage, etc. The Consumption Zone (E) is responsible for collecting data from external sources and redirecting it to the appropriate consumers. 
+
+Fig. 5.  Algorithm of the service agent 
+The  integration  view  is  used  to  describe  each  type  of connector  at  the  transport,  distribution,  intermediary,  and application layers. This connector describes the recommended protocols for linking external resources at the integration and transport  layer.  These  include  the  protocols  HTTP,  FTP, WebSocket and MQTT. The protocols should be chosen based on  the  communication  scheme  (connection-oriented  or subscription/publication-based)  and  their  endpoints  (web application, database, IoT devices, FTP server, etc.). 
+The  technology  selection  view  provides  a  list  of recommendations  for  specific  products  that  offer  the capabilities needed for the service or group of services that need to be created. This view is a guide of sorts when selecting solutions in a particular implementation.  
+V. PRIVATE VERSION OF THE ARCHITECTURE
+A special case describes an intelligent system for analyzing traffic accidents and their dependence on traffic fines. The use of  a  web  application  is  recommended  for  the  visibility  of accident analysis and monitoring. The analysis module takes 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
+
+data on road incidents and their relationship to traffic fines to support  road  safety  decision-making.  The  work  monitoring module monitors bus traffic in the public transportation system to apply mobility models. These modules are combined under a single interface, allowing users to receive information about accidents on the roads, bus routes, as well as their geolocation data and speed. Forecasting includes the calculation of a risk index for each road section and the correlation of accidents and traffic fines. As a result, ITS management is able to analyze the road situation and make decisions to ensure road safety. 
+Incidents, traffic tickets and road networks are external data sources loaded via the AccidentsETL component, which is part of  the  EASOBD-ITC  Zone  E  and  G  services  and  is implemented using Python, Pandas and PostGIS software tools. In terms of quantity and quality the data includes: fines for violations, traffic incidents, GPS-tracking data of buses, and road  networks  and  their  graphs.  As  new  data  arrives,  it  is filtered  and  stored  in  the  MondoDB  database,  which corresponds to Zone D. In addition, bus data is downloaded and merged via the OperETL component of the Spark software in zones E and D. The resulting merged data is also stored in the MongoDB database. In zone B, the AccidentBackend and OperBackend components access and aggregate pre-processed incident data using Python and then provide the results to the frontend component via REST. The AccidentDashboard  and OperMonitoring frontend components are in turn implemented using  the  Angular  Dashboard  Framework  (ADF)  tool, AngularJS, C3, D3 and Leaflet in Service Area A. 
+VI. METHODOLOGY FOR BUILDING A DECENTRALIZED ITS
+Decentralized ITS, managed via the Raft algorithm, is fully automated, with the addition of new servers performed by an agent, which can request, for example, a cloud provider for an additional server, and then connect it to the main cluster. Thus, using the agent service it is possible to connect new servers.  
+For efficient development and maintenance, a decentralized ITS,  managed  via  Raft  algorithm,  has  a  microservice architecture. Microservice architecture is a variant of service- oriented software architecture, aimed at interaction as much as possible  of  small,  weakly  connected  and  easily  changeable modules - microservices. 
+The storage service, which can run on a separate server as well as on any server with a database, provides two main tasks: 
+a) users receive targeted information about the state of 
+the transport network from the ITS; 
+b) saving  unstructured  data  from  various  sources 
+(agents) of ITS (smartphones, multimedia devices of cars and public transport, smart traffic lights, video cameras, etc.) of different formats to ITS. 
+The storage service transfers unstructured blocks of data to the database service for storage. It is in communication with the auth, database, agent, and client services. 
+
+Fig. 6.  General scheme of service interaction 
+Service  auth,  is  responsible  for  authentication  and authorization in the decentralized ITS. This service allows new users  to  register  in  the  system,  authorize  users  by  issuing tokens to the storage service, connect ITS agents (smartphones, multimedia devices of cars and public transport, smart traffic lights, video cameras, etc.). Located in interaction with storage services, client. 
+
+Fig. 7.  Block diagram of agent state transition 
+The database service is responsible for data storage in the decentralized ITS. To ensure reliable operation, it implements the Raft algorithm.  It is in interaction with the storage service. 
+The agent service is responsible for adding new ITS servers for the database service. Allows you to request an additional server from the cloud provider and start a new database service on it. Notifies the storage service about adding a new server. Interfaced with database and storage services. 
+The client service includes two main modules: 
+a) a  desktop  application  that  enables  end  users  to 
+retrieve targeted information about the state of the transport network from the ITS; 
+b) ITS  agent  libraries  that  provide  storage  for 
+unstructured data. 
+Located in interaction with auth, storage services. In order to implement a cluster using the Raft algorithm, it is necessary to implement a communication protocol in a decentralized ITS. The  main  feature  is  that  each  agent  must  work  in  both directions and at any time can be both in the follower state and in the leader state, already relative to its state the instructions of its functionality must change. 
+In the prototype software elements of a decentralized ITS, the  architecture  includes  five  microservices:  client,  storage, auth, database, agent. These macroservices are sufficient to be located on a single server, but to improve the performance of the decentralized ITS, it is recommended to put each of the services on each server separately.  
+VII. CONCLUSION
+In this paper, we investigated the problems of improving the  efficiency  of  big  data  processing  system  for  intelligent transportation system. 
+During the work the following partial tasks are solved: the conceptual  apparatus  in  the  field  of  ongoing  research  is formulated;  the  analysis  of  practical  approaches  to  the distributed storage and processing of big data is carried out; the analysis of the basis for the functioning of technology lakes data, the development of a reference architecture for large data processing  system  for  intelligent  transport  systems  has  been implemented;  the  development  of  private  versions  of architectures  to  solve  individual  problems  of  intelligent transport systems has been implemented; the development of a method. 
+ACKNOWLEDGEMENTS
+The reported study was funded by RFBR, project number 19-29-06036. 
+REFERENCES
+[1] A.  Amrani,  K.  Pasini, M.  Khouadjia  "Enhance  Journey  Planner  with Predictive Travel Information for Smart City Routing Services". Forum 
+on Integrated and Sustainable Transportation Systems (FISTS). IEEE, 2020, pp. 304-308. 
+[2] N.  Cao  "Revisit  Raft  Consistency  Protocol  on  Private  Blockchain System  in  High  Network  Latency".  International  Conference  on Artificial Intelligence and Security. Springer, Cham, 2021, pp. 571-579. 
+[3] T. John, P. Misra "Data Lake for Enterprises". Packt Publishing Ltd, 2017. 
+[4] G. Georgie, Donnelly "Future attacks". OREILLY, 2013, pp.76-94. 
+[5] M.  Kastouni,  A.  Lahcen  "Big  data  analytics  in  telecommunications: Governance,  architecture  and  use  cases".  Journal  of  King  Saud University-Computer and Information Sciences, 2020. 
+[6] T. Nakagawa, N. Hayashibara "Resource management for raft consensus protocol".  International  Journal  of  Space-Based  and  Situated Computing, 2018, Vol. 8, No. 2, pp. 80-87. 
+[7] H.  Netto  "Incorporating  the  Raft  consensus  protocol  in  containers managed  by  Kubernetes:  An  evaluation".  International  Journal  of Parallel, Emergent and Distributed Systems, 2020, Vol. 35, No. 4, pp. 433-453. 
+[8] A.  Olawoyin,  C.  Leung,  A.  Cuzzocrea  "Open  Data  Lake  to  Support Machine Learning on Arctic Big Data". IEEE International Conference on Big Data (Big Data), IEEE, 2021, pp. 5215-5224. 
+[9] R. Singh "Highway 4.0: Digitalization of highways for vulnerable road safety development with intelligent IoT sensors and machine learning". Safety science, 2021, Vol. 143, pp. 105-116. 
+[10] N. Stojanović, D. Stojanović "Big Mobility Data Analytics for Traffic Monitoring and Control". Facta Universitatis. Series: Automatic Control and Robotics, 2020, Vol. 19, No. 2. pp. 087-102. 
+[11] C. Walker, H. Alrehamy  "Personal data lake with data gravity pull". IEEE  Fifth  International  Conference  on  Big  Data  and  Cloud Computing, IEEE, 2015, pp. 160-167. 
+[12] E. Tourouta, M. Gorodnichev, K. Polyantseva, M. Moseva "Providing Fault Tolerance of Cluster Computing Systems Based on Fault-Tolerant Dynamic Computation Planning". Digitalization of Society, Economics and  Management.  Lecture  Notes  in  Information  Systems  and Organisation, vol 53. Springer, Cham. DOI:10.1007/978-3-030-94252- 6_10 
+[13] E.  Kukharenko,  I.  Korkunov,  M.  Gorodnichev,  T.  Salutina  "On  the Introduction of Digital Economics in the Transport Industry". Systems of Signals  Generating  and  Processing  in  the  Field  of  on  Board Communications, 2019, pp. 1-5. DOI: 10.1109/SOSG.2019.8706797. 
+[14] M.  Moseva,  M.  Gorodnichev,  K.  Polyantseva,  A.  Sheremetev,  K. Dzhabrailov "Development of a Platform for Road Infrastructure Digital Certification".  Intelligent  Technologies  and  Electronic  Devices  in Vehicle and Road Transport Complex (TIRVED), 2021, pp. 1-8. DOI: 10.1109/TIRVED53476.2021.9639102. 
+[15] M.S. Moseva "About methods for collecting and analyzing traffic flow characteristics," T-Comm, vol. 16, no.2, pp. 29-38, 2022. 
+[16] N.E. Konstantinov, M.G. Gorodnichev, R.A. Gematudinov "Blockchain as an IоT development platform," T-Comm, vol. 12, no.9, pр. 63-68, 2018.  
+[17] M.G.  Gorodnichev,  S.S.  Makhrov,  E.N.  Denisova,  I.D.  Buldin "Application of blockchain technology to provide protection and control of wireless sensor network nodes," T-Comm, vol. 12, no.7, pр. 64-68, 2018.  
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on May 17,2024 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 
