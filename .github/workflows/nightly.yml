@@ -195,11 +195,10 @@ jobs:
 
       - name: Frontend security tests
         run: |
-          cd frontend && npx jest \
+          cd frontend && npx craco test \
             --testPathPattern="tests/frontend/security" \
             --watchAll=false \
-            --ci \
-            --env=node
+            --ci
 
   production-sla:
     name: 📈 Production SLA Tests
