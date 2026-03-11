@@ -2,12 +2,13 @@
 
 import re
 import pytest
+from unittest.mock import MagicMock, patch
 from src.synthetic.validators import (
     validate_schema,
     validate_generate_request,
     validate_preview_request,
 )
-from src.synthetic.generator import SyntheticDataGenerator
+from src.synthetic.generator import SyntheticDataGenerator, _LLM_MAX_ROWS_PER_CALL
 
 
 class TestValidators:
@@ -310,6 +311,136 @@ class TestSyntheticDataGenerator:
         datetime_pattern = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
         for record in records:
             assert datetime_pattern.match(record["created_at"]), f"Invalid datetime format: {record['created_at']}"
+
+
+class TestGenerateBatchLargeRowHandling:
+    """Tests for generate_batch behaviour with large row counts and LLM failures."""
+
+    SCHEMA = {
+        "columns": [
+            {"name": "id", "type": "integer", "options": {"min": 1, "max": 1000000}},
+            {"name": "name", "type": "string", "options": {}},
+        ]
+    }
+
+    def _make_generator_with_mock_llm(self, llm_side_effect=None, llm_return_value=None):
+        """Return a SyntheticDataGenerator with a mocked LLM client."""
+        generator = SyntheticDataGenerator.__new__(SyntheticDataGenerator)
+        generator.api_key = "fake-key"
+        generator.model = "fake-model"
+        generator._llm_available = True
+        mock_client = MagicMock()
+        if llm_side_effect is not None:
+            mock_client.generate.side_effect = llm_side_effect
+        elif llm_return_value is not None:
+            mock_client.generate.return_value = llm_return_value
+        generator.llm_client = mock_client
+        return generator
+
+    def _csv_for_n_rows(self, n, start=1):
+        """Generate a valid CSV string for n rows (id, name)."""
+        lines = [f"{start + i},name_{start + i}" for i in range(n)]
+        return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Sub-batching tests
+    # ------------------------------------------------------------------
+
+    def test_llm_max_rows_per_call_constant_is_100(self):
+        """_LLM_MAX_ROWS_PER_CALL should be 100 so ≤100-row requests stay
+        in a single LLM call while larger requests are split."""
+        assert _LLM_MAX_ROWS_PER_CALL == 100
+
+    def test_large_request_is_split_into_sub_batches(self):
+        """Requesting >100 rows must trigger sub-batching; each sub-call
+        should receive at most _LLM_MAX_ROWS_PER_CALL rows."""
+        call_sizes = []
+
+        def capture_prompt(messages, **kwargs):
+            content = messages[0]["content"]
+            # Extract row count from "Generate X rows…"
+            import re as _re
+            m = _re.search(r"Generate (\d+) rows", content)
+            if m:
+                call_sizes.append(int(m.group(1)))
+            # Return enough rows for the requested count
+            n = int(m.group(1)) if m else 1
+            return self._csv_for_n_rows(n)
+
+        generator = self._make_generator_with_mock_llm(llm_side_effect=capture_prompt)
+        records, logs = generator.generate_batch(self.SCHEMA, num_rows=200)
+
+        assert len(records) == 200
+        # Each individual LLM call must be ≤ _LLM_MAX_ROWS_PER_CALL
+        assert all(n <= _LLM_MAX_ROWS_PER_CALL for n in call_sizes), (
+            f"Some LLM calls requested more than {_LLM_MAX_ROWS_PER_CALL} rows: {call_sizes}"
+        )
+
+    def test_exact_threshold_uses_single_call(self):
+        """Requesting exactly _LLM_MAX_ROWS_PER_CALL rows must NOT trigger
+        sub-batching (one LLM call)."""
+        call_count = [0]
+
+        def counting_side_effect(messages, **kwargs):
+            call_count[0] += 1
+            return self._csv_for_n_rows(_LLM_MAX_ROWS_PER_CALL)
+
+        generator = self._make_generator_with_mock_llm(llm_side_effect=counting_side_effect)
+        records, _ = generator.generate_batch(self.SCHEMA, num_rows=_LLM_MAX_ROWS_PER_CALL)
+
+        assert call_count[0] == 1
+        assert len(records) == _LLM_MAX_ROWS_PER_CALL
+
+    # ------------------------------------------------------------------
+    # Bug-fix: return [], logs → fallback when all retries return too few rows
+    # ------------------------------------------------------------------
+
+    def test_insufficient_rows_all_retries_falls_back_to_mock_data(self):
+        """When all retries return fewer than 80% of requested rows (no
+        exception), generate_batch must return the requested count via
+        mock-data fill instead of an empty list."""
+        # LLM always returns only 70 rows when 100 are requested
+        generator = self._make_generator_with_mock_llm(
+            llm_return_value=self._csv_for_n_rows(70)
+        )
+        records, logs = generator.generate_batch(self.SCHEMA, num_rows=100, max_retries=2)
+
+        assert len(records) == 100, (
+            "Expected 100 records but got an empty list – the return [], logs bug may have reappeared"
+        )
+        assert any("filling remainder with mock data" in log for log in logs), (
+            "Expected a log message about filling with mock data"
+        )
+
+    def test_insufficient_rows_result_is_never_empty(self):
+        """generate_batch must never return an empty list regardless of how
+        many retries fail the 80% threshold."""
+        generator = self._make_generator_with_mock_llm(
+            llm_return_value=self._csv_for_n_rows(10)  # 10/100 = 10%, well below 80%
+        )
+        records, logs = generator.generate_batch(self.SCHEMA, num_rows=100, max_retries=3)
+
+        assert len(records) > 0, "generate_batch must never return an empty list"
+        assert len(records) == 100
+
+    def test_best_partial_rows_are_kept_when_retries_exhausted(self):
+        """The best partial LLM result should be used (not discarded) when
+        retries are exhausted via the insufficient-rows path."""
+        attempt_num = [0]
+
+        def improving_side_effect(messages, **kwargs):
+            attempt_num[0] += 1
+            # Return progressively more rows but always < 80 (threshold for 100)
+            rows = 50 + attempt_num[0] * 5  # 55, 60, 65 – all < 80
+            return self._csv_for_n_rows(rows)
+
+        generator = self._make_generator_with_mock_llm(llm_side_effect=improving_side_effect)
+        records, logs = generator.generate_batch(self.SCHEMA, num_rows=100, max_retries=3)
+
+        # Should have 100 rows (best partial 65 + 35 mock fill)
+        assert len(records) == 100
+        # The mock-fill log should be present
+        assert any("filling remainder with mock data" in log for log in logs)
 
 
 if __name__ == "__main__":
