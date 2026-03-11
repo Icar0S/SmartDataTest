@@ -21,6 +21,13 @@ except ImportError:
     from llm_client import create_llm_client
 
 
+# Maximum rows to request per individual LLM call.
+# Requests above this threshold are automatically split into sub-batches.
+# Production testing shows ≤100 rows generates reliably; larger counts cause
+# the model to return fewer rows than requested (typically only ~70-75%).
+_LLM_MAX_ROWS_PER_CALL = 100
+
+
 class SyntheticDataGenerator:
     """Generates synthetic data using LLM."""
 
@@ -344,9 +351,36 @@ Requirements:
             logs.append("ERROR: No LLM configured, using mock data")
             return self._generate_mock_data(schema, num_rows), logs
 
+        # For large requests, split into smaller LLM calls for reliability.
+        # Production testing shows ≤100 rows generates reliably; larger counts
+        # cause the model to return only ~70-75% of requested rows, wasting
+        # API quota on retries.
+        if num_rows > _LLM_MAX_ROWS_PER_CALL:
+            all_records = []
+            offset = 0
+            while len(all_records) < num_rows:
+                remaining = num_rows - len(all_records)
+                sub_size = min(_LLM_MAX_ROWS_PER_CALL, remaining)
+                sub_seed = seed + offset if seed is not None else None
+                sub_records, sub_logs = self.generate_batch(
+                    schema=schema,
+                    num_rows=sub_size,
+                    locale=locale,
+                    seed=sub_seed,
+                    max_retries=max_retries,
+                )
+                logs.extend(sub_logs)
+                all_records.extend(sub_records)
+                offset += sub_size
+            return all_records[:num_rows], logs
+
         # Build prompt
         prompt = self._build_prompt(schema, num_rows, locale, seed)
         logs.append(f"Generated prompt for {num_rows} rows")
+
+        # Track the best partial result across attempts so we can fall back
+        # gracefully when all retries are exhausted.
+        best_rows = []
 
         # Try to generate data with retries
         for attempt in range(max_retries):
@@ -366,6 +400,10 @@ Requirements:
                 num_columns = len(schema.get("columns", []))
                 rows = self._parse_csv_response(response_text, num_columns)
                 logs.append(f"Parsed {len(rows)} rows from CSV")
+
+                # Keep the best partial result in case all retries fail
+                if len(rows) > len(best_rows):
+                    best_rows = rows
 
                 if len(rows) < num_rows * 0.8:  # At least 80% of requested rows
                     logs.append(f"WARNING: Only got {len(rows)}/{num_rows} rows, retrying...")
@@ -388,7 +426,21 @@ Requirements:
                     return self._generate_mock_data(schema, num_rows), logs
                 time.sleep(1)  # Brief delay before retry
 
-        return [], logs
+        # All retries exhausted via the insufficient-rows path (no exception).
+        # Use the best partial LLM result and fill any gap with mock data so
+        # callers always receive the requested number of rows.
+        logs.append(
+            f"Max retries reached with only {len(best_rows)}/{num_rows} rows, "
+            "filling remainder with mock data"
+        )
+        if best_rows:
+            records = self._coerce_types(best_rows, schema)
+            records = self._enforce_uniqueness(records, schema)
+            if len(records) < num_rows:
+                mock_fill = self._generate_mock_data(schema, num_rows - len(records))
+                records.extend(mock_fill)
+            return records[:num_rows], logs
+        return self._generate_mock_data(schema, num_rows), logs
 
     def _generate_random_date(
         self, start_str: str, end_str: str, include_time: bool = False
