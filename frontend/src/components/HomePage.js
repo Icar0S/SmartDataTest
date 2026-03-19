@@ -28,7 +28,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Metodologia',
       navChecklist: 'Checklist QA',
       logout: 'Sair',
-      heroTitle: 'DataForgeTest\nTestes de Qualidade para Big Data',
+      heroTitle: 'SmartDataTest\nTestes de Qualidade para Big Data',
       heroSubtitle: 'Testes avançados de qualidade com métricas, suporte LLM + RAG e\ngeração automatizada de código PySpark',
       btnChecklist: 'Checklist Support QA',
       btnGenerate: 'Gerar Dataset',
@@ -38,7 +38,7 @@ const DataQualityLLMSystem = () => {
       sectionProblems: 'Cenários de Qualidade de Dados',
       sectionTips: 'Diretrizes de Implementação',
       sectionFuture: 'Roadmap de Funcionalidades Futuras',
-      footerCopyright: '© 2026 DataForgeTest. Todos os direitos reservados.',
+      footerCopyright: '© 2026 SmartDataTest. Todos os direitos reservados.',
       footerRights: 'Plataforma de Automação de Qualidade de Dados para Big Data com LLM + RAG.',
       footerBuiltWith: 'Desenvolvido com',
       footerTech: 'React · Python · PySpark · LLM · RAG',
@@ -48,7 +48,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Methodology',
       navChecklist: 'QA Checklist',
       logout: 'Logout',
-      heroTitle: 'DataForgeTest\nBig Data Quality Testing',
+      heroTitle: 'SmartDataTest\nBig Data Quality Testing',
       heroSubtitle: 'Advanced data quality testing with metrics, LLM + RAG support, and\nautomated PySpark code generation',
       btnChecklist: 'Checklist Support QA',
       btnGenerate: 'Generate Dataset',
@@ -58,7 +58,7 @@ const DataQualityLLMSystem = () => {
       sectionProblems: 'Data Quality Scenarios',
       sectionTips: 'Implementation Guidelines',
       sectionFuture: 'Future Features Roadmap',
-      footerCopyright: '© 2026 DataForgeTest. All rights reserved.',
+      footerCopyright: '© 2026 SmartDataTest. All rights reserved.',
       footerRights: 'Data Quality Automation Platform for Big Data with LLM + RAG.',
       footerBuiltWith: 'Built with',
       footerTech: 'React · Python · PySpark · LLM · RAG',
@@ -76,7 +76,7 @@ const DataQualityLLMSystem = () => {
         <span className="text-lg font-bold">
           <span className="text-white">⚡ </span>
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-            DataForgeTest
+            SmartDataTest
           </span>
         </span>
 
@@ -123,7 +123,7 @@ const DataQualityLLMSystem = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <Shield className="w-4 h-4 text-purple-500" />
-            <span className="font-semibold text-gray-300">DataForgeTest</span>
+            <span className="font-semibold text-gray-300">SmartDataTest</span>
             <span className="text-gray-600">·</span>
             <span>{t.footerCopyright}</span>
           </div>
@@ -741,7 +741,7 @@ const DataQualityLLMSystem = () => {
             {t.sectionFuture}
           </h3>
           <p className="text-blue-300 text-lg mb-8">
-            Innovative features planned to enhance your DataForgeTest platform
+            Innovative features planned to enhance your SmartDataTest platform
           </p>
 
           {/* Feature Navigation */}

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-const LANG_KEY = 'dataforgetest_language';
+const LANG_KEY = 'smartdatatest_language';
 
 const LanguageContext = createContext(null);
 

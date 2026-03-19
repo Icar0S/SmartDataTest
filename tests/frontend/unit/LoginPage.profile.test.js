@@ -356,12 +356,12 @@ describe('LoginPage — Login form loading and error states', () => {
     renderPage();
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
-    fireEvent.change(emailInput, { target: { value: 'admin@dataforgetest.com' } });
+    fireEvent.change(emailInput, { target: { value: 'admin@smartdatatest.com' } });
     fireEvent.change(passwordInput, { target: { value: 'admin123' } });
     const form = document.querySelector('form');
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockHandleLogin).toHaveBeenCalledWith('admin@dataforgetest.com', 'admin123', false);
+      expect(mockHandleLogin).toHaveBeenCalledWith('admin@smartdatatest.com', 'admin123', false);
     });
     await waitFor(() => {
       expect(screen.getByText(/Quase lá/i)).toBeInTheDocument();

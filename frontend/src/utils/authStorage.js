@@ -1,12 +1,12 @@
 /**
  * Auth storage utilities.
  *
- * SESSION_KEY: 'dataforgetest_session'
+ * SESSION_KEY: 'smartdatatest_session'
  * Stores: {userId, name, email, role, avatar, profile, loginAt, expiresAt}
  * ⚠️ passwordHash is NEVER stored.
  */
 
-export const SESSION_KEY = 'dataforgetest_session';
+export const SESSION_KEY = 'smartdatatest_session';
 
 /**
  * Save user session to localStorage.

@@ -11,7 +11,7 @@ import {
   hasProfile,
 } from '../../../frontend/src/utils/authStorage';
 
-const SESSION_KEY = 'dataforgetest_session';
+const SESSION_KEY = 'smartdatatest_session';
 
 const mockUser = {
   id: 'user-1',

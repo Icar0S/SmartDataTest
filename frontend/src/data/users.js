@@ -13,7 +13,7 @@ export const REGISTERED_USERS = [
   {
     id: 'user-admin-001',
     name: 'Admin DataForge',
-    email: 'admin@dataforgetest.com',
+    email: 'admin@smartdatatest.com',
     // Plain password stored only for frontend demo — migrate to backend auth
     password: 'admin123',
     role: 'admin',
@@ -23,7 +23,7 @@ export const REGISTERED_USERS = [
   {
     id: 'user-eng-002',
     name: 'Engineer DataForge',
-    email: 'engineer@dataforgetest.com',
+    email: 'engineer@smartdatatest.com',
     password: 'engineer123',
     role: 'data_eng',
     avatar: null,
@@ -32,7 +32,7 @@ export const REGISTERED_USERS = [
   {
     id: 'user-qa-003',
     name: 'QA DataForge',
-    email: 'qa@dataforgetest.com',
+    email: 'qa@smartdatatest.com',
     password: 'qa123456',
     role: 'tester',
     avatar: null,

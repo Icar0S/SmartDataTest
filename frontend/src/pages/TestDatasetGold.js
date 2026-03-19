@@ -36,7 +36,7 @@ const TestDatasetGold = () => {
 
   // Focus management
   useEffect(() => {
-    document.title = 'Test Dataset GOLD - DataForgeTest';
+    document.title = 'Test Dataset GOLD - SmartDataTest';
   }, []);
 
   // Polling for status

@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import { LanguageProvider, useLanguage } from '../../../frontend/src/context/LanguageContext';
 
-const LANG_KEY = 'dataforgetest_language';
+const LANG_KEY = 'smartdatatest_language';
 
 beforeEach(() => {
   localStorage.clear();

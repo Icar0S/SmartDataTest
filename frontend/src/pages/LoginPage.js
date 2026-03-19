@@ -43,7 +43,7 @@ import {
 // ---------------------------------------------------------------------------
 const translations = {
   'pt-BR': {
-    platformName: 'DataForgeTest',
+    platformName: 'SmartDataTest',
     loginTitle: 'Bem-vindo de volta',
     loginSubtitle: 'Faça login para acessar a plataforma de QA em Big Data',
     emailLabel: 'E-mail',
@@ -53,9 +53,9 @@ const translations = {
     loginButton: 'Entrar',
     loginButtonLoading: 'Autenticando...',
     demoCredentials: 'Credenciais de demonstração',
-    demoAdmin: 'Admin: admin@dataforgetest.com / admin123',
-    demoEngineer: 'Engenheiro: engineer@dataforgetest.com / engineer123',
-    demoQa: 'QA: qa@dataforgetest.com / qa123456',
+    demoAdmin: 'Admin: admin@smartdatatest.com / admin123',
+    demoEngineer: 'Engenheiro: engineer@smartdatatest.com / engineer123',
+    demoQa: 'QA: qa@smartdatatest.com / qa123456',
     profileTitle: 'Quase lá!',
     profileSubtitle: 'Personalize sua experiência na plataforma',
     profileQuestion: 'Qual é o seu perfil profissional?',
@@ -80,14 +80,14 @@ const translations = {
       coverage: 'Cobertura',
       response: 'Resposta',
     },
-    footerCopyright: '© 2026 DataForgeTest. Todos os direitos reservados.',
+    footerCopyright: '© 2026 SmartDataTest. Todos os direitos reservados.',
     footerRights: 'Plataforma de qualidade de dados com suporte de IA — Uso educacional e profissional.',
     footerBuiltWith: 'Desenvolvido com',
     footerTech: 'React + Flask + Python 3.12',
     loading: 'Carregando...',
   },
   'en-US': {
-    platformName: 'DataForgeTest',
+    platformName: 'SmartDataTest',
     loginTitle: 'Welcome back',
     loginSubtitle: 'Sign in to access the Big Data QA platform',
     emailLabel: 'Email',
@@ -97,9 +97,9 @@ const translations = {
     loginButton: 'Sign In',
     loginButtonLoading: 'Authenticating...',
     demoCredentials: 'Demo credentials',
-    demoAdmin: 'Admin: admin@dataforgetest.com / admin123',
-    demoEngineer: 'Engineer: engineer@dataforgetest.com / engineer123',
-    demoQa: 'QA: qa@dataforgetest.com / qa123456',
+    demoAdmin: 'Admin: admin@smartdatatest.com / admin123',
+    demoEngineer: 'Engineer: engineer@smartdatatest.com / engineer123',
+    demoQa: 'QA: qa@smartdatatest.com / qa123456',
     profileTitle: 'Almost there!',
     profileSubtitle: 'Personalize your platform experience',
     profileQuestion: 'What is your professional profile?',
@@ -124,7 +124,7 @@ const translations = {
       coverage: 'Coverage',
       response: 'Response',
     },
-    footerCopyright: '© 2026 DataForgeTest. All rights reserved.',
+    footerCopyright: '© 2026 SmartDataTest. All rights reserved.',
     footerRights: 'AI-powered data quality platform — Educational and professional use.',
     footerBuiltWith: 'Built with',
     footerTech: 'React + Flask + Python 3.12',
@@ -212,7 +212,7 @@ function TopBar() {
           <span className="text-lg font-bold">
             <span className="text-white">⚡ </span>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-              DataForgeTest
+              SmartDataTest
             </span>
           </span>
         </div>

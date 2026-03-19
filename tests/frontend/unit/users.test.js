@@ -36,21 +36,21 @@ describe('REGISTERED_USERS', () => {
   });
 
   test('admin user exists with correct role', () => {
-    const admin = REGISTERED_USERS.find((u) => u.email === 'admin@dataforgetest.com');
+    const admin = REGISTERED_USERS.find((u) => u.email === 'admin@smartdatatest.com');
     expect(admin).toBeDefined();
     expect(admin.role).toBe('admin');
     expect(admin.password).toBe('admin123');
   });
 
   test('engineer user exists with correct role', () => {
-    const eng = REGISTERED_USERS.find((u) => u.email === 'engineer@dataforgetest.com');
+    const eng = REGISTERED_USERS.find((u) => u.email === 'engineer@smartdatatest.com');
     expect(eng).toBeDefined();
     expect(eng.role).toBe('data_eng');
     expect(eng.password).toBe('engineer123');
   });
 
   test('qa user exists with correct role', () => {
-    const qa = REGISTERED_USERS.find((u) => u.email === 'qa@dataforgetest.com');
+    const qa = REGISTERED_USERS.find((u) => u.email === 'qa@smartdatatest.com');
     expect(qa).toBeDefined();
     expect(qa.role).toBe('tester');
     expect(qa.password).toBe('qa123456');

@@ -136,7 +136,7 @@ describe('LoginPage — Step 1: Login Form', () => {
 
   test('renders login title in PT-BR by default', () => {
     renderLoginPage();
-    const elements = screen.getAllByText(/DataForgeTest/i);
+    const elements = screen.getAllByText(/SmartDataTest/i);
     expect(elements.length).toBeGreaterThan(0);
   });
 

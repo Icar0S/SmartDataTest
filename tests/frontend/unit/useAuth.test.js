@@ -18,7 +18,7 @@ jest.mock('../../../frontend/src/data/users', () => ({
     {
       id: 'user-1',
       name: 'Admin User',
-      email: 'admin@dataforgetest.com',
+      email: 'admin@smartdatatest.com',
       password: 'admin123',
       role: 'admin',
       avatar: null,
@@ -68,7 +68,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth());
     let loginResult;
     await act(async () => {
-      const promise = result.current.handleLogin('admin@dataforgetest.com', 'admin123', false);
+      const promise = result.current.handleLogin('admin@smartdatatest.com', 'admin123', false);
       jest.advanceTimersByTime(1200);
       loginResult = await promise;
     });
@@ -93,7 +93,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth());
     let loginResult;
     await act(async () => {
-      const promise = result.current.handleLogin('admin@dataforgetest.com', 'wrongpass', false);
+      const promise = result.current.handleLogin('admin@smartdatatest.com', 'wrongpass', false);
       jest.advanceTimersByTime(1200);
       loginResult = await promise;
     });
