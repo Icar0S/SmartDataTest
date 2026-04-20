@@ -25,7 +25,7 @@ const DatasetMetrics = () => {
 
   // Focus management
   useEffect(() => {
-    document.title = 'Dataset Metrics - DataForgeTest';
+    document.title = 'Dataset Metrics - SmartDataTest';
   }, []);
 
   // Handle file selection

@@ -80,7 +80,7 @@ describe('TestDatasetGold Component', () => {
     test('sets document title', () => {
       renderWithRouter(<TestDatasetGold />);
       
-      expect(document.title).toBe('Test Dataset GOLD - DataForgeTest');
+      expect(document.title).toBe('Test Dataset GOLD - SmartDataTest');
     });
 
     test('has proper navigation structure', () => {

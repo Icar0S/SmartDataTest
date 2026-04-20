@@ -1,0 +1,198 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+2019 Developments in eSystems Engineering (DeSE)
+Data Quality Management for Big Data 
+Applications
+          Majida yaseen khaleel              Prof. Dr. Murtadha M. Hamad        
+                      Department of Computer Science                  D eUpanrivtmeresnittyoof fCAonmbpaurte r Science                      University of Anbar        
+  Ramadi, Iraq                       Ramadi, Iraq         majdhsyasyns@gmail.com                    dr.mortadha61@gmail.com
+     Abstract— Currently, as a result of the continuous increase  Several  Data  Warehouses  (DWs)  were  developed  in of data, one of the key issues is the development of systems and  different  fields.  Nevertheless,  today's  DWs  face  new applications to deal with storage, management and processing  scientific problems. Heterogeneous, independent, scalable of big numbers of data. These data are found in unstructured  and distributed are the current sources of data. With the ways.  Data  management  with  traditional  approaches  is  difficulties involved, the traditional data warehouse faces inappropriate because of the large and complex data sizes.  some constraints, summarized with the following sentence: Hadoop is a suitable solution for the continuous increase in  non-existence  of  scalability  owing  to  problems  in data sizes. The important characteristics of the Hadoop are  processing combined with natural data. Data nature: new distributed  processing,  high  storage  space,  and  easy  semi-structured and unstructured data models and formats administration. Hadoop is better known for distributed file 
+systems.  In this  paper, we have  proposed techniques and  have created the need for modern data warehouses to be algorithms that deal with big data including data collecting,  integrated and used, but traditional DW can not.  
+data  preprocessing,  algorithms  for  data  cleaning,  A  We  have  proposed  a  technique  for  converting Technique for Converting Unstructured Data to Structured  unstructured  data  to  structured  data  using  metadata  , Data  using  metadata,  distributed  data  file  system 
+(fragmentation algorithm) and Quality assurance algorithms  distributed data file system (Fragmentation algorithm) and by using the  model is the statistical  model to evaluate the  quality  assurance  algorithms  that  decrease  above highest educational institutions. We concluded that Metadata  limitations and  the summation of total query maintenance accelerates  query  response  required  and  facilitates  query  cost  and  response  time  of  the  selected  views  which  is execution,  metadata will be content for reports, fields and  regarded the view selection problem. 
+descriptions. Total time access for three complex queries in 
+distributed processing it is 00: 03: 00 per second while in non- II . BIG DATA DEFINITION 
+distributed processing it is at 00: 15: 77 per second, average is  The term big data refers to a huge amount of information approximately  five  minutes  per  second.  Quality  assurance  that comes from several sources. Therefore big data do not note values (T-test) is 0.239 and values (T-dis) is 1.96, as a 
+result of dealing with scientific sets and humanities sets. In the  only refer to this huge volume of data but also the variety comparison law, it can be deduced that   if the t-test is smaller  of data forms, which are supplied at different speeds [2]. than the t-dis; so there is no difference between the mean of  By 2020,there  will  be  around  20-100  billion connected  the scientific and humanities samples, the values of C.V for  devices leading to  more  data  collection; thus illustrating both scientific is (8.585) and humanities sets is (7.427), using  a  necessity  for  applying big  data  analytics [3]. This takes the  law  of  homogeneity  know  whether  any  sets  are  more  forth  the requirement of understanding big data. See Fig homogeneous whenever the value of a small C.V was more  1.[4]. 
+homogeneous however the humanity set is more homogeneity.                                             
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Keywords—  Big  Data,  data  quality,  unstructured  Data Distributed data file system, and statistical model. 
+I. INTRODUCTION
+Currently, large data volumes appear unprecedented in heterogeneous sources (eg Commercial and educational, finance). The proliferation of smart computers and Internet of things will make them a very technical nature . Strong systems  and  distributed  programs  behind  the  scenario support multiple overlapping systems (for example, smart grid systems [1]. 
+    Until the big data revolution, traditional technology lacks high storage capacity, keeping all the archiving for a long time and running large data since large data comes from different sources so we need ways to deal with it, big data needs massive data sets to be cleaned, processed, analyzed, secured, and textured. Analysis of data in companies and industries  is  becoming  increasingly  important  for competing,  finding  new  ideas  and  personalizing  their services. [1] 
+
+Fig. 1.volume versus variety 
+A.  Reasons for Appearance of Big Data 
+   Recently, there have been some things that have helped this explosion and increase in size and diversity, including: 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+978-1-7281-3021-7/19/$31.00 ©2019 IEEE 357
+DOI 10.1109/DeSE.2019.00072
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+1. Some regions have very large data for analysis such as meteorology  (weather  science),  genetics  (genomics), complex  physical  simulations,  and  biological  and environmental research [2].  
+2.Low storage cost laws that require the continuation of the data  in  the  database  to  track  criminals,  vandals  and intruders [2]. 
+3. The advent of Internet technology (IoT), which allows all devices  to  communicate  and  interconnect  Internet technology and new data production, doors and windows and  walls  and  refrigerators  and  everything  at  home connected to the Internet and interact with it [2]. 
+4. The emergence of social networks (MySpace, Facebook, tweeter and Google) that send large amounts of data over time and various bodies [2].     
+III. RELATED WORKS 
+1) In 2012, by Abdullah Farhan Mahdi [6] Since On Line Analytical  Processing  (OLAP)  is  essential  in  decision- making He built a model for distributing information to several  computers  linked  to  a  network  using  the fragmentation algorithm and conducted a query on these computers,  the  findings  resulted  in  the  velocity  of complicated issues being implemented in a lot of relative time [6]. 
+2) In  2015,  Jie  Songa,  Chaopeng  Guoa,  Zhi  Wanga, YichanZhanga, Ge Yub and Jean-Marc Piersonc [7] this paper presents Hadoop based Olap (HaoLap), an OLAP system for big data. designed an OLAP based on hadoop and applied several algorithms to each particular work to perform roll up operation on dimension hierarchy using the dimension coding and traverse algorithm then stored the dimensions  and  measurements  using  the  partition  and linearization algorithm. Results with efficient performance in OLAP and complex query [7]. 
+3) In 2017, Xiaolei Li, Zhenyu Tu et al., [8] By using big data analysis to enhance performance and enhance rates, new  company  opportunities  can  be  acquired.  The  data analysis was introduced using industrial enterprises and the off-line data reference model library were developed. By using Spark to introduce the web application that is used with the production of Real Time [8].  
+4) In 2017 Sonia Ordoñez Salinas and Alba Consuelo Nieto Lemus [9] Opinions differed regarding the warehouse data and large data some concluded the disappearance of the repository data with the existence of large data, while others completed the integration of the two by discovering the points of convergence and difference between them and the work of joint tasks [9].  
+5) In 2018, Konstantinos Vassakis, Emmanuel Petrakis and Ioannis Kopanakis [10]. The huge increase in data varies from one generation to another. In the previous generation, the increase of industrial companies, people and advanced technology led to competing companies among them, but now the increase is the result of the Internet and social networking sites that are growing rapidly [10]. 
+IV. THE PROPOSED SYSTEM 
+The proposed system illustrates the main steps from data collection to results obtained using the following algorithms and techniques . 
+A. The Role Of Metadata          
+    Metadata  are  an  effective  task  of  managing  and organizing  data  while  storing  it  because  of  the  lack  of 
+effective mechanisms such as metadata. Metadata refers to 
+data that describe other data. It adds more organization to 
+the data structure, such as the database, and also describes unstructured data such as maps and media Multiplayer [11].                  
+B. A  Technique  for  Converting  Unstructured  Data  to        Structured Data using Metadata approach                                                It  is  difficult  to  find  a  tool  for  dealing  with  non-
+structured  data  that  can  store  and  retrieve  data  that  are 
+generated in a structured database. The following steps will 
+be taken to access non-structured data in the handwriting 
+form. 
+Algorithm1  for  Converting  Unstructured  Data  to Structured Data using Metadata approach 
+Inputs: unstructured Data. Outputs: structured Data. 
+_____________________________________________   Start 
+Step1. Input unstructured data (with various sources). Step 2. Select an affected parameters (features). 
+Step3.Using these features to create structured metadata                 using data modeling (relationships) for this purpose.   
+Step4.Apply  (Classification  or  Clustering  task)  or  any                 mining or statistical methods (machine learning) for an 
+efficient accuracy(quality) results 
+Step5.Data Visualization. End. 
+C. Distributed Processing. 
+   The distributed file system is a major challenge in dealing with large data as it uses several computers connected to each other using any available networks and in the case of a specific query will be sent to these computers and respond to rapid response and thus saves time in retrieving data [6].  
+1. Data Fragmentation 
+    To  handle  large  data,  the  data  are  fragmented  either horizontally or vertically according to the Fragmentation algorithm to several computers and then dealing with the architecture of Client - Server in the need for a specific 
+complex OLAP [6] .   
+2. Replication of data   
+    Replication is one of the technologies used to copy the data to more than one site to maintain in the case of loss of data from the designated place because it is located in the other  and  used  with  the  process  of  fragmentation  as integrated  work  in  the  architecture  of  Client  -Server therefore, the data are stored more accurately and provide more data and give a detailed report of anything whether homogeneous or not [6].    
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+358
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+3) Network Regulation 
+     Distributed  data  operation  within  the  network environment, where possible, should be within the area of building  (LAN)  or  city(MAN).  Implementation  of  the system was based on an internal network (LAN) within organization building. The work will be in the architecture Client -Server [6].                
+D. Data Quality 
+     Quality  is  a  smart  tool  for  applying  sustainable development for all parts of the system at any organization. This is the application of development methods to ensure quality, improvement, sustainability and implementation at high level in practice, operations and performances. [12]. 
+• General Model of Evaluation
+The statistical models are used to evaluate the highest educational  institutions  based  on   standard  model.  The  model is used to evaluate the faculty members  in these institutions. The faculty members model is based on five measures and each measure is based on standard ratio with the final evaluation measure obtained from the sum of all the five measures with a rate of 100%. These measures are (Scientific  Performance  with  a  rate  of  35%,  Teaching Efficiency with a rate of 25%, Educational Performance  with a rate of 10%, Personal Conduct with a rate of 20%, Foundation  Performance  with  a  rate  of  10).  The performance of the scientific colleges is compared  with the performance  of  the  humanism  colleges  depending  on colleges evaluation results with statistical forms using the (T-test)  for  comparison  and  the  (COV)  to  know  the homogeneousness between the scientific colleges and the humanity colleges[12].   
+• The Arithmetic Mean 
+    Using (1) and the percentage law we can be find the final average to evaluate the university then to the college and then each person in this college [12], 
+ ¦n X
+X = i=1 i                                              (1)  
+n
+To compute the arithmetic mean we use (1)  Where   n is the size of sample  
+The arithmetic mean (or average) of the squared deviation (Xi −X)2  is called the variance. The variance denoted 
+symbolically  by   s2 . Its formula is: 
+ ¦n X −X)2
+= i=1 ( i                         (2) 
+s2
+n−1
+Where  n is the sample size. 
+  The square root of the difference is the standard deviation, as shown in (3). It is used to determine the dispersion of the performance of  scientific colleges and the dispersion of the performance of colleges of humanity.               
+The (S) symbol refers the square root of standard deviation 
+of variable x .[12].                                    
+ ¦n (Xi −X)2
+s = i=1                                      (3)                        
+n−1
+• Statistical Comparison Functions 
+   Statistical comparison has several functions. Here, two comparisons of statistical comparisons were performed on the  basis  of  each  of  the  two  components  between  the performance  of  comparative  scientific  colleges  and  the performance  of  humanitarian  colleges  in  the  following form:                        
+A. T-test    
+    T-test is used to compare between two separate accounts mediums. Its  mathematical formulations are illustrated in  (4) It depends on the mean and variance of the two sets. Also it brings on a degree of freedom (df) and identify the moral (.), in order to find ( t scheduled ) which can be found from the intersection of (df) with (.)[12],  
+(X −X )−(μ −μ )
+t = 1 s2p  2 1 + 11 §¨2                       (4)  ·
+ 
+ n1 n2 ©    ¸¹
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+359
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+ ¦n  By sample size(n)  is  the sum of all measurements   where   X1 and  X2  = means of samples 1 and 2 
+aatr hevn epedrreaxaitsvgise•eendrTatiehsgpdeee b.rVvsyaiaolrtunihae.ensI ctcteihosaatrihntasecdt cmethereen(dtSSriaa2taln)n.oSdIfqat rutidhas erDecsomevmoaiftaphtduieeotmevniafatrtioicomsn sat nhodef populationsn11   masa2nn2edda0=  nsn2s2.  ==1 sstiaz1ne)dssao1rdf + sdae(mvnip2alteiso n1sao2nfds2amples 1 and 2 Ti=h1e average or the percentage is called the arithmetic  (μ1 −μ )    = hypothesized difference between the 
+Xi
+   The variance is a measurement for variation of the data 
+scientific  (2) which represents the variance to a sample[12].                                     ( n   −         2                 −   1 )  s 2           
+Deviation  is the difference between an individual data  with      p n +n −2
+value xi  and  the mean  X and, it is called the deviation  of   1 2
+Xi s2 from   X  , that is deviation  =  Xi −X and df = n1 +n2 −2 , Confidence interval for  μ1 −μ2
+1 + 1 (X1 −X2) ±tσ / 2 s2p (n1 n2 ) 
+          With  σ =(1_ Confidence coefficient).  
+there is a difference between the average of the two  samples if the t calculated is greater than the t scheduled.  Otherwise, there is not a difference between the average of  the  two  samples  if  the  t  calculated  is  lower  than  the  t  scheduled. 
+B. The  Coefficient of Variation  
+     Equation (5) is a statistical function to compare between  two different samples based on standard deviation. It is  used to find out how distortion data is in the data, where the  higher  the  data  indicates  that  the  data  is  dispersed,  
+indicating  that  the  data  is  more  homogeneous  and  vice  Fig.3. the original data set. 
+versa. 
+     To handle large data, you can defragment vertically by the  following  example  "SELECT  *  FROM  item  Where 
+c.v = s × 100 item_ quentety = 209"; see fig.4. (5)                                                                           
+X
+V. THE RESULTS AND DISCUSSION 
+      In this section , the execution of the proposed algorithms for converting unstructured data to structured data using metadata ,distributed processing(fragmentation), and data quality, which helps decision makers to obtain good results and to make the right decisions .
+A. Metadata of Sales                                             
+    In this section of the proposed system the description of the files (tables) used in data warehouse and details of the reports again the sales system :                               1. Metadata for tables that used in sales system. 2.Metadata for complex OLAP query(reports) against sales system.   For example Metadata of  item Table in table 1.  
+TABLE.1. METADATA OF ITEMS TABLE 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+361
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+
+B. Distributed processing 
+• Data Fragmentation 
+   To handle big data, R are the original data to be split into horizontal  data  (R1)  or  vertical  data  (R2)  that  contains sufficient data  then retrieve the complex queries required from these fragments . It is possible to return the fragments to their original data by collecting them. see fig,3.  
+Fig.4. Vertical fragmentation 
+    And  to  handle  large  data,  you  can  defragment horizontally by the following example "SELECT item_id, item_name, item_code FROM item”; see fig.5. 
+
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+Fig.5.  horizontal fragmentation 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+   By applying the proposed system algorithms, we found: First: Response Time of Query 
+  The query response time in the OLAP and decision support systems  is  critical  and  very  important.  By  applying distributed processing algorithms to the sales system, we concluded that when processing large data time saving (i.e. the system requires a few minutes), high quality and data retrieval speed. Therefore, the implementation of the query on the distributed processing provides us with fast response time and speeds up decision making. See fig. 6. 
+00:14:24 with out dis.
+processing 00:07:12 distributed
+processing 00:00:00
+total Q3 Q2 Q1
+time
+Fig.6 . Execution time of OLAP query in Distributed processing 
+Second : Evaluation of higher education institutions 
+  We can apply statistical models to the big data were to be Iraqi universities and evaluated according to the standards mentioned and therefore we applied statistical models at the level of Anbar University as a sample of Iraqi universities . Evaluate and Compare Science with human Section The percentages are illustrated in table 2,3,4. 
+    After  taking  several  colleges  and  applying  them   a statistical models to five measures. The following results are illustrated in different fig.7 and fig.8. 
+
+Fig.7. Rate assessment of final evaluation of the colleges 
+
+Fig.8 .Rate assessment  of scientific and humanity colleges 
+TABLE 2. EVALUATION OF THE SCIENTIFIC SECTION WITH HUMANITIES
+
+TABLE3. A COMPARISON OF TWO SETS  TO KNOW DIFFERENCE
+
+TABLE 4. COMPARED TO THE TWO SETS  TO KNOW HOMOGENEITY
+
+VI. SYSTEM EVALUATION 
+   The design and implementation of proposed system can 
+be evaluated as: .  
+1. response time:  we used the proposed system to process 
+large numbers of data and realized that it would take a few 
+minutes or seconds to answer the complex queries.                                
+2. Ease of application: algorithms can be applied using any  programing environment. 
+3. Accuracy: the accuracy of query optimizing based on the 
+selection best set of views and tables that will be used for 
+creating  new  query  by  applying  proposed  algorithm  for optimizing the query.                                
+   We compare this thesis results with other results based the following factors in the table 5. 
+This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+362
+Authorized licensed use limited to: University of Wollongong. Downloaded on May 31,2020 at 12:23:03 UTC from IEEE Xplore.  Restrictions apply. 

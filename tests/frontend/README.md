@@ -1,6 +1,6 @@
 # Frontend Tests
 
-Este diretório contém os testes de frontend do DataForgeTest, organizados por tipo.
+Este diretório contém os testes de frontend do SmartDataTest, organizados por tipo.
 
 ## Estrutura
 

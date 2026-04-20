@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 # Supported file types for auto-import
-_AUTO_IMPORT_EXTENSIONS = {".txt", ".md", ".pdf"}
+_AUTO_IMPORT_EXTENSIONS = {".txt", ".md", ".pdf", ".csv"}
 
 
 class SimpleRAG:
@@ -178,6 +178,25 @@ class SimpleRAG:
                 print("[WARNING] PyPDF2 not installed; PDF files cannot be imported.")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 print(f"[WARNING] Could not read PDF {file_path.name}: {e}")
+        elif suffix == ".csv":
+            try:
+                import pandas as pd  # pylint: disable=import-outside-toplevel
+
+                for encoding in ("utf-8", "latin-1", "cp1252"):
+                    try:
+                        df = pd.read_csv(file_path, encoding=encoding)
+                        # Convert DataFrame to readable text: header + rows
+                        lines = [" | ".join(str(c) for c in df.columns)]
+                        for _, row in df.iterrows():
+                            lines.append(" | ".join(str(v) for v in row.values))
+                        return "\n".join(lines)
+                    except UnicodeDecodeError:
+                        continue
+                return None
+            except ImportError:
+                print("[WARNING] pandas not installed; CSV files cannot be imported.")
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[WARNING] Could not read CSV {file_path.name}: {e}")
         return None
 
     def _auto_import_from_folder(self, folder: Path):
@@ -308,37 +327,149 @@ class SimpleRAG:
 
         return chunks
 
+    # ── PT-BR → EN keyword translations for data-quality domain ─────────────
+    _PT_EN_MAP: Dict[str, List[str]] = {
+        "dados": ["data"],
+        "qualidade": ["quality"],
+        "validação": ["validation", "validate"],
+        "validacao": ["validation", "validate"],
+        "teste": ["test", "testing"],
+        "testes": ["tests", "testing"],
+        "pipeline": ["pipeline"],
+        "erro": ["error", "errors"],
+        "erros": ["error", "errors"],
+        "nulo": ["null", "missing"],
+        "nulos": ["null", "missing", "nulls"],
+        "duplicado": ["duplicate"],
+        "duplicados": ["duplicates", "duplicate"],
+        "esquema": ["schema"],
+        "desempenho": ["performance"],
+        "performance": ["performance"],
+        "spark": ["spark"],
+        "big": ["big"],
+        "completude": ["completeness", "complete"],
+        "precisão": ["accuracy", "precision"],
+        "precisao": ["accuracy", "precision"],
+        "consistência": ["consistency", "consistent"],
+        "consistencia": ["consistency", "consistent"],
+        "atualidade": ["timeliness", "freshness"],
+        "fonte": ["source"],
+        "fontes": ["sources", "source"],
+        "documentos": ["documents", "document"],
+        "documento": ["document"],
+        "arquivos": ["files", "file"],
+        "arquivo": ["file"],
+        "base": ["base", "database", "knowledge"],
+        "conhecimento": ["knowledge"],
+        "métricas": ["metrics", "metric"],
+        "metricas": ["metrics", "metric"],
+    }
+
+    def _expand_query(self, query: str) -> set:
+        """Expand a query with translated terms for cross-language matching."""
+        words = query.lower().split()
+        expanded = set(words)
+        for word in words:
+            # Strip punctuation from word
+            clean = word.strip(".,;:!?\"'()")
+            translations = self._PT_EN_MAP.get(clean, [])
+            expanded.update(translations)
+        return expanded
+
     def search(self, query: str, top_k: Optional[int] = None) -> List[Dict]:
-        """Simple keyword-based search."""
+        """Keyword search with cross-language expansion and per-doc deduplication.
+
+        Improvements over the original:
+        - PT-BR → EN keyword expansion so Portuguese queries match English docs
+        - IDF-style weighting: rarer terms get higher scores
+        - One best-chunk-per-document deduplation, then global top_k ranking
+        - Fallback: when fewer than top_k results have overlap, fill with the
+          highest-scoring chunk from each remaining document (score > 0 guard
+          removed so the LLM always gets some context)
+        """
         if top_k is None:
             top_k = self.config.top_k
 
-        results = []
-        query_words = set(query.lower().split())
+        query_words = self._expand_query(query)
+
+        if not query_words:
+            return []
+
+        # Pre-compute IDF: log(total_docs / docs_containing_term)
+        import math  # pylint: disable=import-outside-toplevel
+
+        total_docs = max(len(self.document_chunks), 1)
+        term_doc_freq: Dict[str, int] = {}
+        for doc_chunks in self.document_chunks.values():
+            doc_words: set = set()
+            for chunk in doc_chunks:
+                doc_words.update(chunk["text"].lower().split())
+            for word in query_words:
+                if word in doc_words:
+                    term_doc_freq[word] = term_doc_freq.get(word, 0) + 1
+
+        idf: Dict[str, float] = {
+            w: math.log((total_docs + 1) / (freq + 1)) + 1.0 for w, freq in term_doc_freq.items()
+        }
+        # Terms not found in any doc still get a small weight
+        for w in query_words:
+            if w not in idf:
+                idf[w] = 0.1
+
+        # Score every chunk; keep best chunk per document
+        best_per_doc: Dict[str, Dict] = {}
 
         for doc_id, chunks in self.document_chunks.items():
             doc_metadata = self.documents[doc_id]["metadata"]
+            best_score = -1.0
+            best_chunk = None
 
             for chunk in chunks:
-                chunk_words = set(chunk["text"].lower().split())
+                chunk_text_lower = chunk["text"].lower()
+                chunk_words = set(chunk_text_lower.split())
 
-                # Simple similarity score based on word overlap
-                overlap = len(query_words.intersection(chunk_words))
-                if overlap > 0:
-                    score = overlap / len(query_words.union(chunk_words))
+                matched_terms = query_words.intersection(chunk_words)
+                if not matched_terms:
+                    continue
 
-                    results.append(
+                # TF-IDF-like score: sum of IDF weights for matched terms
+                # normalised by query length
+                score = sum(idf.get(w, 0.1) for w in matched_terms) / len(query_words)
+
+                if score > best_score:
+                    best_score = score
+                    best_chunk = {
+                        "text": chunk["text"],
+                        "score": score,
+                        "doc_id": doc_id,
+                        "metadata": doc_metadata,
+                    }
+
+            if best_chunk is not None:
+                best_per_doc[doc_id] = best_chunk
+
+        # Sort matching docs by score descending
+        ranked = sorted(best_per_doc.values(), key=lambda x: x["score"], reverse=True)
+
+        # If we still have fewer results than top_k, include a representative
+        # chunk from each unmatched document (score = 0) so the LLM always
+        # receives some context.
+        if len(ranked) < top_k:
+            missing_ids = set(self.document_chunks.keys()) - set(best_per_doc.keys())
+            for doc_id in list(missing_ids)[: top_k - len(ranked)]:
+                chunks = self.document_chunks.get(doc_id, [])
+                if chunks:
+                    doc_metadata = self.documents[doc_id]["metadata"]
+                    ranked.append(
                         {
-                            "text": chunk["text"],
-                            "score": score,
+                            "text": chunks[0]["text"],
+                            "score": 0.0,
                             "doc_id": doc_id,
                             "metadata": doc_metadata,
                         }
                     )
 
-        # Sort by score and return top results
-        results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:top_k]
+        return ranked[:top_k]
 
     def get_sources(self) -> List[Dict]:
         """Get information about all documents."""

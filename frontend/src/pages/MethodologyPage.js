@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -15,9 +15,10 @@ import {
   ArrowDown
 } from 'lucide-react';
 import { fadeIn, slideIn, staggerContainer } from '../styles/animations';
+import { useLanguage } from '../context/LanguageContext';
 
 const MethodologyPage = () => {
-  const [language, setLanguage] = useState('pt-BR');
+  const { language, changeLanguage } = useLanguage();
 
   const translations = {
     'pt-BR': {
@@ -195,7 +196,7 @@ const MethodologyPage = () => {
             {/* Language Toggle Button */}
             <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm rounded-lg p-1 border border-gray-700/50">
               <button
-                onClick={() => setLanguage('pt-BR')}
+                onClick={() => changeLanguage('pt-BR')}
                 className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 ${
                   language === 'pt-BR'
                     ? 'bg-purple-600 text-white'
@@ -206,7 +207,7 @@ const MethodologyPage = () => {
                 PT-BR
               </button>
               <button
-                onClick={() => setLanguage('en-US')}
+                onClick={() => changeLanguage('en-US')}
                 className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 ${
                   language === 'en-US'
                     ? 'bg-purple-600 text-white'

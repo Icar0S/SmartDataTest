@@ -1,0 +1,141 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+Analysis on the Quality Model of Big Data Software 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+Xijiao Xu  
+Shanghai Key Laboratory of Computer Software Evaluation. Shanghai Computer Software Technology Development       Center  
+Shanghai, China xxj@sscenter.sh.cn 
+ Jiayu Gong  
+Shanghai Key Laboratory of Computer Software Evaluation. Shanghai Computer Software Technology Development       Center  
+Shanghai, China gjy@sscenter.sh.cn  
+ Huanming He 
+Shanghai Key Laboratory of Computer Software Evaluation. Shanghai Computer Software Technology Development       Center  
+Shanghai, China hhm@sscenter.sh.cn 
+Wei Song 
+Shanghai Key Laboratory of Computer Software Evaluation. Shanghai Computer Software Technology Development       Center  
+Shanghai, China songw@sscenter.sh.cn 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+Abstract—With  the  rapid  development  of the  big  data  system, The big data system has the characteristics of large data scale, diverse  data  and  high  computational  complexity.  Its  testing method has to be constantly improved. By analyzing the general software quality model, and combining the characteristics of the big data software, a set of quality model for the big data software is formed. 
+Keywords—Big  Data  ,the  Quality  Requirements  ,Software Model 
+I. INTRODUCTION 
+The rapid development of the Internet has given birth to a large number of new frontier technologies. The big data is a hot emerging industry in recent years. The Internet has created a  large-scale  application  environment  for  the  big  data technology,  which  first  originated  from  the  Internet.  The Internet provides the most important data foundation for the big data. The analyzing and processing capabilities of the big data also bring more developing possibilities for the Internet 
+companies. In this article，The big data system is defined to centrally store big data resources, meet the high concurrency, mass data requirements for high-performance computing and large-capacity storage capabilities, and provide the ability of the data collection, The big data systems defined in this article is  to  centrally  store  big  data  resources,  meet  the  high concurrency,  mass  data  requirements  for  high-performance computing and large-capacity storage capabilities, and provide a  large  amount  of  openness  such  as  data  collection,  data calculation, data storage, data analysis, and data visualization. Ability, the data calculation, the data storage, the data analysis, and the data visualization. 
+As  a  new  application  technology,  the  big  data  system carries  the  core  business  of  the  platform  frequently,  so  the comprehensive testing and evaluating of the big data system is particularly important. However, due to the characteristics of the  big  data,  its  testing  methods  are  different  from  the traditional software test. The evaluated model of the general software quality ,which is used in the big data system, cannot reflect the characteristics of the big data system such as large data scale, diverse data, high computational complexity, and 
+distributed structure. This paper will establish a set of software quality model for the big data system to provide reference for the  test  and  evaluation  of  the  big  data  system,  from  the perspective  of  software  quality  evaluation  model  and combining with the big data system evaluated examples. 
+II. THE EVALUATED MODEL OF THE SOFTWARE PRODUCT QUALITY MODEL
+Software products have different quality requirements from the  perspective  of  different  users.  Users  consider  that  the software is easy to use, easy to learn, flexible and user-friendly as the high-quality software. Product managers consider that the software is easy to maintaining, easy to modifying, and easy  to  developing  because  of  thinking  about  the  product marketing  competitiveness.  Developers  usually  consider  the software’s  complexity  and  importance  as  the  important indicators of the software quality. So it has great significance to  establishing  the  software  quality  standard,  which  is beneficial to improving the product’s software quality. 
+At present, the general software quality standards widely used  and  recognized  in  the  industry  are  ISO/IEC 25023:2016[1~2].  The  software  products’  quality  evaluated model includes ISO/IEC 25051 software quality model[3]. In this model, the software quality characteristics are defined as functional  suitability,  performance  efficiency,  compatibility, usability, reliability, security, maintain-ability and portability. These  quality  characteristics  can  be  used  as  the  general software quality metrics, but the quality of the big data system cannot be measured. 
+The  difference  between  the  big  data  systems  and  the traditional  systems  is  storage,  mainly  about  the  database storage and the file storage. The searching engine companies were the first to feeling the technical challenges of the massive amounts of  data.  Subsequently,  the  rise  of  the  social  media sites and the mobile Internet aggravated this challenge. The Internet companies find that the growth, the diversity, and the processing timeliness requirements of the new data cannot be dealt with by the traditional databases and business intelligent vertical scaling architectures. Because the traditional database is designed to capturing data, if you directly get data from it for analysis,  there  will  be  many  problems,  such  as  complex 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+     This work was supported by National Key R&D Program of China (No. 2018YFB1403404).
+978-1-6654-1893--5/21/$31.00 ©2021 IEEE  78 
+ICIS 2021-summer, June 23-25, 2021, Shanghai, China 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+structure, messy data, missing history, slow query when the amount of data is large, etc. At this time, you need a "data warehouse  ".  As  a  result,  the  distributed  file  system—— Google File System (GFS) was first proposed, the distributed computing  system  and  the  distributed  database  solved  the predicament faced by the big data with the lower cost and laid the foundation for the flourishing of big data technologies such as HBase, Cassandra, MongoDB, Neo4j and Redis and other databases. The computing processing engine gradually covers scenarios  such  as  offline  batch  computing,  real-time computing, stream computing, and the computing frameworks of MapReduce, Spark, Flink, and Storm are born. In the field of data query and analysis, it has formed a wealth of SQL on Hadoop  solutions,  massively  parallel  processing  (MPP) architecture,  Hive,  HDFS,  MR,  TeraData,  GreenPlum  and other  technologies.  The  universal  system  frame  diagram  of applying  big  data  technology  is  shown  in  Figure  1,  which contains the common components of the big data system. 
+
+Fig. 1.  The system frame diagram for Big Data System 
+Therefore, according to the characteristics of the big data system, it is necessary to provide more quality measures for its software  quality  model,  and  comply  with  the  following principles[4]: 
+1) Performance  efficiency  should  consider  the processing  speed,  the  response  time,  the  resource consumption,  throughput,  etc.  The  general performance testing tools are not suitable for the big data system’s measurement, and there are many types of modules in the big data system, also the different modules  require  the  different  testing  techniques, so multiple testing tools are frequently needed. 
+2) The testing environment and monitoring plan of the big  data  system  should  be  considered.  The  testing environment of the big data system is complex, and 
+the factors that affect the performance of the big data system  are  numerous  and  complicated,  including network environment, application, virtualization, data quality, etc., so it is necessary to monitor the entire Cluster machines, services, computing, storage, tasks and other information. 
+3) The measurability of the quality characteristics should be considered.  It  should  be  measured  by subjective and  objective  means,  and  the  cost  of  measurement should  be  taken  into  account.  It  should  be  easy  to measure and convenient for data collection. The data processed  by  the  big  data  system  has  the characteristics of large-scale (Volume), various types (Variety), and fast production speed (Velocity). In the test process of the big data system, the more realistic the test data set is, the more reliable the test results will be. 
+III. THE EVALUATED MODEL OF THE BIG DATA SOFTWARE QUALITY
+Based on the above evaluation principles, and combined with the ISO/IEC 25051 software quality model, a three-tier structure framework is formulated for the test quality evaluated model of the big data system, as shown in Figure 2. In this framework model, the quality factor layer is the eight quality characteristics of the software quality model; the quality sub- elements are the refinement of its upper quality factor layer; the bottom layer is the software quality metric (including various parameters),  which  is  a  quantitative  software  characteristic indicators. For example, the resource consumption mentioned in  the  article  is  the  software  quality  metric  of  resource availability which is attributed to performance efficiency. 
+ 
+   
+   
+Metric Metric Metric Metric Metric Metric
+Fig. 2.  Quality Evaluated Model 
+A. Functional Suitability 
+The functional sub-characteristics of the big data system mainly include data collection, data storage, data analysis, etc. For the big data system, it mainly measures its data analysis and processing function modules, namely data tables or data files. The specific measurement elements include[5-7]: 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+79
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+(1)Verify  completed  data  table,  and  the  table  name  is consistent with the agreement； 
+(2)  that  data  table  fields  are  complete,  field  name,  field 
+type, length precision and other attributes are consistent with the convention； 
+(3)The primary key of the data table set consistent with the agreement, and the technical constraints are that there are no records with duplicate primary keys and no records with null 
+primary key fields； 
+(4) Verify that the time constraint is consistent with the 
+convention. 
+data processed by each Executor and the processing time can be viewed by accessing Spark's Web UI interface. The Spark's Web UI interface is shown in Figure 3. 
+
+Fig. 3.  The Spark's Web UI Interface 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+B. Performance Efficiency  C.  Compatibility 
+Compatibility  mainly  includes  co-existence, verifTy he thsube  -plchaatfroracmte risctiomcs poofne  pntersf orofm athncee  ebiffgic  idaenctay  smyasintelym   interoperability  and  other  aspects.  Among  them, 
+including HDFS, HBASE, SPARK, Cloudera and so on. Under  interoperability is to evaluate the ability of information transfer each sub-characteristics, the performance testing elements of  and interaction between two or more modules. In the big data the  big  data  system  mainly  include:  throughput,  data  system  framework,  data  providers  introduce  new  data  or processing,  query  response  time,  etc.  The  components  and  information  into  the  big  data  system;  data  consumers  use metrics is shown in Table 1.  applications  provided  by  the  big  data  application  providers. There are rich interfaces among  the data providers, the data 
+Table 1   Components and Metrics   consumers and the big data application providers, such as the data access interface,  the data acquisition interface,  the data 
+Components Metrics HDFS Throught（Read and Write Performance） HBASE Data processing（Read and Write Requests/per second） SPARK Data processing Cloudera The Monitoring Component of Hadoop Platform verification  interface,  etc.[8].  It  requires  these  interactive interfaces  to  follow  the  rules  of  big  data  collection  and 
+retention,  data  access  in  multiple  formats  (structured,  semi- structured,  unstructured),  and  support  for  common  data 
+collected tools. 
+D. Usability 
+Usability mainly includes learnability, user error protection and  so  on.  The  measurement  of  learnability  includes consideration of whether the software presentation documents or the software system helping documents are easy to operate, comfortable and effective. And according to the file, whether the  big  data  system  can  be  easily  deployed,  or  a  graphical interface system of the configured tool is provided. User error protection  considers  whether  the  system  prompts  the  delete operation  when  the  product  software  performs  the  delete operation. 
+Throughput: Platform IO processing capability is suitable 
+for HDFS, Hbase and other technologies. The involved tools of  E.  Reliability 
+performance analysis include the TestDFSIO tool that comes 
+with  Hadoop  and  the  performance  testing  tool  Yahoo!  Reliability  mainly  includes  availability,  fault  tolerance, CloudServing  Benchmark  (YCSB),  etc.;  the  database  IO  easy recovery and so on. For the big data system, under the processing  capabilities,  such  as  MPP  database,  can  include  above  sub-features,  the  main  measured  elements are system sequential table scan single node performance, single node data  redundancy and data backup strategy. 
+import and export, and accurate query of tens of billions of  System redundancy：Check whether the number of tables.   sub-nodes of HDFS, HBase, and MPP components of 
+Data processing: including the speed of executing queries  the big data system is redundant. 
+or MapReduce jobs, as well as the computing power of the  Data backup strategy: Check the number of copies of platform. For example: the spark computing power mainly uses  HDFS  data‘s settings,  HBase,  MPP databases’  data aggregate  query  and  Terasort  algorithm  as  performance  backup strategy. 
+evaluated standards. Aggregate query is the task of submitting 
+aggregate query in Spark cluster, and you can view the amount  F.  Security 
+of data processed by each Executor and the processing time by  The sub-characteristics of information security mainly visiting  the  Spark's  Web  UI  interface;  Terasort  algorithm  include confidentiality, non-repudiation, authenticity, evaluation is also in the Spark cluster. By running the TeraSort  data security etc. 
+tool, the generated random data is sorted, and the amount of 
+80
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+ Confidentiality：User  access  rights  of  the  big  data 
+system includes the configuration of roles and users in the  unit  of  system  components,  according  to  the granularity of data table level and data column level to assign permissions to users; 
+ Non-repudiation:  the  operation  log  of  the  big  data 
+system cannot be modified or deleted; 
+ Authenticity ： identity  authentication  mechanism, 
+check  the  identity  authentication  method,  password complexity requirements and login of users by the big data system. 
+ Data  Security：check  whether  the  system  provides 
+data  storage  encrypted  and  decrypted  functions; sensitive data is encrypted transported. 
+G. Maintain-ability 
+Maintainability  mainly  includes  analyzability  and modifiability. The analyzability’s elements are to confirm the installation and deployment of the big data cluster nodes and the  data  nodes,  and  to  view  the  version  information  of  the system. Modifiability is mainly to check the system's online upgrade function and data update mode. 
+H. Portability 
+The sub-characteristics of portability includes adaptability and installability. The adaptability’s metric is to confirm the operating system, database, browser that the big data system is adapted to. Installability is mainly check whether the managing node and data node of the big data cluster can be installed. 
+suitable  for  big  data  system  ,  compared  with  the  general software  quality  model  for  analysis.  It  is  hoped  to  provide reference for the big data platform test and improve the quality of the big data software. 
+REFERENCES
+[1] ISO/IEC 25010:2011 “System and software engineering—Systems and software quality requirements and evaluation(SQuaRE) Part 10: System and software quality models”; 
+[2] ISO/IEC  25023:2016“ Systems  and  software  engineering—Systems and  software  Qualitu  Requirements  and  Evaluation(SQuaRE)- Measurement of system and software product quality” ; 
+[3] ISO/IEC  25051:2014  “System  and  software  engineering——Systems and  software  quality  requirements  and  evaluation(SQuaRE)  Part 51:Requirements for quality of ready to use software product (RUSP) and instructions for testing”; 
+[4] Yuyu Yuan. Practical quality model for evaluating software products. Computer Engineering, 29(5):32-34, 2003; 
+[5] GB/T  38673—2020  “Informantion  technology  ——Big  data——basic requirements for big data systems(Chinese)” ; 
+[6] ISO/IEC  25024:2015  “Systems  and  software  engineering  —  Systems and  software  Quality  Requirements  and  Evaluation  (SQuaRE)  — Measurement of data quality”; 
+[7] ISO/IEC  25012:2008  “ Software  engineering  —  Software  product Quality Requirements and Evaluation (SQuaRE) — Data quality model” ; 
+[8] GB/T 38672—2020“Information technology ——Big data——Interface basic requirements(Chinese)”. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+IV. CONCLUSION
+By analyzing the characteristics of big data software, this paper has formed a set of software quality requirements system 
+81
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Authorized licensed use limited to: UNIVERSIDADE FEDERAL DO CEARA. Downloaded on April 11,2024 at 17:30:53 UTC from IEEE Xplore.  Restrictions apply. 

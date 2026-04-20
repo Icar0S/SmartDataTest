@@ -185,7 +185,7 @@ describe('AdvancedPySparkGenerator Component', () => {
       expect(screen.getByText(/Step 1: Upload Dataset/i)).toBeInTheDocument();
     });
 
-    test('proceeds to step 3 after generate DSL', async () => {
+    test('proceeds to step 3 after generate JSON', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockMetadata,
@@ -200,14 +200,14 @@ describe('AdvancedPySparkGenerator Component', () => {
       fireEvent.change(input, { target: { files: [file] } });
       fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
       await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-      fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
       await waitFor(() => {
-        expect(screen.getByText(/Step 3: Review and Edit DSL/i)).toBeInTheDocument();
+        expect(screen.getByText(/Step 3: Review and Edit JSON/i)).toBeInTheDocument();
       });
     });
   });
 
-  describe('Step 3 - DSL review', () => {
+  describe('Step 3 - JSON review', () => {
     const goToStep3 = async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -223,13 +223,13 @@ describe('AdvancedPySparkGenerator Component', () => {
       fireEvent.change(input, { target: { files: [file] } });
       fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
       await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-      fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-      await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+      fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+      await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
     };
 
-    test('shows DSL editor in step 3', async () => {
+    test('shows JSON editor in step 3', async () => {
       await goToStep3();
-      expect(screen.getByText(/Step 3: Review and Edit DSL/i)).toBeInTheDocument();
+      expect(screen.getByText(/Step 3: Review and Edit JSON/i)).toBeInTheDocument();
     });
 
     test('back button returns to step 2 from step 3', async () => {
@@ -278,8 +278,8 @@ describe('AdvancedPySparkGenerator Component', () => {
       fireEvent.change(input, { target: { files: [file] } });
       fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
       await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-      fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-      await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+      fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+      await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
       fireEvent.click(screen.getByRole('button', { name: /Generate PySpark Code/i }));
       await waitFor(() => screen.getByText(/Step 4: PySpark Code/i));
     };
@@ -424,8 +424,8 @@ describe('AdvancedPySparkGenerator - Metadata with columns', () => {
     fireEvent.change(input, { target: { files: [file] } });
     fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
     await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-    fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-    await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+    fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+    await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
     fireEvent.click(screen.getByRole('button', { name: /Generate PySpark Code/i }));
     await waitFor(() => screen.getByText(/Step 4: PySpark Code/i));
     
@@ -433,7 +433,7 @@ describe('AdvancedPySparkGenerator - Metadata with columns', () => {
   });
 });
 
-describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
+describe('AdvancedPySparkGenerator - JSON and Error Handling', () => {
   beforeEach(() => {
     fetch.mockClear();
     jest.clearAllMocks();
@@ -447,9 +447,9 @@ describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
     preview: [{ id: 1 }],
   };
 
-  test('shows error when DSL generation fails', async () => {
+  test('shows error when JSON generation fails', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => simpleMetadata });
-    fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'DSL generation failed' }) });
+    fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'JSON generation failed' }) });
 
     renderWithRouter(<AdvancedPySparkGenerator />);
     const input = document.querySelector('input[type="file"]');
@@ -457,9 +457,9 @@ describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
     fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
     await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
 
-    fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
     await waitFor(() => {
-      expect(screen.queryByText(/Step 3: Review and Edit DSL/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Step 3: Review and Edit JSON/i)).not.toBeInTheDocument();
     });
   });
 
@@ -473,15 +473,15 @@ describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
     fireEvent.change(input, { target: { files: [new File(['content'], 'data.csv')] } });
     fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
     await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-    fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-    await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+    fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+    await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
     fireEvent.click(screen.getByRole('button', { name: /Generate PySpark Code/i }));
     await waitFor(() => {
       expect(screen.queryByText(/Step 4: PySpark Code/i)).not.toBeInTheDocument();
     });
   });
 
-  test('allows editing DSL text in step 3', async () => {
+  test('allows editing JSON text in step 3', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => simpleMetadata });
     fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ dsl: { rules: [{ rule: 'test' }] } }) });
 
@@ -490,8 +490,8 @@ describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
     fireEvent.change(input, { target: { files: [new File(['content'], 'data.csv')] } });
     fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
     await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-    fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-    await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+    fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+    await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
 
     const textarea = screen.getByRole('textbox');
     fireEvent.change(textarea, { target: { value: '{"custom": "dsl"}' } });
@@ -508,8 +508,8 @@ describe('AdvancedPySparkGenerator - DSL and Error Handling', () => {
     fireEvent.change(input, { target: { files: [new File(['content'], 'data.csv')] } });
     fireEvent.click(screen.getByRole('button', { name: /Inspect Dataset/i }));
     await waitFor(() => screen.getByText(/Step 2: Review Dataset Metadata/i));
-    fireEvent.click(screen.getByRole('button', { name: /Generate DSL/i }));
-    await waitFor(() => screen.getByText(/Step 3: Review and Edit DSL/i));
+    fireEvent.click(screen.getByRole('button', { name: /Generate JSON/i }));
+    await waitFor(() => screen.getByText(/Step 3: Review and Edit JSON/i));
     fireEvent.click(screen.getByRole('button', { name: /Generate PySpark Code/i }));
     await waitFor(() => screen.getByText(/Step 4: PySpark Code/i));
 

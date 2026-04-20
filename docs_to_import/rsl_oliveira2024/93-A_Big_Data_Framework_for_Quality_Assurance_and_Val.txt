@@ -1,0 +1,125 @@
+﻿International Journal of Recent Technology and Engineering (IJRTE)  
+ISSN: 2277-3878 (Online), Volume-8 Issue-2, July 2019  
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+A Big Data Framework for Quality Assurance and Validation 
+S. Nachiyappan, Justus S 
+   depends purely on format. It  can be in any structured or Abstract: Big data is a new technology, which is defined by  unstructured format or it can be also a corrupted file. The data 
+large amount of data, so it is possible to extract value from the  which are collected from the various sources like social media capturing and analysis process. Large data faced many challenges  and  digital  media will be constructive and structured.It is dcoume ptolexvaitrioyauns d fepearfoturerms asuch nce. Mas anvoyluorgmae,nspizaetieodn, s vafariaceticohna,llveanlugees , tough to analyze the types of data. There are many types of 
+while facing test strategies for structured and unstructured data  data like we categorize under structure and unstructured. It is validation,  establishing  a  proper  testing  environment,  working  very  difficult  to  analyze  all  types  of  dataThere  are  some with non relational databases and maintaining functional testing.  flexible solutions for DBMS and RDBMS such as  Oracle. 
+These challenges have low quality data in production, delay in  The RDBMS is used for structured query language or SQL to execution and increase in cost. Reduce the map for data intensive  manage, define, query, and update data. However, suppose business and scientific applications Provides parallel and scalable 
+programming  model.  To  get  the  performance  of  big  data  data size is irresistible, it seems that RDBMS can handle hard, applications, defined as response time, maximum online user data  and if done, the process becomes more expensive. It proves capacity  size,  and  a  certain  maximum processing capacity. In  that relational databases are not capable of managing large 
+proposed, to test the health care big data . In health care data  data and some new technologies are needed for processing the contains text file, image file, audio file and video file. To test the  data. Customary databases are accurate for structured data bpigre pdroactaessdinocgutesmetinnt,g  abny dupsinost gprotwocesscoinngc etespts tinsuch g. Toacs labssigify dathtae and not for unstructured data. Big data contains the three 
+data from unstructured format to structured format using SVM  characteristics such as volume/variety and velocity always algorithm.   In  preprocessing  testing  test  all  the  data,  for  the  called as 3V’s.Volume refers to an algorithm ability to deal purpose data accuracy.  In preprocessing testing such as file size  with a large amount of data. The scale of the data set is the 
+testing, file extension testing and de-duplication testing. In Post  quantity  for  the  clustering  algorithms  related  to  volume Proeasily tcessoinfegtch to thimepdlematae. nt the map reduce concept for the use of  property, the higher the size, the handling outlines. The data 
+set is a collection of data  set properties. Classification of 
+Index Terms: Preprocessing, Map reduce in Post Processing,  features, nominal, ordinal, interval and ratio. Many clustering Structured data using SVM.   algorithms support numerical and classification data. In large quantities, the size of the data set increases to maintain large 
+I. INTRODUCTION  data, and the dimensions do not even increase. It's a curse of 
+  Big  data  is  new  forms  of  information  processing  that  size. In many clustering algorithms are capable of performing promotes  large  volume,  high  Speed  with  communication  setbacks. Noise data can be grouped with data points. Variety assets, improved awareness, cost effective, decision making  indicates  the  ability  of  a  clustering  algorithm  to  perform and process automation. Data represented large quantities is  various sets of data sets, such as numerical, classification, nothing but Big Data. True, there is no specific size parameter  nominal and ordinal. A criterion for clustering algorithms is a that  defines  this  technology  size.  This  is  the  safe  way  to  set of data and cluster shape type. The size of the data set is measure the standard route of terabytes even pet bytes. The  smaller or larger, but clustering algorithms support larger data data  travels  from  various  directions,  and  the  speed   and  sets for large data mining. In cluster shape, the set of data volume will be terrible. Data will be replaced at a faster pace  cluster is based on size and type shape. Velocity refers to the and therefore require more processing, especially for social  calculation algorithm's calculations based on the complexity media feeds. But it is not the only medium to get information.  of  the  time  period  of  the  clustering  algorithm.  If  the It comes from different sources and shapes. If you go through  algorithm's calculations are too low, nothing algorithm has the data you can find text files, audio files, images, video files,  less run time. The algorithms run based on the Big O Option. presentations,  sensor  datas,  data  bases  and  log  files.  It  The  Artificial  Neural  Network  algorithm  is  based  on  a cognitive  approach, namely, a neural network without the 
+hidden  layer.  Although  this  approach  could  lead  to  poor quality  in  classification,  it  was  easily  selected  for construction. As with the SVM model we created a perception classification for each binary combination. A node has an input layer of a node for classification. Perception has an output layer that represents a number of two categories that 
+Revised Manuscript Received on 30 July 2019.  * Correspondence Author Nachiyappan S*, Assistant Prof (Sr.), SCSE, VIT University, Chennai.Justus S, Associate Professor, SCSE, VIT University, Chennai. © The Authors. Published by Blue Eyes Intelligence Engineering andSciences Publication (BEIESP). This is an open access article under theCC-BY-NC-ND license http://creativecommons.org/licenses/by-nc-nd/4.0/ 
+belong  to  an  example  given  
+either 0 or a 1.   
+Using the full feature set rules for input layer increases the 
+computation, but stabilizes the feature set for comparison with  Big Data is defined as datasets whose size is very huge and it the SVM algorithm.   cannot be adopted in a traditional database tools to do all the 
+data processing. This is a specific definition which defines big  
+II. RELATED WORK  data in terms of its context not the metric. This was discussed in Mckinsey’s report 2011 NIST has defined big data in some 
+BdepigenDatads udpooes n itsno t feameatunres thanat dit it is isa  vderiffyerlarengtiatede volubmyethoe fd“Verata it y other way like “ big data is where the data acquisition data 
+volume and velocity or variety of data limits the ability to larbigge data data”in  anliterd “atuhurge e andata”d th.erTe herare e arsoe mme andyefindefitioinitions wnshichfor perform the analysis on data. There are certain limitations that 
+plays a very important role. Big Data is Defined by IDC in  which are needs to be addressed before processing it”. There 2011 : “Big data technologies describe a new generation of  is  also  some  other  definitions  which  states  that“software technologies  and  architectures,  designed  to  economically  libraries along with their associated algorithms that enable extract value from very large volumes of a wide variety of  distributed  processing  and  analysis  of  big  data  problems data,  by  enabling  high-velocity  capture,  discovery,  and/or  across clusters of computer units” [1].  
+analysis.''[1]. This explains the four characters or four V’s of 
+Big data.  Volume, Variety, Velocity and Veracity of data.  
+
+Fig1. Big Data Validation Service 
+There ia s work which is carried out by an industry regarding 
+big data testing, They have used the Big Data services for  III. METHODDOLOGY 
+each and every V’s. Here four types of testing’s are done first 
+is to test the velocity, when the data comes inside the system  A.  File Categorization using SVM Algorithm 
+or storage the rate of speed which it is extracting and loading  The  file  classification  is  a  function  that  automatically into target system. Second one is the volume testing which  separates the set of file extension from the classification from tests the amount of data in which the map reduce algorithms  the  predefined  set.  The  concept  of  file  classification  is  a are used in specific to their business needs. Third one is the  standardized number of predefined categories or fractions. variety  of  data  where  the  type  of  data  is  important  to  File  classification  can  be  defined  as  a  function  of differentiate like structured or unstructured. If its unstructured  automatically  classifying  electronic  documents  for  their data  then  the  data  has  to  be  processed  and  it  has  to  be  commenting  classes  based  on  their  file  extension.  Each converted into a structured format to process it. Fourth one is  document  is  not  exactly  one,  multiple  or  category.  Using veracity of data where the truthiness of data is going to be the  machine  learning,  learning  classifications  of  targets,  and very  important  part  as  the  validation  and  verification  is  automating  those  classifications  automatically.  This  is  a concern. Fig1. Shows the big data validation services and how  learning  problem  overseeing.  Due  to  the  overlapping  of it is going to be processed.  categories,  each  category  is  considered  a  separate  binary 
+classification problem.  
+Classification  helps  to  identify  the  correct  category  of  extension and store it on the server. In this process we must domain in use, in this section I decided to divide the cloud file  use  the  SVM  algorithm.  SVM  Algorithm  Main  concept into four categories related to a particular file, which is split  classification
+into an image file, video file, text file, and document file. For 
+extraction.  Then  get  the  extension  and  classify  the  file 
+
+Fig 2: Overview of Big data testing 
+File size and File extension Testing 
+A.  De-duplication in Preprocessing Testing  File size and file extension is the one of the pre process In big data preprocessing technique, we've got to check the   testing. Data has been collected from varied sources and when de-duplication,  zero  file  size,  then  the  file  extension.  In  collection  information  the  info  the  information  set  and de-duplication testing ,To transfer file the user and also the  uploading the data into the big information system and before CSP  perform  each  de-duplications.  The  de-duplication  process it, to validate the file is empty or not. If the file size is operation  is  a  twin  of  that  within  the  baseline  approach.  zero the file is not uploaded into the cloud server. Then the additional exactly, the user sends the file tag to the CSP for  File extension validation helps us in many ways to confine the the file duplicate check. If a file duplicate is found, the user  extension of file. In the file extension validation, to test the can run the POW protocol POWF with the CSP to prove the  file size limit. For example, the image file contains some limit, file possession. If no duplicate exists, CSP stores the cipher  if the size is exceeds it is not uploaded into the cloud   
+rtext with key and returns the corresponding pointers back to 
+user for native storage. In de-duplication on the opposite hand  B.  Map Reduce in Post Processing 
+of keeping the multiple information copies with an equivalent  Map reduce is that this programming paradigm that enables file content, de-duplication eliminates recurrent information  for large scalability across a whole lot or thousands of servers by  keeping  solely  single  copy  and  referring  alternative  in a very big data cluster. The Map reduce is straightforward redundant  information  thereto  single  copy.  The  to grasp for those that area unit acquainted with clustered de-duplication to eliminates duplicate copies of an equivalent  scale-out data processing solutions. 
+file. De-duplication also can be used at the block level, that  
+eliminates duplicate blocks of information that occur in non  
+identical files.  
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Retrieval Number: A1912058119/19©BEIESP  Published By:  
+DOI: 10.35940/ijrte.B1912.078219  Blue Eyes Intelligence Engineering & Journal Website: www.ijrte.org  2493  Sciences Publication  
+International Journal of Recent Technology and Engineering (IJRTE)  
+ISSN: 2277-3878 (Online), Volume-8 Issue-2, July 2019  
+ Map-Reduce Validation represent the checking of key-value pairs  generation  and  validate  the  map-reduce  by applying numerous business rules. The term Map reduce truly refers to 2 separate and distinct tasks that big data programs perform. the  primary  is  that  the  map  job,  that  takes  a  group  of knowledge and converts it into another set of knowledge, wherever individual components area unit countermined into rows (key/value pairs). The scale back job takes the output from a map as input and combines those information rows into a smaller set of rows. In map scale back, the scale back job is often performed once the map job. The Health Care big data area unit hold on within the server. Within the user will fetch information quickly we've to use the map scale back. 
+Table 1. Quality Attributes of Big Data 
+S.N
+oQuality Variable Explanation 1 Data correctness The  correctness  of  the  data  is validated  with  respect  to  format and data types. 2 Data consistency This validated the data consistency in various angles it also refers to data  gathering  from  various locations. 3 Data accuracy This  refers  to  closeness  between the actual result and the expected result. Data from various sources are gathered and measured for its accuracy.  4 Data security Security  is  one  if  the  important concern  which  need  to  be addressed  and  validated   for  the applications  security  and  its integrity in various  perspectives III. TEST PROCEDURE 
+In addition the quality factors which are discussed in this paper are as follows: 
+Reliability:    
+This assures the reliability of the big data applications  under some specific conditions how the system is going to perform. When a specific load is given to the system how it behaves.  Performance:  How  the big data  applications performs in specific  conditions  and  its  also  indicates  about  the performance  of  big  data  apps,  such  as  availability  and response time. 
+Correctness:  
+This speaks about the rightness of the big data applications. Scalability:  
+Scalability is the factor which speaks about the applications flexibility to scale. In some situations it should support to scale some huge data and huge repositories and storages from period  to  period.  In  the  same  way  that  the  applications scalability should be tested for its purpose. 
+Security:  
+The validation of  security regarding the big data application is done here at different stages. 
+IV. RESULT 
+A. Data Accuracy 
+Data Quality is one of the important factor which needs to be considered when we go for any testing the first one we need to discus is data accuracy. Data accuracy is the important factor of  data quality. It is the data stored in that field is correct or not. In this implementation the medical data set of sample 100000 records are taken as the test data set.  
+In data accuracy is higher when compare to preprocessing. After  the  pretesting  the  each  cluster  provides  the  correct accurate result. Before preprocessing the data is stored in unstructured format after preprocessing the data is formed in to  structured  data  and  its  formed  into  different  clusters. Cluster type such as image, video, document and text. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Retrieval Number: A1912058119/19©BEIESP  Published By:  
+DOI: 10.35940/ijrte.B1912.078219  Blue Eyes Intelligence Engineering & Journal Website: www.ijrte.org    Sciences Publication  
+International Journal of Recent Technology and Engineering (IJRTE)  
+ISSN: 2277-3878 (Online), Volume-8 Issue-2, July 2019  
+When  the  Quality  challenges  for  Big  data  is  being  discussed the data quality of applications are also considered.  The Quality variables of enormous information applications  were secret nowadays. Traditional quality factors following  robustness, performance and security can be valid in big data.   Now coming to big data validations and the quality challenges  this work discuss about the quality and validation process of  big data. On comparing to customary software testing with the   big data application testing process is entirely different and  they are discussed in this paper in a brief manner.  
+The test procedure for big data is as follows.  
+1) Functional testing of big data, which includes rich  test environments and domain-specific functions;  
+2) Non-function testing, includes performance,  reliability, portability, Security, system consistency and  Quality of Service  
+3) Big data Timing testing, checks timeliness of the  system;  Fig 3: Data Accuracy 
+4) Big Data feature testing, targets user related system 
+evolution and visualization 
+These  four  steps  are  followed  in  testing  the  big  data  
+applications  and  feature  testing  which  includes  testing  
+continuously with real time testing.   
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Retrieval Number: A1912058119/19©BEIESP  Published By:  
+DOI: 10.35940/ijrte.B1912.078219  Blue Eyes Intelligence Engineering & Journal Website: www.ijrte.org    Sciences Publication  
+International Journal of Recent Technology and Engineering (IJRTE)  
+ISSN: 2277-3878 (Online), Volume-8 Issue-2, July 2019  
+B. Data volume 
+In data volume, each cluster takes more storage space before pretesting. After that implementation of the pre testing the size of the data has been reduced. By means of de-duplication testing the duplicate data has been removed and the storage space has been reduced far better than before preprocessing. Because of the remove duplicate data, null value data and file categorization the storage space becomes low in each cluster. 
+
+7. Quality Assurance for Big Data Applications – Issues, Challenges and Needs – Chuanqi Taq, Jearry Gao. 2016. 
+8. A Survey on Quality assurance techniques for big data applications, Pengcheng zhang, Xuewu Zhou, Jerry Gao, Chuanqi Tao. 2017. 
+9. Big Data - Testing Approach to Overcome Quality Challenges – Infosys White paper – Vol 11 no 1- 2013. 
+10. Big Data Testing Services,  Infosys white  paper – 2015 
+AUTHORS PROFILE 
+  Prof.  S.  Nachiyappan  is  working  in  VIT University Chennai campus, Completed his PG in Anna university in 2004 and his area of research is software engineering and Big Data. He is having 5 years of Industry Experience and 10 + Years of teaching  experience.  He  is  a  member  of  ACM professional Chapter. 
+Dr. S. Justus   Worked in various industries as project manager and researcher, he has an over all  experience  of  17+  years  in  both  IT  and Academic.  He  has  guided  more  than  15  PG students  for  the  project  and  has  published various  papers  in  national  and  international journals.   He  is  a  member  of  ISTE,  IEEE, IAENG. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Retrieval Number: A1912058119/19©BEIESP  Published By:  
+DOI: 10.35940/ijrte.B1912.078219  Blue Eyes Intelligence Engineering & Journal Website: www.ijrte.org    Sciences Publication  
+International Journal of Recent Technology and Engineering (IJRTE)  
+ISSN: 2277-3878 (Online), Volume-8 Issue-2, July 2019  
+Fig. 4: Data Volume 
+V. CONCLUSION 
+Big data information is as yet advancing and analyzers and testers   have  a  huge  duty  to  recognize  new  thoughts  for performing tests in the field of Big Data. A standout amongst the most testing things for an testers is to keep the pace with industry's  evolving  elements.  In  many  aspects  of  the  test, technical details behind the tester scene are unknown, but testing of Big Data Technology is quite different. There is no need to be strong in a Tester Fundamentals test, but in order to analyze many performance barriers and other problems, you need to know the minute details in the design of database designs. Big data testers should first learn parts of the big data  Eco System. In this paper  10000 sample data is used entered big data in the same cluster mode.  We turn out with two preprocess and post process testing results. The future work in this is to test information with numerous group frameworks. 
+ We have to give the more accurate result by using different algorithms.  
+REFERENCES 
+1. Avita  Katal,  Mohammad  Wazid,  R  H  Goudar,  “Big  Data:  Issues, Challenges, Tools and Good Practices”, IEEE, 2013. 
+2. Xiaoming  Gao,  Judy  Qiu,  “Supporting  Queries  and  Analyses  of Large-Scale  Social  Media  Data  with  Customizable  and  Scalable Indexing  Techniques  over  NoSQL  Databases”,  14th  IEEE/ACM International Symposium on Cluster, Cloud and Grid Computing, 2014. 
+3. Matthew  Smith,  Christian  Szongott,  Benjamin  Henne,  Gabriele  von Voigt, “Big Data Privacy Issues in Public Social Media”, IEEE, 6th International Conference on Digital Ecosystems Technologies (DEST), 18-20 June 2012. 
+4. Vapnik (1995), The Nature of Statistical Learning Theory. Springer, Berlin  
+5. Burges, C.J.C. (1996). Simplified Support Vector Decision Rules. 13th  International Conference on Machine Learning.  
+6. Pengcheng Zhang1, Xuewu Zhou1, Wenrui Li2, Jerry Gao3,4 (2017) A  survey on quality assurance techniques for big data applications.  
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+Retrieval Number: A1912058119/19©BEIESP  Published By:  
+DOI: 10.35940/ijrte.B1912.078219  Blue Eyes Intelligence Engineering & Journal Website: www.ijrte.org  2495  Sciences Publication  

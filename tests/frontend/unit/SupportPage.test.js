@@ -37,7 +37,7 @@ describe('SupportPage Integration Tests', () => {
   test('renders SupportPage with title and description', () => {
     render(<SupportPage />);
     
-    expect(screen.getByText(/DataForgeTest Support/i)).toBeInTheDocument();
+    expect(screen.getByText(/SmartDataTest Support/i)).toBeInTheDocument();
     expect(screen.getByText(/Get help with your data quality testing setup using our AI-powered documentation assistant/i)).toBeInTheDocument();
   });
 
@@ -77,6 +77,6 @@ describe('SupportPage Integration Tests', () => {
     expect(screen.getByTestId('message-circle-icon')).toBeInTheDocument();
     
     // Check title is present 
-    expect(screen.getByText(/DataForgeTest Support/i)).toBeInTheDocument();
+    expect(screen.getByText(/SmartDataTest Support/i)).toBeInTheDocument();
   });
 });

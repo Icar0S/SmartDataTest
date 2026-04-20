@@ -1,0 +1,174 @@
+﻿AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+Quality Control Framework of Big Data for Early Warning of 
+Agricultural Meteorological Disasters
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+Jiale Li 
+College of Ecology and Environment, Institute of Disaster Prevention 
+Sanhe, Hebei, China 
+lijiale_cumtb@126.com 
+ABSTRACT 
+Agricultural meteorological disasters, including floods, droughts, dry  hot  winds,  low  temperature  chills,  typhoons,  hail  and continuous rain, can lead to significant reduction in agricultural output.  Big  data  platform  for  early  warning  of  agricultural meteorological disaster is the basis of business operation system for  early  warning  of  agricultural  meteorological  disasters,  and the data quality is an important guarantee for success of the early warning.  Quality  control  of  big  data  for  early  warning  of agricultural meteorological disaster involves names of data sets, metadata, data documents and content of data sets. The quality control for contents of data sets is divided into quality control of attribute  data  and  that  of  spatial  data,  and  quality  control  of spatial data is divided into quality control of vector data and that of raster data. Methods for data quality control are divided into fully automatic, semi-automatic and full manual control methods.   
+CCS CONCEPTS 
+• Social  and  professional  topics ~  Quality assurance   • Hardware ~ Printed circuit boards   • Computing methodologies ~ Machine learning 
+KEYWORDS 
+agro-meteorological  disasters,  early  warning,  big  data,  quality control, framework. 
+1 Introduction 
+Meteorological  disasters  are  atmospheric  natural  disasters  that cause harm to human life and property, cause losses to social and economic  development,  and  have  serious  adverse  effects  on human production and life  [1]. According to statistics from the United  Nations  World  Meteorological  Organization, meteorological disasters account for 60% of all natural disasters [2]. China is a country with frequent natural  disasters, and food 
+Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned  by  others  than  ACM  must  be  honored.  Abstracting  with  credit  is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from Permissions@acm.org. 
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China © 2019 Association for Computing Machinery. ACM ISBN 978-1-4503-7150-6/19/07…$15.00 https://doi.org/10.1145/3349341.3349371 
+Shunbao Liao† 
+College of Ecology and Environment, Institute of Disaster Prevention 
+Sanhe, Hebei, China 
+liaoshunbao@cidp.edu.cn 
+production is greatly affected by natural disasters. About 70% of natural disasters are resulted from meteorological disasters [3]. 
+Agro-meteorological disasters are a general term for adverse weather  or  climatic  conditions  that  occur  in  agricultural production  processes  and  result  in  significant  reduction  in agricultural  production,  including  floods,  droughts,  dry  hot winds,  low  temperature  chills,  typhoons,  hail  and  continuous rain [4]. Agro-meteorological disaster prevention needs to know a lot of information such as weather forecast, weather conditions, the  scope  of  meteorological  disasters,  duration,  intensity  of disasters,  population  distribution  of  affected  areas,  number  of large livestock, crop planting area, water irrigation status, etc. This  information  includes  both  spatial  geographic  information and a large number of weather attribute information inseparable from space [5]. Therefore, it is an effective method to combine high-tech  such  as  remote  sensing  and  GIS  and  conventional disaster  monitoring  and  evaluation  methods  to  monitor  and evaluate  major  agrometeorological  disasters  [6].  Real-time quality control of meteorological data is of great significance for meteorological  support  of  aviation  activities  and  disaster prevention and mitigation [7]. 
+Data  Quality  Management  is  to  improve  data  quality  by refining  and  enhancing  the  management  level  of  the organization.  The  management  of  data  consists  of  a  series  of activities,  which  involve  identification,  measurement, monitoring, and early warning of data quality problems. These problems could be triggered off in one of the phases, which range from  data  planning,  collection,  storage,  sharing,  maintenance, and application to data destruction. Data quality assessment and management  are  generally  measured  in  several  dimensions, including  completeness,  conformity,  consistency,  accuracy, uniqueness, and integration [8]. 
+2 Big Data Platform for Early Warning of 
+Agricultural Meteorological Disasters 
+2.1 Platform Structure
+Big  data  platform  for  early  warning  of  agricultural meteorological disasters and model system are the  basis of early warning service operation system (as shown in Figure 1). Users call  data  from  Big  data  platform  and  early  warning  models through  the  interface  of  early  warning  service  system  for agricultural meteorological disasters to realize the early warning of  agricultural  meteorological  disasters.  At  the  same time,  the 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+business system stores the user's early warning results into Big data platform for other users to query. 
+User1 User2 …… User n
+Operation system for agricultural meteorological disasters warning service (Interface)
+Big data platform for  Models system for agricultural meteorological 
+disasters warning  disasters warning 
+Basic data for agricultural 
+meteorological disasters  Model build/selection
+warning 
+Figure  1:  Operation  business  system  for  early  warning service of agricultural meteorological disasters
+The  quality  control  of  big  data  for  early  warning  of agrometeorological disasters refers to data quality inspection and data correction that arise in the process from basic data to Big data platform for agrometeorological disasters warning. However, the  data  quality  issues  that  occur  in  the  process  from  user operation  results  to  Big  data  platform  for  agrometeorological disasters warning will not be discussed in this paper. 
+2.2 Quality Control Objects
+Big data are divided into structured data and unstructured data, and the quality control of early warning big data for agricultural meteorological disasters is mainly for structured data. The large database of agricultural meteorological disaster warning consists of attribute database and spatial database. The attribute database includes real-time observation database (such as meteorological observation  database)  and  non-real-time  observation  database (such as statistical survey database, historical climate database, etc.). The spatial database includes spatial vector database and spatial raster database. It was stipulated in this study that the object  of  quality  control  for  big  data  of  agricultural meteorological disasters warning was a data set, which was, a two-dimensional table in relational database, coverage in vector database or a grid layer in raster database.  
+Quality control objects in Big data platform for early warning of agricultural meteorological disasters are listed in Table 1. 
+Table 1. Quality control objects in the big data platform
+ 
+Data types at level 1 Data types at level 2 Quality control objects Examples  Attribute data Real-time observed data Tables in relational database real-time observed meteorological  data Non-real- time observed data Tables in relational database statistical survey data, historical climate data Spatial data Vector data Vector layers Land use, boundary Raster data Raster layers DEM, NDVI 3 Contents of Quality Control 
+According to data management strategy and actual situation of data, quality control of big data for agricultural meteorological disaster  early  warning  was  carried  out  at  different  levels, including  quality  control  of  data  set  names,  metadata,  data documents,  and  content  of  data  sets.  The  quality  control  of content of data sets was divided into quality control of attribute data and that of spatial data, and quality control of spatial data was divided into quality control of vector data and that of raster data. 
+3.1 Quality Control of Data Set Names 
+Big  data  for  agro-meteorological  disaster  warning  are spatiotemporal  data. The  purpose  of normalization  of  data  set name is to let users know the spatiotemporal range, detail level and thematic content of data set by names of data sets, that is, the basic information about a dataset can be obtained by its name. 
+Therefore, dataset names of big data for agrometeorological disaster warning should contain four elements, which are spatial scope (region), time range, detailed level and thematic content of data  sets,  but  however  the  order  of  these  elements  can  be adjusted according to the habit. The time range refers to the time of data acquisition, not the time when the data is published or released. The detail level of data may be scale of vector data, spatial resolution of raster data, or administrative division unit of statistical survey data. For the normalization of data set name, the example is as follows: 
+Example:  National  1:100,000  land  use  data  (2015).  Where "national" is the spatial range of data; "1:100,000" refers to the detail level of data; "Land use" is the thematic content; "2015" represents the time of the data. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+75
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+3.2 Metadata and Data Documents 
+Metadata is data about data. It is information that describes a dataset. Metadata generally describes data sets by standardized entries,  which  are  normative  and  uniform.  Metadata  can  help users understand and apply data sets. Without metadata, users sometimes  cannot  fully  interpret  data.  Therefore,  metadata 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+conforming  to  norms  and  with  sufficient  information  is  an important means of data quality assurance. 
+A data document is a file that describes a data set. Compared with  metadata,  data  documents  do  not  follow  a  strict  coding specification,  but  they  are  sometimes  critical  to  the  user's understanding of data. For example, in some data sets, attribute elements  are  represented  by  codes  consisting  of  letters  and numbers, the description of the codes (including meaning, unit, etc.) is particularly important. Both metadata and data document are important means of data quality control, but they have their own  characteristics.  Metadata  is  more  standardized,  but  the description  of  datasets  by  metadata  is  sometimes  not  specific. Data documents are not as standardized as metadata, but their description  may  be  more  specific.  Therefore,  metadata  is relatively suitable for the standardized management of data sets, and data documents are more suitable for the interpretation and application of data sets by users. From the perspective of data quality  control,  either  metadata  or  data  documents  should accompany data sets. It's best to have both. 
+3.3 Quality Control of Contents of Data Sets 
+Quality control of data set content is divided into quality control of attribute data and that of spatial data, and quality control of spatial data is divided into quality control of vector data and that of raster data. 
+3.3.1 Quality Control of Attribute Data. Attribute  data  is  also 
+called  two-dimensional  tabular  data,  which  is  a  table  in  a relational database. The  attribute data in the agrometeorological disaster  warning  database  mainly  includes  real-time  and historical meteorological data, and statistical survey data. 
+3.3.2 Quality Control of Real-Time and Historical Meteorological 
+Data.  For  those  kinds  of  data,  meteorological  stations  are generally  used  as  recording  units,  and  the  main  contents  of quality control are as follows: 
+(a) Quality control of weather station codes: It is mainly checked whether the codes of weather stations are within the national standard  codes  database  and  whether  the  corresponding relationship  between  the  codes  and  the  names  of  weather stations is correct. 
+(b) Quality control of spatial coordinates of weather stations:  it  is checked whether the longitude, latitude and altitude of weather stations are correct. 
+(c) Quality control of time elements:  it  is  checked  whether  the attribute value and the format of time for each record is correct. 
+(d) Missing value check: checked contents include missing values for the fields that should have values, the percentage of missing values, and whether the missing values can be interpolated by some means, and so on. 
+(e) Outlier check: according to the spatial-temporal variation law of meteorological data, check whether there is outlier in data sets by  certain  mathematical  methods,  whether  to  eliminate  or correct them. 
+(f) Logical  rationality  check:  According  to  meteorological knowledge, check whether there exist the data inconformity to conventional  logic.  For  example,  whether  the  lowest  value  is 
+greater than the highest value, or whether the average value is between the maximum value and the minimum value, and so on. 
+(g) Checking of other obvious errors. 
+3.3.2.1  Quality  Control of  Statistical  Survey  Data. Statistical survey data are generally recorded by  administrative divisions, and the main contents of data quality control include: 
+(a) Quality  control  of  administrative  divisions’  codes:  check whether the administrative divisions’ codes are within the scope of  the  national  standard,  and  whether  the  correspondence between  the  administrative  divisions’  codes  and  their  name is correct. 
+(b) Quality control of time elements: check whether the attribute value and the format of time element for each record are correct. 
+(c) Missing value check: which fields should have values but are actually missing, the percentage of missing values, whether they can be interpolated by some means, and so on. 
+(d) Logical rationality check: according to the basic knowledge of statistics,  check  whether  there  exist  the  data  inconformity  to conventional logic. For example, in some administrative divisions, whether the total output of a certain crop is greater than the total grain  output,  whether  the  total  crop  output  is  equal  to  the planting area multiplied by the yield of a unit area, and whether the  sum  of  the  total grain  output  of  the lower  administrative divisions  is  equal  to  the  total  grain  output  of  the  higher administrative division, and so on. 
+(e) Checking of other obvious errors. 
+3.3.3 Quality Control of Spatial Data. Due to the inst ability of 
+spatial entities,  the  limitations of  human  cognitive  expression, the observation errors of spatial entities, and the errors in spatial data processing, spatial data can cause quality problems when expressing the real world. According to its sources, the error of geographic  information  spatial  data  can  be  divided  into  the original  data  error  and  the  error  introduced  by  the  spatial database construction. 
+3.3.3.1 Coordinate and Map Projection Checking.  Spatial  data 
+includes vector data and raster data. Whether it is vector data or raster data, it first need to be checked whether its coordinate system  including  ellipsoid  parameters  and  map  projection parameters  are  consistent  with  the  corresponding  parameters defined in the database. If not, conversion and modification are required to ensure overlay and spatial analysis between spatial data to be carried out. 
+3.3.3.2 Quality Control of Vector Elements. According  to  scale 
+and thematic content of data sets, it should be checked whether vector features (lines and polygons) conform to corresponding mapping specifications, for example normalization of lines and minimum  spot  on  maps.  The  reference  specification  for  the quality control is mapping specification at corresponding scale. 
+3.3.3.3 Quality Control of Raster Features. It should be checked 
+whether the size of grid cells is the same as that indicated in the 
+dataset name. 
+3.3.3.4 Quality  Control of  Attribute  Elements in  Spatial  Data 
+Sets. For vector layer, the following contents should be checked: 
+(a) Code correctness  checking:  it  should  be  checked  whether attribute  codes  of  vector  elements  (such  as  administrative divisions’ codes, land use type code, etc.) are beyond codes base, 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+76
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+and whether the correspondence between codes and type names (such as administrative divisions’ names, names of land use type, etc.) is correct or not. 
+(b) Name/code missing checking:  it  should  be  checked  whether there exist unnamed or uncoded vector features (points, lines or polygons). 
+(c) Checking of other attribute element values: it should be checked whether attribute values of vector features (such as temperature value in the isotherm) exceeds extreme limits. 
+(d) Obvious errors checking: it should be checked whether there are obvious errors in data sets by GIS software and  visualization means. 
+For raster layers, the following contents should be checked: 
+(a) Code  correctness  checking:  it  should  be  checked  whether attribute codes of grid cells arc within code database. 
+(b) Logical  rationality  checking:  for  example,  whether  NDVI values are between 0 and 1. 
+(c) Missing value checking:  it  should  be  checked  whether  there exist grid cells without attribute values, the ratio of the grid cells without  attribute  values  to  all  cells,  and  whether  the  missing values can be interpolated by some methods. 
+(d) Outlier checking: such as cliff detection in DEM. 
+(e) Extreme values checking:  it  should  be  checked  whether  the attribute values of grid cells (such as temperature) exceeds the extreme limits. 
+(f) Obvious error checking:  it  can  be  visually  checked  whether there  are  obvious  errors  in  raster  layers  by  image  processing system or GIS software. 
+4 Methods of Quality Control 
+Quality  control  methods  of  big  data  for  early  warning  of agricultural meteorological disasters are divided into three types: automatic control methods, artificially interactive semi-automatic control methods and full manual control methods. 
+relatively low update frequency and low timeliness requirements. For  example,  detection  of  coordinate  systems  and  projection parameters of spatial data, cartographic normative detection of vector features in digital maps, identification of grid cell size in raster data, detection of code normalization and logic consistency of attribute data in statistical survey data, etc. 
+4.3 Full Manual Control Methods 
+The data quality problems are detected and analyzed completely by manual visual method. Some obvious data quality problems may  not  be  discovered  through  automated  or  semi-automated methods, but experienced technicians can easily identify them through  manual  visual  methods,  for  example,  obviously nonstandard drawings in digital maps or illogical values of grid cells. Checking of name normalization of data sets is also usually done by manual inspection methods. 
+5 Technological Process of Data Quality Control
+Based on the above analysis, we can draw a flow chart for data quality  control  of  Big  data  platform  for  agricultural meteorological disaster warning, as shown in Figure 2. 
+The  data  quality  control  process  of  Big  data  platform  for agricultural meteorological disaster warning mainly includes:(1) data set name inspection, (2) data set content inspection. Quality control of data set content includes attribute data and spatial data. Attribute  data  are  mainly  used  for  meteorological  observation data  and  statistical  survey  data.  Spatial  data  are  divided  into vector data and raster data. Its quality control mainly checks the coordinate  system  and  projection  parameters,  as  well  as  the quality inspection of various spatial elements. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+77
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+4.1 Automatic Data Quality Control Methods 
+Instead  of  man-machine  interaction,  automatic  data  quality control methods realize data quality detection through computer software. The automatic methods are mainly aimed at real-time collected data with obvious characteristics of time series, such as real-time  and  quasi-real-time  meteorological  observation  data. The quality inspection for real-time collected data needs not only high  timeliness  but  also  completing  heavy  workload.  Only automated quality inspection can meet the needs of data quality control. 
+Quality  problems  of  historical  meteorological  observation data, and some quantitative quality problems in vector data and raster data, can also be detected by automatic methods. 
+4.2 Semi-Automatic Quality Control Methods
+With participation of professional technicians, the quality of data sets  is  interactively  checked  and  judged  through  statistical analysis software or RS/GIS software. This situation is mainly for vector data, raster data, statistical survey data, etc., which have 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+AICS 2019, July 12–13, 2019, Wuhan, Hubei, China                                                                                                                        Jiale Li et al. 
+Big data for
+agricultural meteorological disasters warning
+Datasets: 2D attribute table / Vector data layer /Raster data layer Names of data sets Contents of data sets
+Normalization check for  Quality control for contents of data sets names of data sets
+Attribute data Spatial data
+Whether  Meteorological  Vector  Raster it  observation  Statistical  data  data 
+N contains 4  data survey data layer layer major 
+elements
+Y Coordinate system and map 
+projection check
+Normative  Grid cell
+detection of  size vector features detection
+Code correctness Station code Code correctness
+Logical rationality Station coordinates Admin. codes Missing codes
+Missing values Time elements Time elements Abnorm. inspection
+Abnormal inspection Missing values Missing values Obvious errors
+Extreme check Outliers Logical rationality detection
+Obvious error Logical rationality …… ……
+detection
+……
+…… Semi-automatic  Semi-automatic / 
+Semi-automatic / Automatic detection detection manual detection
+manual
+Is there a  Y
+quality 
+problem
+N
+End
+Figure  2: Flow chart of data quality control for big data platform of agricultural meteorological disaster warning
+6 Conclusions and Discussions 
+6.1 Conclusions 
+The framework, objects, contents and methods of data quality control  for  Big  data  platform  of  agricultural  meteorological disasters warning were analyzed systematically in this study. The following conclusions were drawn: 
+(a) Data quality control is a basic work for construction of Big data  platform  of  agricultural  meteorological  disasters  warning, and it is also an important guarantee for success of early warning. In  addition  to  the  quality  control  of  contents  of  data  sets themselves, dataset names, metadata and data documents are also integral  parts  of  data  quality  control  for  Big  data  platform  of agricultural meteorological disaster warning. 
+This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+78

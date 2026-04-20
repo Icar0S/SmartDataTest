@@ -1,0 +1,188 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+Physica Medica 69 (2020) 28–35
+Contents lists available at ScienceDirect 
+Physica Medica 
+journal homepage: www.elsevier.com/locate/ejmp 
+Original paper
+A systematic quality assurance framework for the upgrade of radiation 
+T oncology information systems
+Baoshe Zhang ⁎, Shifeng Chen, Warren D. D’Souza, ByongYong Yi
+Department of Radiation Oncology, University of Maryland School of Medicine, Baltimore, MD 21201, USA A R T I C L E I N F O A B S T R A C T
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Keywords:
+Quality assurance
+Radiation oncology information system Clinical data integrity and safety Radiation oncology data management Integrated oncology system
+In spite of its importance, no systematic and comprehensive quality assurance (QA) program for radiation on- cology information systems (ROIS) to verify clinical and treatment data integrity and mitigate against data errors/corruption and/or data loss risks is available. Based on data organization, format and purpose, data in ROISs falls into five different categories: (1) the ROIS relational database and associated files; (2) the ROIS DICOM data stream; (3) treatment machine beam data and machine con figuration data; (4) electronic medical record (EMR) documents; and (5) user-generated clinical and treatment reports from the ROIS. For each data category, this framework proposes a corresponding data QA strategy to very data integrity. This approach verified every bit of data in the ROIS, including billions of data records in the ROIS SQL database, tens of millions of ROIS database-associated files, tens of thousands of DICOM data files for a group of selected patients, almost half a million EMR documents, and tens of thousands of machine con figuration files and beam data files. The framework has been validated through intentional modi fications with test patient data. Despite the big data nature of ROIS, the multiprocess and multithread nature of our QA tools enabled the whole ROIS data QA process to be completed within hours without clinical interruptions. The QA framework suggested in this study proved to be robust, ffie cient and comprehensive without labor-intensive manual checks and has been im- plemented for our routine ROIS QA and ROIS upgrades.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+1. Introduction
+With the advancement of computer technology and the transition
+from paper-based medical records to electronic medical records (EMRs)
+[1  3], radiation oncology information systems (ROISs) [4] have be- come increasingly complex and data-intensive. Their functionalities
+have been extended from a simple record-and-verify system [5] to a comprehensive radiation oncology patient care system with numerous subsystems, such as patient image storage, patient demographics, treatment scheduling, treatment delivery and records, follow-up visits, and even treatment planning. ROISs are playing a pivotal role in im- proving patient care regarding e fficiency and safety [4] , as well as re- ducing the error rate in the clinic [2,6,7]. However, a ROIS, as an emerging complex technology, may face new challenges and introduce
+a new venue for errors [6,8]. Therefore, quality assurance (QA) issues for ROISs have been raised in the radiation oncology community [7,9].
+There are occasions that can put ROISs at high risks, such as, a software upgrade or hardware change [10], which might be in company with database migration. Because of the complexity of patient data and
+hybrid database storage architecture, database migration is becoming
+much more complex and risky. A clinical ROI system provides treat- ment parameters (such as gantry angle, collimator angle, couch angle, jaw position, multileaf collimator position, monitor units, etc.) to a treatment delivery system (such as linear accelerators) and then records all treatment histories and activities. If any of the treatment parameters is accidentally modi fied in the database during the ROIS upgrade, treatment will deviate from the intended plan, with consequences that could harm patients and/or lessen treatment e ffectiveness. An intensity- modulated radiation treatment/volumetric-modulated arc therapy plan might include thousands of treatment parameters, so that it is almost impossible to check these manually as was done in the past. Despite vigorous software QA by the vendors of ROISs before the release of a new version, it is still the responsibility of clinical physicists and IT group members to check and con firm their own data integrity. As a type of medical device, ROISs deserve a comprehensive QA method like any other equipment in radiation oncology. However, few how-to instruc- tions or recommendations for ROIS QA methods have been published [13]. Therefore, it is crucial to perform a series of QA for checking consistency during a ROI upgrade and the QA procedure should be automatic for a practical reason.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+⁎ Corresponding author.
+E-mail address: bzhang4@umm.edu (B. Zhang).
+https://doi.org/10.1016/j.ejmp.2019.11.024
+Received 17 March 2019; Received in revised form 8 November 2019; Accepted 26 November 2019 1120-1797/ © 2019 Associazione Italiana di Fisica Medica. Published by Elsevier Ltd. All rights reserved.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+This article presents a systematic QA framework for veri fication ofROIS information integrity after a signi ficant change happened to ROIS, such as ROIS software or hardware upgrades or data migrations.
+2. Methods and materials
+This framework mainly focuses on clinical data sources and struc-
+tures in ROIS. All data are categorized into five kinds: the ROIS SQL [11] database and its associated files, ROIS DICOM [12] data streams, ROIS machine data files and con figurations, EMR documents, and clinical reports generated from the ROIS. The principle of the QA fra- mework compares these five data sources and data structures between ROIS states. Once data integrity is veri fied, an end-to-end test is per- formed to further check connections and interfaces between the ROIS system and other clinical systems (such as treatment planning systems, treatment control consoles, and hospital information systems).
+2.1. ROIS relational database
+From time to time, due to performance improvements, security concerns, or bug fixes, a ROIS relational database (see Appendix I for details) system would be upgraded. Sometimes, it involves data mi- gration. Usually, data migration occurs in the following situations but
+not limited to: (1) the vender strategically changes partnership with commercial database software companies or simply adopts a new da- tabase server architecture based on performance and features; (2) the vendor simply adopts a new hardware and relocates data from a legacy storage to a new data storage, or from a server to another; (3) the vendor redesigns their database schema and architecture and needs to move data from the legacy databases to the new databases. During ROIS upgrades, possible data risks include implicit data loss and explicit data
+loss, data corruption, and corrupted data relationships.
+In order to verify migrated data in databases, the first step is to compare database schema to figure out how data have been re- structured and migrated from the legacy database to the new database
+and how data relationships have changed   for example, to identify any added or deleted data columns or tables or any data type change for a
+data column. An existing data column may move to a di fferent data table, or a data table or column may be renamed. Moreover, data ag- gregations or data splits may have occurred. Such a database schema change is illustrated in Fig. 1. Here, a new data table C in the new database contains data from tables A and B in the legacy database. This diagram also shows that a data column being moved from the legacy database might end up with a di fferent data column name in the new database.
+
+Fig. 1. Diagram for database schema change. Data table C is in the new data- base, and data tables A and B are in the legacy database. Data column c1 in data table C contains the same data from data column a1 of data table A, and so on for data columns c2, c3, and c4.
+
+Fig. 2. Database schema comparison. Here A represents the legacy database, and B represents the new databases. Region (c) represents common data ex- isting in both databases, region (a) represents data removed from B, and region (b) represents new data in B.
+According to database schema changes, data comparison between
+two states of databases can be implemented by either creating data views or designing complex data comparison statements. In our im- plementation, we used A-B  and B-A  (A and B are datasets from an SQL query statement for legacy databases and for new databases, re- spectively) to identify di fferences between A and B. In Fig. 2, region (a) represents the data that exist in the legacy database but not in the new database (A-B); region (b) represents newly created data that never existed in the legacy database (B-A) and region (c) represents data that exist in both the legacy database and the new database (A ∩ B).
+It is time-consuming and technically challenging to compare big and complex databases. In order to speed up data comparison, concurrent multi-process or multi-thread techniques should be used to process sectional database. A ROIS system might be composed of several da- tabases. Each database might have hundreds or thousands of data ta- bles. Since database servers support parallel data access, each con- current process or thread can handle a portion of a database. For a big data table, its data comparison can be distributed among multiple processes or threads by carefully splitting the data table into multiple sections.
+2.2. ROIS DICOM interface
+DICOM is a de facto standard in medical fields, including radiation oncology, for patient data exchange and storage, such as exporting radiation therapy (RT) information (e.g., contours, treatment plans, dose distributions of treatment plans, treatment records and radiation therapy images) to a clinic linear accelerator. A ROIS exchanges patient demographic information and radiation treatment information with other radiation oncology systems through DICOM data streams. Although relational databases are the ultimate patient data storage, the information in these databases must be converted into a DICOM data stream before being sent to other systems, such as sending treatment plans to a treatment delivery system. In addition, the ROIS receives information from other systems through its DICOM interface, then converts and stores the information in its relational databases.
+DICOM data streams group information into data sets and use three
+different element encoding schemes. It has a 2-byte field for informa- tion group specifying information class (such as patient information), a
+2-byte field for information element specifying a particular data (such
+as patient name), a 2-byte field for data type (such as, ST  indicates that the data type is short text.). Further, DICOM uses sequences to create nested data structures to store complex attributes. DICOM stream has some time stamps, such as DICOM object creation time. Therefore, even
+for the same DICOM object, two DICOM exports will produce two dif- ferent DICOM data streams. In DICOM data comparison, we only compare essential information instead of comparing every bit contained in DICOM data stream. For example, when two DICOM RT-plan data streams are compared, DICOM object instance creation time will be
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+
+Fig. 3. DICOM interface of ARIA ROIS.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+ignored but other information (such as plan parameters and referenced structure and referenced patient information and various DICOM un- ique identi fiers) will be compared.
+DICOM objects (such as RT-Plan) for a group of selected patients are
+automatically exported from the relational databases through the ROIS
+DICOM interface and stored in the file system by a DICOM storage server (Fig. 3) for two ROIS states, such as pre- versus post-upgrade.
+Then the uniform identi fications (UID) of DICOM service-object pair (SOP) instances are used to pair DICOM files between ROIS states. A DICOM comparison tool will read each data element from a pair of
+DICOM files for comparison, and then generate a comparison summary
+report (Fig. 4a and Fig. 4b and Fig. 4c). The procedure not only checks
+to determine whether the ROIS DICOM interface is working properly but also implicitly veri fies data in the ROIS databases.
+2.3. Beam data and machine con figurations
+When treatment machines, such as clinic linear accelerators, are commissioned, a set of machine model parameters are generated based on clinical measurements. These parameters are used for beam mod- eling, dose calculation, treatment plan validation, etc. Individual sites might have di fferent preferences in machine settings and con figura- tions. To verify machine data and con figurations, our approach is to generate an MD5 hash string for each data file between ROIS states.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+
+Fig. 4a. Snapshot of a DICOM comparison report. In this instance, all plan parameters and treatment records are identical.
+
+Fig. 4b. Sample report of DICOM RT-Treatment Record changes. In this instance, treatment records have been changed but the plan parameters are identical.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+31
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+Then these MD5 hash codes are compared to determine if the machine data files are intact. If machine data changes occur, our approach is to obtain the file format information from the manufacturer to compare data and determine what kinds of changes were made. For example, if machine data are saved in XML, an XML file parser is used to compare changes of critical information.
+2.4. ROIS static files and EMR documents
+Relational databases usually store big trunks of binary data (such as
+images, doses, contours, etc.) as disk files in patient folders. The con- tents of these files are not modi fied frequently during routine practice and are kept intact, as are the contents of EMR documents. Because of
+the very large numbers of these files with terabytes of disk storage, it is not practical to generate a separate copy of all these files for each ROI state. Our strategy is to generate an MD5 hash string for each such file between ROIS states and then compare paired MD5 hash strings to determine whether any such file has been corrupted or altered.
+2.5. User-generated documents in ROIS
+User-generated documents are usually template-based and can be
+generated from information in the ROIS relational databases, such as
+patient appointments during a period of time, radiation treatment his-
+tory, a list of patients under a speci fic treatment protocol, etc. These reports use common file formats, such as Microsoft Excel, Word, or PDF, so that they can be viewed by third-party software. Our approach uses
+file parsers to retrieve information from these reports and compare
+them between ROIS states to make sure that information in these re-
+ports is identical and accurate. In our clinic, comparison of these reports is automatically performed by in-house built Excel, Word, or PDF file parsers.
+2.6. Mode-up test and end-to-end test
+After data integrity testing, a mode-up test and an end-to-end test
+are performed following clinical work flow (Fig. 5). Therapists loaded each treatment beam of the plans for under-treatment patients into the treatment machines to con firm whether the plans are deliverable. The end-to-end test uses a phantom patient and follows the treatment pro- cedures from CT simulation scan to treatment delivery. All treatment records, including captured images and treatment history, are checked. During this entire end-to-end test process, data in each step are
+carefully veri fied. The end-to-end test will not only check the essential ROIS software functionalities but also help to con firm the connectivity between ROIS and other clinical systems.
+3. Results
+The radiation oncology practice at the University of Maryland Medical System includes five photon sites (a main campus and four community practices) and a proton site; and all sites share a single ARIA (Varian, Palo Alto, California, USA) ROIS. Both of the QAs with our novel method following upgrades from version 11.2 to 11.5 in early
+2014 and from version 11.5 to 13.7 with the proton modality in late 2016 showed that this framework is reliable and e ffective.
+Both ARIA upgrades and QA were performed over a single weekend.     Prior to the upgrades, an XML file describing the SQL database schema changes was generated from both the legacy version and the new ver-
+sion of ARIA. Once the clinics closed on a Friday afternoon, the QA program generated MD5 hash string for each database-associated file and each EMC document. Another QA program commanded the ARIA DICOM interface to export treatment plans and treatment records for all under-treatment patients. The pre-upgrade SQL databases of the ARIA ROIS were kept for comparison. Physicists, dosimetrists, and therapists generated clinical reports used for routine practice for later comparison.
+A copy of machine con figuration files and beam data files of each treatment machine was kept for later comparison. Together, all of these
+tasks were completed in 2 3 h. The ARIA ROIS upgrade was then started by the vendor application specialists. After upgrade, the SQL database comparison software started to compare databases table by table and record by record between the pre- and post-upgrade data- bases guided by the schema change XML file of the database. In parallel, the ARIA DICOM interface was commanded to export treatment plans
+and treatment records for the same patients as those prior to the up- grade. A DICOM comparison program paired DICOM files according to DICOM Instance UIDs and then compared detailed information between paired DICOM files. An MD5 hash string was generated for each data- base-associated file (such as image file, dose file, contour file, etc) and each EMR document, followed by comparison of corresponding pre-/ post-upgrade MD5 hash strings. Another program parsed machine configuration files between pre- and post-upgrades. Clinical and treat- ment reports with the same criteria were exported from ARIA and compared against their pre-upgrade counterparts. All comparison tasks
+were completed on a Saturday. The summary of the comparison results
+was presented to the chief physicist or the upgrade QA team lead for
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+
+Fig. 4c. Sample report of DICOM RT-Plan changes. In this instance, plan parameters have been changed but the treatment records are identical. Here, beam type for all treatment beams was changed from STATIC to DYNAMIC.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+review. When doubts were raised, the vendor s application specialists were contacted for consultation. Should any doubt or suspicion not be resolved satisfactorily, the ARIA ROIS would have been rolled back. Once data QA was performed successfully, the vendor  s application specialists came on-site to perform acceptance tests in the presence of local physicists and/or IT personnel. On Sunday, representatives from each functional group, including physicists, dosimetrists, therapists,
+and physicians, performed the mode-up tests and an end-to-end test. Once these tasks had been successfully completed and documented, the
+new ROIS was o fficially released for clinic use.
+In order not to compromise any clinical patient data, test patients
+are used. All of the modi fications have been detected and it was pos- sible to identify the sources of di fferences using the reports generated from the QA proves. For instance, a series of parameters of a beam from
+a treatment plan has been modi fied, including monitor unit value, collimator angle, couch angle, jaw field sizes, MLC leaf positions, ap- pointment schedule. These changes will result in exported DICOM RT-
+Plan changes (Fig. 4b and Fig. 4c and Fig. 6) and will also result in database changes (Figs. 7 and 8).
+The system successfully detected true-positive components which have been intentionally added during the upgrade procedure under a test ROIS environment. The error components were a modi fied delivery plan, an altered treatment history, deletion of an image, addition of an electronic medical record and omission of a patient. During the 2014 upgrade, we veri fied 1,638 data tables with 2.4 billion data records, 1.86 million ARIA database static files, and 43,153 EMR documents. For 222 patients under treatment, 605 pairs of DICOM RT plans and 13,480 pairs of DICOM treatment records retrieved from the ROIS DICOM in- terface were compared. 83 new data tables were identi fied. 74 existing data tables had new data columns added, and 4 data tables from the previous version were removed. Meanwhile, two existing data tables
+were consolidated into a data table. Reports for 5,073 patient en- counters over a 2-week period were compared and determined to be identical to those before the upgrade. Contents in 12,237 machine files
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+
+Fig. 5. Clinical work flow for the end-to-end test with a phantom patient.
+
+Fig. 6. Sample report of DICOM RT-Plan parameter changes. In this instance, multiple plan parameters have been altered.
+were compared, and no di fferences were found between pre- and post- 4. Discussions
+upgrade states. It took about 2 h for pre-upgrade preparation and about
+8 h for post-upgrade QA. Data migration errors in radiation oncology have been identi fied as
+During the 2016 upgrade, we veri fied 1,891 data tables with 4.4 emerging issues by the World Health Organization [13] , and ROIS billion data records, as well as 9.45 million ARIA database static files software upgrades or changes have been identi fied as imposing high and 493,034 EMR documents. For 351 under-treatment patients, 1,104 risk [10]. The International Atomic Energy Agency Human Health Re- pairs of DICOM RT plans and 22,046 pairs of DICOM treatment records port No.7 [14] recommended that quality control be performed after were compared. 165 new data tables and 94 amended or deleted tables record-and-verify system upgrades. However, the relevant QA tools are were identi fied. Reports for 8,452 patient encounters over a 2-week far behind emerging technology. Until now, the majority of QA checks period were compared and were identical to those before the upgrade. in ROISs have been performed via manual checks, such as pre-treatment Contents in 26,165 machine con figuration files and beam data files measurements or spot checks [15] . Because of increasing data quantity were compared, with no di fferences identi fied. It took about 3 h for pre- and complexity, such manual checks can assess only a tiny fraction of upgrade preparation and about 8 h for post-upgrade QA. patient data for contemporary ROIS systems with EMR functions. A
+
+Fig. 7. Sample summary report of database changes.
+Fig. 8. Sample report of detailed database table changes. This figure shows two corre- sponding table rows from table
+ dbo.ExternalField  between two ROIS states. Here, RadiationSer  represents the primary key of table dbo.ExternalField . All other columns (such as, GantryRtn, CollRtn)
+represent attributes of table dbo.ExternalField . Due to space limitations, not all the table columns are listed here.
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+34
+B. Zhang, et al. Physica Medica 69 (2020) 28–35
+comprehensive and automated QA tool is imperative for maintaining
+and verifying patient data integrity in the era of big data.
+Clinical implementations of automated QA tools have been reported
+for initial chart checks [16  19] . Hadley et al. [20] used an automated tool for veri fication of treatment plan parameters after ROIS upgrade and database migration. The transition from conventional manual checks toward automation of patient data QA is challenging. As ra- diation oncology practices migrate from paper-based medical records to EMRs and the integration of ROIS and hospital information systems advances, information stored in the ROIS has been signi ficantly in- creased, further complicating information relationships. The ROIS now includes all kinds of patient data and related data, such as patient de- mographics, clinic appointment schedules, diagnosis codes, treatment
+plan and delivery records, planned and delivered doses, along with clinical notes in the form of text documents. In an integrated oncology environment, none of the information is of less importance than others, and con firmation of integrity is crucial for safe practice.
+Although our automated QA tools check every bit of data, thanks to
+the utilization of multiprocess and multithread techniques, the entire procedure of database integrity QA and other data QAs were able to be completed within hours without clinical practice interruption.
+End-to-end tests following the clinical work flow, from CT simula- tion to treatment delivery, are helpful for detecting any issue related to ROIS interconnectivity with other clinical systems and to assess major
+components  performances.
+Although we only applied this framework to ARIA upgrades, the
+framework can be seamlessly applied to other ROISs. Also, this fra-
+mework can be trimmed to cater to routine ROIS QA or a di fferent scenario, for example, only DICOM QA check is needed if only a DICOM
+upgrade was performed for the ROIS. This framework proposed here is
+very instrumental in paving the way to a widely accepted quality as- surance program for modern radiation oncology information system within the radiation oncology community, not only during speci fic events, such as upgrade or data migration, but also on a routine basis,
+such as, quarterly or yearly.
+The main purpose of this framework is to verify data integrity be- tween two ROIS states. It is not designed to check any dynamic data update in ROIS databases. Therefore, during the execution of this fra- mework, the ROIS software should be kept from updating the ROIS database, such as addition/deletion of a database table record or an EMR document. Such updates from the ROIS software will alter the ROIS database to change the ROIS state, which will lead to unreliable results. Although this framework can implicitly check some ROIS soft- ware functionalities and behaviors, it should not be used as a complete ROIS software QA tool. The ROIS software functionality QA should be fully performed by the vendors.
+
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+35

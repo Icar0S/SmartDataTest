@@ -41,6 +41,11 @@ jest.mock('../../../frontend/src/styles/animations', () => ({
   staggerContainer: {},
 }));
 
+// Mock LanguageContext — MethodologyPage now uses useLanguage() globally
+jest.mock('../../../frontend/src/context/LanguageContext', () => ({
+  useLanguage: () => ({ language: 'pt-BR', changeLanguage: jest.fn() }),
+}));
+
 describe('MethodologyPage', () => {
   const renderWithRouter = (component) => {
     return render(

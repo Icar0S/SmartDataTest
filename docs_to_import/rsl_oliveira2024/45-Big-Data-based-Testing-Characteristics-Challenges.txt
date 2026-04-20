@@ -1,0 +1,176 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+2021 7th International Symposium on System and Software Reliability (ISSSR)
+Big Data-based Testing: Characteristics, Challenges, and Future Directions  
+                                    Pan Liu                                                                          Yihao Li                                
+Faculty of Business Information  School of Information and Electrical Engineering    Shanghai Business School, Shanghai, China                                    Ludong University, Yantai, China 
+panl008@163.com                                                                     yihao.li@ldu.edu.cn               
+Lian Zeng                         Xuankui Zheng                             Sihao Huang 
+Shanghai Business School   Shanghai Business School  Shanghai Business School
+18786201272@163.com               1079737114@qq.com                     1160114530@qq.com    
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Abstract—With the rise of the applications of the Internet of Things (IoT) in human society, how to ensure the reliability of IoT systems has  become  a  research  hotspot.  Generally,  there  are  complex interactions between multiple systems in IoT. Therefore, even if a single system can pass rigorous tests, it may not be able to guarantee that the system runs reliably in a complex IoT environment. With the operation of the IoT system, a large amount of data will be generated  to  record  sensor  data,  system  operations,  user’s operations,  and  other  information.  Therefore,  software  faults  or software design defects can be discovered if we use appropriate big data technology to mine the massive amount of data. The paper states the characteristics of big data-based testing and compares this test method with traditional software test methods in the software life cycle. Then, the paper discusses the challenges of applying big data-based testing to IoT systems. Finally,  some  future  research directions of big data-based testing are given in the paper. 
+Keywords:  big  data-based  testing;  big  data  technology;  system reliability; IoT systems 
+I. INTRODUCTION
+With the advent of the IoT era, more and more large- scale systems related to the national economy and people's livelihood,  such  as  power  operation  system,  rail  transit system, and aerospace system, have been connected to the network,  and  software  has  become  a  key  to  the  normal operation of IoT. However, frequent software failures have caused the problem of "trustworthy crisis" [1-3] in software. For  example,  due  to  a  line  of  code  error,  the  blockchain project  YAM  worth  500  million  dollars  https://news.bitcoin.com/new-defi-yield-farming-project-yam- finance-sees-460-million-locked-in-17-hours/ 
+2 https://www.space.com/china-far-side-moon-rover-strange- substance.html 
+978-1-6654-3431-7/21/$31.00 ©2021 IEEE 44
+DOI 10.1109/ISSSR53171.2021.00012
+ was  closed  on August 12, 2020. Because of insufficient testing, the SpaceX rocket of the US Space Exploration Technology Company exploded when it was returned on the ground on February 2, 2021 [4]. Therefore, once the IoT system runs incorrectly or is  maliciously  manipulated,  the  consequences  will  be unimaginable. 
+In the past, software testing is an effective way to detect software faults and improve software quality [5]. However, IoT systems often run in an extremely complex environment. Thus, it is an impossible task to test them completely. For example, due to the harsh space environment on the moon, 
+China’s Yutu lunar2 rover was paralyzed on the lunar surface after less than two months of operations. This indicates that the previous software and hardware test for Yutu lunar rover was  insufficient.  In  addition,  one  IoT  system  often  has complex interactions with other IoT systems. If we stop a running IoT system and test it, it is likely to affect the normal operation of other IoT systems, resulting in huge economic losses.  However,  the  traditional  software  testing  methods, such as unit testing, integration testing, system testing, and acceptance testing, are difficult to effectively solve the above two problems because it is impossible to exhaustively test IoT systems. Therefore, industry and academia urgently need to  study  new  methods  of  software  testing  to  improve  the quality of IoT systems. 
+Recently,  some  scholars  proposed  a  novel  software testing  method  based  on  big  data  technology  [6-8].  This testing  method  lies  on  the  emphasis  of  the  analysis  of software running logs [9,10] or user operation data recorded by the software to detect software faults or software design defects. As the running time of the software increases, the system logs or the data recorded by the system will contain a large number of system operation information. If we regard these  massive  operations  on  the  system  as  the  software testing  process,  the  system  has  already  completed  the massive  testing,  and  software  faults  and  software  design defects must be recorded in the data. Therefore, these faults and defects can be detected from the data if big data mining techniques are effective. This test method is also suitable for detecting software faults and design defects of IoT systems. First of all, the IoT system will generate a large amount of data, such as sensor data, system logs, and system forum data. By  mining  these  data,  we  can  detect  software  faults  and software design defects. For example, we have realized the performance test of the networking efficiency of apps and found a small number of network failure events of WeChat by  analyzing  its  networking  data  [11].  Secondly,  the operation of the IoT system can be optimized according to the result of data analysis. For example, Al-Ali et. al [12] improved the smart home management system through the big data analysis of the smart home, and improved the user’s experience of the smart home. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+The paper discusses big data-based testing, and compares this test method with traditional software testing methods in the software life cycle. Then, we also discuss the challenges of applying big data-based testing to ensure the reliability of IOT systems. Finally, some future research directions for big data-based testing are given to ensure the reliability of IoT systems. 
+The contributions of the paper include: 
+(1) We  discussed  the  evolution  of  the  software  life cycle  and  the  relationship  between  traditional software testing methods and big data-based testing. Then, we constructed four models to describe the evolution process of the software life cycle. 
+(2) We summarized the three challenges of big data- based testing to ensure the reliability of IoT systems. 
+(3) We presented five future research directions for big data-based testing. 
+II. BIG DATA-BASED TESTING
+A. Software Life Cycle 
+software  release  phase,  software  maintenance  and  update phase, and software obsolescence phase, as shown in Fig. 1 (a). From Fig. 1 (a), software development is accompanied by software testing in the past. If we consider iteration of software  multiple  versions,  software  life  cycle  can  be represented by the model in Fig. 1 (b). If we consider the interaction between users and software, software life cycle can be described by the model in Fig. 1 (c). After using the software, users will put forward some suggestions for the improvement of the software according to their own habits. Programmers can update the software according to these user requirements,  and  then  the  next  software  version  will  be released. However, there are two difficulties in achieving the above process. First, not all users of software can express clearly  what  software  requirements  need  to  be  improved. Second, users of the software may not be able to observe all software faults and software design defects. Therefore, we need to study the new and non-manually method to generate the software update requirement report. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+45
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+Generally, software life cycle [13,14] can be arbitrarily divided  into  software  development  and  testing  phase, 
+(a) software development  maintenance and  software  
+software Release 
+and testing upgrade obsolescence 
+iteration evolution
+(b) software development  maintenance and  software 
+version Release
+and testing upgrade obsolescence
+iteration evolution
+(c) software development  software upgrade  software 
+version Release customer use
+and testing requirement obsolescence
+iteration evolution
+(d) software development  software upgrade  software 
+version Release customer use
+and testing requirement obsolescence
+big data  fault and defect 
+data collection
+analysis mining
+Figure 1. Four models for describing the evolution of the software life cycle 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+Because  an  amount of data  is  generated from  the IoT system, we can collect them and use big data technology to deal with them. Thus, it is possible to dig out software faults and software design defects from the data. We can construct a new model shown in Fig .1 (d) to describe the software life cycle. From Fig. 1 (d), data collection, big data analysis, and data mining are used to detect software faults and software design defects so as to generate the software update report. The test method is called big data-based testing. Its core idea is to use big data technology to mine software faults and software  design  defects  that  are  not  found  by  traditional software testing methods in the software life cycle. 
+Note: in practice, big data-based testing cannot replace those traditional software testing methods. Even if software faults  and  software  design  defects  are  detected,  software testers  still  need  to  use  some  traditional  software  testing methods to fix them. 
+B. Characteristics 
+Comparing to traditional software testing methods, big data-based testing has the following characteristics: 
+(1) Big  data-based  testing  is  implemented  after  the software is released. 
+(2) Big data-based  testing does not require  testers  to design and execute test cases, but to detect software faults  and  design  defects  by  collecting  and analyzing  data.  Therefore,  the  cost  of  software testing is saved. 
+(3) Big  data-based  testing  is  a  data-driven  testing method, that is, this testing method depends on the availability of the data generated by the software and  the  effectiveness  of  the  data  acquisition, filtering and analysis methods. 
+(4) After software faults are detected by big data-based testing, the traditional software testing methods also need to be used to fix software faults and software design defects. 
+(5) Big data-based testing can not only find software faults,  but  also  detect  software  design  defects, which is difficult to achieve by traditional software testing methods. 
+C. Comparison 
+The  relationship  between  traditional  software  testing methods and big data-based testing is shown in Fig. 2. From Fig.  2,  traditional  software  testing  methods  and  big  data- based  testing  are  both  part  of  the  software  life  cycle. Traditional software testing methods are completed before the  software  is  officially  released,  while  big  data-based testing is completed after the software is released. Therefore, both traditional software testing methods and big data testing realize the whole process testing of the software life cycle. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+46
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+traditional software testing methods big data-based testing
+software 
+testers test cases test execution life cycle data collection data analysis
+bug fix fault and defect mining
+before software release after software release
+Figure 2. The relationship between traditional software testing methods and big data-based testing 
+ 
+Item Traditional software testing methods Big data-based testing bug fix yes no software design defect no yes Table  1  shows  the  difference  between  traditional software testing methods and big data-based software testing. From  Table  1,  traditional  software  testing  methods  are  to find software bugs by executing test cases. Therefore, these test methods usually require testers to design test cases and execute  test  cases.  Compared  with  traditional  software testing methods, big data-based software testing requires data analysts  to  collect  data,  analyze  data,  and  mine  software faults  and  defects  in  software  design.  In  addition,  both traditional  software  testing  methods  and  big  data-based testing  can  detect  software  faults.  Traditional  software testing  methods  can  fix  software  bugs,  but  cannot  find defects in software design. Big data-based testing can detect defects in software design, but it is difficult to locate and fix software faults. 
+III. CHALLENGES
+By collecting and analyzing the relevant data generated by  the  IoT  systems,  software  faults  and  software  design 
+defects  can  be  discovered.  Then,  we  can  model  software behaviors  to  simulate  the  usage  scenario  of  software  that 
+triggers software faults or displays software design defects. Next, exception execution paths of software are generated 
+from the model using model-based testing. Finally, we can instantiate test cases of these paths to reappear software bugs 
+TABLE I.  
+COMPARISON OF TRAD- ITIONAL SOFTWARE TESTING  and design defects in the IoT system. To realize the above METHODS AND BIG DATA BASED TESTING process,  there  are  still  some  challenges  in  big  data-based 
+Item Traditional software testing methods Big data-based testing method execution  of  test cases data collection, analysis and data mining staff testers data analyst phase  in  the soft. life cycle before  software release after software release software  fault detection yes yes testing. 
+Challenge 1: How to analyze the data generated by the IoT systems so that valid data can be retained to realize the mining of software bugs and design defects? 
+The IoT systems generate massive amount of data every day and  most of  the  data  are  invalid  and redundant [15], which  leads  to  the  surge  of  data  storage  cost  and  the difficulty of data analysis [6]. Thus, we need to construct a data  filtering  model  to  filter  invalid  and  redundant  data. Before  adopting  the  big  data  analysis  technologies,  we cannot  predict  whether  there  are  software  bugs  or  design defects  in  the  IoT  system.  So,  it  is  an  unwise  choice  to 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+47
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+analyze  all  the  data  directly.  To  solve  this  problem, researchers put forward the data sampling analysis method [11,12]. The main idea of the proposed method is to first select  part  of  data  from  the  whole  data  to  conduct  data analysis. If software faults or software design defects can be found,  it  indicates  that  the  data  filtering  model  and  data analysis method are effective. Then, according to the 2-8 law, we can use the data filtering model and the data analysis method to mine all data. Otherwise, we need to redesign the data filtering model and apply a new data analysis method to deal with the data. Sampling analysis method can be applied to  analyze  mass  data,  but  the  difficulty  of  applying  the method lies in choosing of the right sampling strategy and constructing  of  the  effective  data  filtering  model.  In  the future,  the data sampling strategies and  new data filtering models  will  be  two  research  directions  to  realize  the detection of both software faults and software design defects with the low cost of data analysis. 
+Challenge 2: What kind of model can be constructed to simulate  the  behavioral  characteristics  of  users  using  the software in a complex scenario? 
+Once software faults or software design defects are found, we  need  to  reproduce  these  faults  and  defects  so  that programmers  can  repair  them.  However,  IoT  systems  are often used in a very complex application scenario, and there may also be complex interactions between users and systems. Therefore,  it  is  a key for reproducing  software  faults  and software design defects to construct a model to accurately describe  the  interaction  between  users  and  IoT  systems. Generally,  software  behaviors  include  not  only  traditional operations  such  as  concatenation,  selection,  and  loop,  but also  operations  such  as  synchronization,  concurrency  and alternation  between  multiple  operations  [3,16].  Thus,  to model complex software behaviors, we need to consider the testability of the selected model so that it is easy to generate test paths from the model and instantiate test cases from test paths [17]. In the past, finite state machine (FSM [18-21]) was  usually  used  to  model  software  behaviors.  However, because  FSM  does  not  support  synchronization  and concurrency operations [16], it cannot simulate all software behaviors in IoT systems. To enhance the modeling ability of FSM,  extended  finite  state  machine  (EFSM  [22,23])  and extended regular expression (ERE [16,24,25]) models have been proposed to model software behaviors. These models not  only  have  more  powerful  modeling  capabilities  than FSM, but also generate test paths from the models easily. The difficulty in using EFSM and ERE models lies in the lack of modeling tools that can be used in industry. Although a few tools, such as MTTool [2], CREST [23], and SDL [26], were developed to support modeling and test generation for EFSM  or ERE,  these  tools  still have  shortcomings in  the multi-level modeling of large-scale complex systems. 
+Challenge 3: How to quickly locate software bugs and design  defects  in  program  statements  so  as  to  assist programmers in fixing them? 
+Model-based testing [21,27-29]can produce the expected execution path and expected result of the software running. Then,  we  can  detect  software  faults  by  observing inconsistent  between  the  model  and  the  actual  software. 
+However, this test method does not involve a single line of code. As a result, it is hard to locate software faults in the program.  Combining  model-based  testing  methods  and program slicing technology [30,31]may be a way to realize the  location  of  software  faults  and  design  defects  in  the future. 
+IV. FUTURE DIRECTION
+Due  to  the  difficulty  of  simulating  the  operating environment of the IoT systems exhaustively, it is hard for IoT  systems  to  realize  sufficient  testing.  Through  the collection  and  analysis  of  data  generated  from  the  IoT system, software faults and design defects in the IoT system can  be  discovered.  To  realize  this  purpose,  there  are  still some researches that need to be carried out in the future. 
+a) Intent-based data collection method 
+The data generated from IoT systems [32]includes: 1) the Web  log  on  the  server  that  records  the  user's  various operations on the software, 2) software error information that is submitted by the user after the software crashes, 3) various operating data of the user to the software, and 4) forum data of the IoT system. Recording all the data will increase the cost of data storage, and a large amount of invalid data will also  lead  to  the  failure  of  big  data  analysis.  In  the  past, people usually cleaned and formatted those collected big data, and then analyzed them. Therefore, the intention-based data collection method needs to be used to reduce the collected data. To realize the intention-based data collection method, we  need  to  study  the  classifications  of  test  intent.  For example,  to  find  software  design  defects,  we  should eliminate those data including standardized operations that follow the software design requirements using a data filtering model because these operations to software have been tested in  traditional  software  testing  methods.  The  defects  in software  design  often  come  from  users’  non-standard operations. Thus, the data including non-standard operations need to be collected in this test intent. In the future, different data collection methods for different test intents, including software design defects, software performance, and software application areas, will need to be studied. 
+b) Analysis methods for unstructured data 
+Generally, the data that records users’ use of the software are mostly unstructured data, such as log data. To analyze unstructured  data,  we  need  to  perform  field  extraction, syntactic  analysis,  and  semantic  analysis  on  the  collected data.  Therefore,  for  analysis  and  research  on  unstructured data, in the future, there are the three research directions, including  massive  data  incremental  sampling  analysis method, the extended regular expression modeling method of unstructured  data,  and  the  software  fault  mining  method using extended regular expression model. 
+Before  using  big  data  analysis  methods  to  dig  out software faults and software design defects, we can neither predict  that  the  software  contains  faults  or  defects,  nor predict which data mining methods that will surely detect software  faults  and  software  design  defects.  Aimless  data analysis will lead to the increase of the data analysis cost. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+49
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+Thus, it is necessary to screen out the data that can be used to find software faults. An effective data analysis method can discover  software  faults  with  the  low  cost.  Currently,  the incremental sampling analysis method is an effective data collection strategy with the low cost. In the future, it will be necessary to study the selection strategies of the data, the conditions  for  terminating  data  selection,  the  analytical methods of data characteristics, and the construction method of the data filtering model. 
+In the past, to extract information from unstructured data, we used the regular expression to model data features. Then, effective information can be filtered and extracted from the massive data according to this model. Although this method is very effective for the data with obvious features, it is hard for regular expressions to describe those data with complex relationship  among  data  features.  Therefore,  extended regular expression needs to be studied to solve this problem in the future. 
+c) Modeling tool based on regular expression 
+After constructing the extended regular expression model for filtering the massive data, we also need to solve a key problem  that  is  a  supported  tool  for  modeling  extended regular  expression.  Currently,  most  of  the  existing  data analysis tools support the processing and analysis of regular expression, but do not support the processing and analysis of extended  regular  expression.  In  the  future,  the  modeling theory  of  extended  regular  expression  and  the  conversion rules from the model to test paths need to be studied. The difficulty of this research is how to ensure the validity of the transformation from the extended regular expression model to a group of sub regular expression models. 
+d) Software behavior modeling 
+In the past, to simulate software behaviors, researchers usually need to build models such as FSM, label transition system,  and  Petri  net  [32].  However,  the  relationship between software behaviors in the Internet of things is very complex, such as concurrency and synchronization, which leads  to  the modeling failure of FSM  and  label  transition system.  To  model  software  behaviors  in  the  IoT,  it  is necessary  to  clarify  the  interaction  between  users  and software,  such  as  whether  the  concurrent  operation  is between users, how the server responds to these operations, whether the user operation meets the business process and so on. 
+e) Software fault location combining model-based testing and program slicing technique 
+Through data mining, software faults or software design defects can be found. Then, we can get execution paths using model-based  testing  for  reproducing  software  faults  and design defects in IoT system. To help programmers fixing software faults and design defects, we also need to locate software  faults  in  the  program.  In  the  past,  programmers usually  used  program  slicing  technique  to  locate  software faults. Therefore, how to combine model-based testing and program slicing technique to find software faults is one of the future research directions. 
+V. CONCLUSION
+Generally,  the  IoT  system  runs  in  a  very  complex environment, so it is difficult to realize the complete test of the IoT system in traditional software methods. As a result, it is hard to ensure the reliability of the IoT system by using the way of software testing. To improve the reliability of the IoT system, we recommend big data-based testing. Because the IoT system will produce a large amount of data, including system operation data, user interaction data, sensor data, etc., we can detect potential  software faults or software design defects by mining these data. Currently, there are a number of online data sources3,4,5 available to realize software defect detection.  This  paper  discusses  the  characteristics  of  big data-based testing, and compares this method with traditional software  testing  methods.  Then,  this  paper  presents  the current challenges of big data-based testing, and gives the future research directions of this method. The work in this paper has a very important reference for the promotion and application of big data-based testing. 
+REFERENCES
+[1] V.  V.  G.  Neto,  "A  model-based  approach towards  the building of trustworthy  software-intensive  systems-of-systems,"  in  2017 IEEE/ACM 39th International Conference on Software Engineering Companion (ICSE-C), 2017, pp. 425-428. 
+[2] P. Liu and Z. Xu, "MTTool: A Tool for Software Modeling and Test Generation," IEEE Access, vol. 6, pp. 56222-56237, 2018. 
+[3] X. Cheng, Y. Wang, W. Zhou, X. Wang, and J. Wang, “Software fault  detection  for  sequencing  constraint  defects,”  International Journal of Performability Engineering, vol. 16, no. 11, pp. 1814–1825, November 2020. 
+[4] L.  Dawson,  "Technological  Risks  of  Space  Flights  and  Human Casualties,"  in  The  Politics  and  Perils  of  Space  Exploration,  ed: Springer, 2021, pp. 225-241. 
+[5] S.  Masuda,  K.  Ono,  T.  Yasue,  and  N.  Hosokawa,  "A  survey  of software quality  for machine learning  applications,"  in 2018  IEEE International  conference  on  software  testing,  verification  and validation workshops (ICSTW), 2018, pp. 279-284. 
+[6] A.  Miranskyy,  A.  Hamou-Lhadj,  E.  Cialini,  and  A.  Larsson, "Operational-log  analysis  for  big  data  systems:  Challenges  and solutions," IEEE Software, vol. 33, pp. 52-59, 2016. 
+[7] J.-G. Lou, Q. Fu, S. Yang, Y. Xu, and J. Li, "Mining Invariants from Console Logs for System Problem Detection," in USENIX Annual Technical Conference, 2010, pp. 1-14. 
+[8] X. Zhang, Y. Xu, Q. Lin, B. Qiao, H. Zhang, Y. Dang, C. Xie, X. Yang, Q. Cheng, and Z. Li, "Robust log-based anomaly detection on unstable  log  data,"  in  Proceedings  of  the  2019  27th  ACM  Joint Meeting  on  European  Software  Engineering  Conference  and Symposium on the Foundations of Software Engineering, 2019, pp. 807-817. 
+[9] R.  Abbas,  Z.  Sultan,  and  S.  N.  Bhatti,  "Comparative  analysis  of automated load testing tools: Apache jmeter, microsoft visual studio (tfs),  loadrunner,  siege,"  in  2017  International  Conference  on Communication Technologies (ComTech), 2017, pp. 39-44. 
+[10] Y.-J.  Chen and  H.-Y.  Chien,  "IoT-based  green  house  system  with splunk data analysis," in 2017 IEEE 8th International Conference on Awareness Science and Technology (iCAST), 2017, pp. 260-263. 
+[11] P. Liu, "Big Data Testing Technology: data collection, analysis, and test practice," Posts and Telecom Press, 2018. (in Chinese) 
+3 https://academic.oup.com/nar/article/46/D1/D14/4316108 4 https://sir.csc.ncsu.edu/portal/index.php 
+5 https://www.kaggle.com/ 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+50
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 
+
+[12] X. Wu, X. Zhu, G.-Q. Wu, and W. Ding, "Data mining with big data," IEEE transactions on knowledge and data engineering, vol. 26, pp. 97-107, 2014. 
+[13] V. T. Rajlich and K. H. Bennett, "A staged model for the software life cycle," Computer, vol. 33, pp. 66-71, 2000. 
+[14] T.  R.  D.  Saputri  and  S.-W.  Lee,  "Integrated  framework  for incorporating sustainability design in software engineering life-cycle: An empirical study," Information and Software Technology, vol. 129, 
+p. 106407, 2021. 
+[15] M.  Gudipati,  S.  Rao,  N.  D.  Mohan,  and  N.  K.  Gajja,  "Big  data: Testing  approach  to  overcome  quality  challenges,"  Big  Data: Challenges and Opportunities, vol. 11, pp. 65-72, 2013. 
+[16] P. Liu and H. Miao, "Theory of Test Modeling Based on Regular Expressions,"  in  Structured  Object-Oriented  Formal  Language  and Method, ed: Springer, 2014, pp. 17-31. 
+[17] P. Liu, H.-K. Miao, H.-W. Zeng, and Y. Liu, "FSM-based testing: Theory, method and evaluation," Jisuanji Xuebao(Chinese Journal of Computers), vol. 34, pp. 965-984, 2011. 
+[18] A.  A.  Andrews,  J.  Offutt,  and  R.  T.  Alexander,  "Testing  Web applications by modeling with FSMs," Software & Systems Modeling, vol. 4, pp. 326-345, 2005. 
+[19] W.  Li,  F.  L.  Gall,  and  N.  Spaseski,  "A  Survey  on  Model-Based Testing Tools for Test Case Generation," in International Conference on Tools and Methods for Program Analysis, 2017, pp. 77-89. 
+[20] C. Gaston and D. Seifert, "Model-Based Testing of Reactive Systems. Advanced Lectures, chapter Evaluating coverage based testing," ed: Springer-Verlag, Berlin, 2005. 
+[21] P.  Liu,  Y.  Li,  and  Z.  Li,  "Some  Thoughts  on  Model-Based  Test Optimization,"  in  2019  IEEE  19th  International  Conference  on Software  Quality,  Reliability  and  Security  Companion  (QRS-C), 2019, pp. 268-274. 
+[22] Y. Chen, A. Wang, J. Wang, L. Liu, Y. Song, and Q. Ha, "Automatic Test Transition Paths Generation Approach from EFSM Using State Tree," in 2018 IEEE International Conference on Software Quality, Reliability and Security Companion (QRS-C), 2018, pp. 87-93. 
+[23] K. Androutsopoulos, N. Gold, M. Harman, Z. Li, and L. Tratt, "A theoretical and empirical study of EFSM dependence," in 2009 IEEE 
+International Conference on Software Maintenance, 2009, pp. 287- 296. 
+[24] P. Liu, J. Ai, and Z. J. Xu, "A study for extended regular expression- based testing," in Computer and Information Science (ICIS), 2017 IEEE/ACIS 16th International Conference on, 2017, pp. 821-826. 
+[25] O.  Kilinccceker,  E.  Turk,  M.  Challenger,  and  F.  Belli,  "Regular Expression  Based  Test  Sequence  Generation  for  HDL  Program Validation,"  in  2018  IEEE  International  Conference  on  Software Quality, Reliability and Security Companion (QRS-C), 2018, pp. 585- 592. 
+[26] W. E. Wong, T. Sugeta, J. J. Li, and J. C. Maldonado, "Coverage testing software architectural design in SDL," Computer Networks, vol. 42, pp. 359-374, 2003. 
+[27] F. Abbors, T. Ahmad, D. Truscan, and I. Porres, "MBPeT: a model- based  performance  testing  tool,"  in  2012  Fourth  International Conference on Advances in System Testing and Validation Lifecycle, 2012. 
+[28] A. Aerts, M. R. Mousavi, and M. Reniers, "A Tool Prototype for Model-Based  Testing  of  Cyber-Physical  Systems,"  vol.  9399,  pp. 563-572, 2015. 
+[29] M.  Markthaler,  S.  Kriebel,  K.  S.  Salman,  T.  Greifenberg,  S. Hillemacher, B. Rumpe, C. Schulze, A. Wortmann, P. Orth, and J. Richenhagen, "Improving model-based testing in automotive software engineering," in 2018 IEEE/ACM 40th International Conference on Software  Engineering:  Software  Engineering  in  Practice  Track (ICSE-SEIP), 2018, pp. 172-180. 
+[30] N. AlAbwaini, A. Aldaaje, T. Jaber, M. Abdallah, and A. Tamimi, "Using  Program  Slicing  to  Detect  the  Dead  Code,"  in  2018  8th International  Conference  on  Computer  Science  and  Information Technology (CSIT), 2018, pp. 230-233. 
+This document was truncated here because it was created in the Evaluation Mode.
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+51
+Authorized licensed use limited to: UNIVERSIDADE ESTADUAL DO CEARA. Downloaded on February 16,2024 at 13:15:03 UTC from IEEE Xplore.  Restrictions apply. 

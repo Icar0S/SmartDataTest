@@ -169,15 +169,15 @@ describe('QaChecklist Component', () => {
     
     // Fill and submit
     fireEvent.change(textarea, { target: { value: 'start_date:<:end_date' } });
-    const submitButton = screen.getByRole('button', { name: /Gerar DSL e PySpark/i });
+    const submitButton = screen.getByRole('button', { name: /Gerar JSON e PySpark/i });
     fireEvent.click(submitButton);
     
     // Should show success message and results
     await waitFor(() => {
-      expect(screen.getByText(/DSL e código PySpark gerados com sucesso/)).toBeInTheDocument();
+      expect(screen.getByText(/JSON e código PySpark gerados com sucesso/)).toBeInTheDocument();
     });
     
-    expect(screen.getByText('DSL (Domain Specific Language)')).toBeInTheDocument();
+    expect(screen.getByText('JSON')).toBeInTheDocument();
     expect(screen.getByText('Código PySpark')).toBeInTheDocument();
   });
 
@@ -240,12 +240,12 @@ describe('QaChecklist Component', () => {
     
     // Submit on last question
     fireEvent.change(textarea, { target: { value: 'start_date:<:end_date' } });
-    const submitButton = screen.getByRole('button', { name: /Gerar DSL e PySpark/i });
+    const submitButton = screen.getByRole('button', { name: /Gerar JSON e PySpark/i });
     fireEvent.click(submitButton);
     
     // Should show error
     await waitFor(() => {
-      expect(screen.getByText(/Failed to generate DSL and PySpark code/)).toBeInTheDocument();
+      expect(screen.getByText(/Failed to generate JSON and PySpark code/)).toBeInTheDocument();
     });
   });
 

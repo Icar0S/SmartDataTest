@@ -159,7 +159,7 @@ describe('RAG Integration Tests', () => {
     render(<SupportPage />);
     
     // Verify page title
-    expect(screen.getByText('DataForgeTest Support')).toBeInTheDocument();
+    expect(screen.getByText('SmartDataTest Support')).toBeInTheDocument();
     
     // Verify page description
     expect(screen.getByText(/Get help with your data quality testing setup using our AI-powered documentation assistant/)).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('RAG Integration Tests', () => {
     render(<SupportPage />);
     
     // Verify the complete page structure is rendered
-    expect(screen.getByText('DataForgeTest Support')).toBeInTheDocument();
+    expect(screen.getByText('SmartDataTest Support')).toBeInTheDocument();
     expect(screen.getByTestId('chat-window')).toBeInTheDocument();
     
     // Verify chat functionality components

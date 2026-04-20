@@ -1,0 +1,71 @@
+link,ferramentas,metodo
+https://dev.to/kirekov/apache-spark-hive-and-spring-boot-testing-guide-mdp,"JUnit, JUnit 5, JUnit, Jest",Integration Testing
+https://dev.to/carlosgonzagabsb/e-possivel-obter-100-de-automacao-de-testes-1h22,,Exploratory Testing
+https://dev.to/keploy/test-data-management-a-comprehensive-guide-5730,Selenium,
+https://dev.to/panasenco/test-driven-development-for-analytics-engineering-3nlo,,Test-Driven Development
+https://dev.to/lambdatest/ensuring-quality-in-data-ai-a-comprehensive-approach-to-quality-in-the-age-of-data-ai-testm-2023-2phi,Selenium,
+https://dev.to/mbogan/using-datafold-to-enhance-dbt-for-data-observability-3cbl,,Regression Testing
+https://dev.to/sudo_pradip/dbt-and-software-engineering-4006,,"Regression Testing, Unit Testing, Acceptance Testing"
+https://dev.to/a1qa_testing/how-to-ensure-the-quality-of-smart-contracts-in-decentralized-applications-1j9a,Jest,"Behavior-Driven Development, Integration Testing, Load Testing"
+https://dev.to/m1pko/data-quality-technical-debt-from-hell,,Regression Testing
+https://dev.to/sureshayyanna/learn-sql-in-7-days-sdet-5hc8,Cucumber,Test-Driven Development
+https://dev.to/yashbansal651/23-software-testing-trends-to-look-out-for-in-2023-2lcf,"Selenium, Appium",Regression Testing
+https://dev.to/elthrasher/mocking-aws-with-jest-and-typescript-199i,"Mockito, Jest","Unit Testing, Integration Testing"
+https://dev.to/locally/spatial-big-data-systems-a-retrospective-13oa,Selenium,
+https://dev.to/gewenyu99/what-we-learned-from-analyzing-202-million-ci-jobs-in-trunk-flaky-tests-part-2-1363,"JUnit, JUnit",
+https://dev.to/adityabhuyan/ai-powered-software-testing-unlocking-benefits-for-large-scale-projects-59ja,,Regression Testing
+https://dev.to/berthaw82414312/test-automation-frameworks-key-to-effective-and-efficient-software-testing-4bin,"Selenium, Cucumber, Appium","Regression Testing, Unit Testing, Integration Testing"
+https://dev.to/aws-builders/my-journey-into-the-cloud-getting-aws-certified-323c,,Smoke Testing
+https://dev.to/kayis/what-are-the-alternatives-to-unit-tests-2jii,,"Unit Testing, Integration Testing"
+https://dev.to/berthaw82414312,"Selenium, Appium","Test-Driven Development, Exploratory Testing, Regression Testing, Unit Testing, Integration Testing"
+https://dev.to/testscenario/what-is-performance-testingtypes-of-performance-testing-4mfi,,"Regression Testing, Load Testing"
+https://dev.to/keploy/test-data-generator-enhancing-software-testing-efficiency-2njm,,"Regression Testing, Acceptance Testing, Load Testing"
+https://dev.to/dataform/how-to-write-unit-tests-for-your-sql-queries-2hd7,,"Regression Testing, Unit Testing"
+https://dev.to/glensmith088/top-trends-in-software-testing-using-ai-ml-in-2020-2l1i,Selenium,
+https://dev.to/bryla_piotr/list-of-54-uk-companies-hiring-for-tech-internships-now-4inf,,"Unit Testing, Integration Testing"
+https://dev.to/adityabhuyan/best-practices-for-data-security-in-big-data-projects-78p,"Selenium, Appium",
+https://dev.to/sukumaar/apache-spark-unit-testing-strategies-451j,"JUnit, JUnit","Test-Driven Development, Unit Testing"
+https://dev.to/lambdatest/top-automation-testing-trends-to-look-out-in-2020-o2e,"Selenium, TestNG, Appium, Jest","Exploratory Testing, Regression Testing"
+https://dev.to/emilyjohnsonready/unlock-10-secrets-to-90-data-migration-success-59db,Selenium,
+https://dev.to/meghasharmaaaa/devops-toolchain-mlo,"JUnit, Selenium, TestNG, JUnit",
+https://dev.to/t/testing/page/73,"Selenium, Postman, Jest","Regression Testing, Integration Testing"
+https://dev.to/adityabhuyan/scala-vs-java-the-superior-choice-for-big-data-and-machine-learning-enm,Selenium,
+https://stackoverflow.com/questions/65215835/how-to-generate-big-data-volume-to-perform-load-test-using-jmeter,,Load Testing
+https://stackoverflow.com/questions/63242862/can-we-do-big-data-load-testing-by-using-java-request-sampler,,Load Testing
+https://stackoverflow.com/questions/62638491/jmeter-hbase-testing-how-to-preform-the-load-testing-for-big-data,,Load Testing
+https://medium.com/@seckindinc/preventing-data-quality-issues-with-unit-testing-1b0565d3a4db,,Unit Testing
+https://kovidrathee.medium.com/data-quality-and-testing-frameworks-316c09436ab2?responsesOpen=true&sortBy=REVERSE_CHRON,Cucumber,Unit Testing
+https://medium.com/@xenonstack/best-practices-for-implementation-of-testing-in-big-data-8f048513af63,,Load Testing
+https://medium.com/policygenius-stories/data-warehouse-testing-strategies-for-better-data-quality-d5514f6a0dc9,,Unit Testing
+https://medium.com/dbsql-sme-engineering/how-to-build-an-end-to-end-testing-pipeline-with-dbt-on-databricks-cb6e179e646c,,Unit Testing
+https://medium.com/weareservian/the-test-pyramid-and-data-engineering-with-julia-e4678c3f8dff,,Unit Testing
+https://medium.com/data-engineer-things/mastering-data-quality-10-essential-checks-with-real-world-examples-and-7-best-practices-fa303f2ae42b,,Regression Testing
+https://medium.com/data-quality-beyond/beginners-guide-to-data-testing-e2258a910c22,,"Unit Testing, Integration Testing, Acceptance Testing"
+https://medium.com/@wyaddow/maintain-data-quality-with-data-refactoring-tests-f46580d0b43e,,Regression Testing
+https://medium.com/people-ai-engineering/data-quality-automation-with-apache-spark-ac87cbbf3c37,,Integration Testing
+https://medium.com/@sachan.pratiksha/mastering-the-unittest-module-in-python-best-practices-for-big-data-testing-with-pyspark-0549259d7e69,"JUnit, JUnit",
+https://medium.com/womenintechnology/unit-tests-for-better-data-quality-0c19014a948c,,"Unit Testing, Integration Testing"
+https://medium.com/@MWanyoike/best-practices-for-dataops-testing-how-to-ensure-data-quality-and-accuracy-through-effective-2b156423e143,,"Regression Testing, Integration Testing"
+https://medium.com/@shakti.garg/test-driven-development-tdd-for-big-data-project-9b626149fa76,"JUnit, JUnit",Unit Testing
+https://medium.com/analytics-vidhya/data-lake-and-quality-assurance-2dd5de3a0e67,,Smoke Testing
+https://www.linkedin.com/advice/0/how-can-you-design-data-quality-test-cases-skills-data-quality,Selenium,
+https://www.linkedin.com/pulse/big-data-test-environment-setup-rohini-nair?trk=articles_directory,Selenium,
+https://www.linkedin.com/advice/1/how-do-you-use-unit-testing-integration-big-data-projects,"JUnit, Selenium, TestNG, Cucumber, JUnit","Test-Driven Development, Behavior-Driven Development, Regression Testing, Unit Testing, Integration Testing, Acceptance Testing, Smoke Testing, Load Testing"
+https://www.linkedin.com/pulse/big-data-testing-complete-guide-testrigor-j9gle,,"Regression Testing, Integration Testing, Load Testing"
+https://www.linkedin.com/pulse/big-data-testing-smriti-saini-1e,,"Acceptance Testing, Load Testing"
+https://www.linkedin.com/advice/0/how-do-you-reduce-data-quality-testing-risks-your,,"Regression Testing, Unit Testing, Integration Testing"
+https://www.linkedin.com/pulse/big-data-testing-bugs-allowed-alexander-protasov,Selenium,Test-Driven Development
+https://www.linkedin.com/advice/3/how-can-you-prepare-future-data-quality-testing,,"Test-Driven Development, Unit Testing, Integration Testing"
+https://www.linkedin.com/pulse/week-19-tdd-big-data-domain-role-unit-testing-marabesi-matheus-,,"Test-Driven Development, Exploratory Testing, Unit Testing"
+https://www.linkedin.com/pulse/big-data-testing-overview-rohini-nair,Selenium,
+https://www.linkedin.com/posts/colin-manko_we-need-to-talk-about-data-quality-data-activity-7249050675496583168-YeUy,,"Unit Testing, Integration Testing"
+https://www.linkedin.com/advice/3/how-can-you-ensure-data-quality-testing-alignment,,"Unit Testing, Integration Testing, Acceptance Testing"
+https://www.linkedin.com/pulse/navigating-complexities-challenges-big-data-testing-muhammad-usman-ogt5f,"Selenium, Cucumber, Appium",
+https://www.linkedin.com/advice/0/how-can-you-identify-resolve-data-quality-issues-1e,,Regression Testing
+https://www.linkedin.com/pulse/big-data-testing-smriti-saini?trk=articles_directory,,Acceptance Testing
+https://www.linkedin.com/posts/chrisbergh_data-observability-and-data-quality-testing-activity-7216467879272087552-A24z,,Smoke Testing
+https://www.linkedin.com/pulse/rethinking-big-data-testing-glint-phoropter-jordan-bonilla,,Unit Testing
+https://www.linkedin.com/pulse/technical-testing-big-data-kushan-amarasiri,"Selenium, TestNG",
+https://www.linkedin.com/advice/0/what-best-way-align-testing-big-data-requirements-05eye,Selenium,
+https://www.linkedin.com/pulse/unlocking-insights-art-big-data-testing-quality-part-solanki,"Selenium, Appium",
+https://www.linkedin.com/pulse/road-map-part-2-from-non-tech-big-data-testing-krishna-kayaking?trk=public_profile_article_view,,Exploratory Testing

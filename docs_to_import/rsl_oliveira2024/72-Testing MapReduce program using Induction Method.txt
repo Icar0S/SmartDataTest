@@ -1,0 +1,158 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+2020 IEEE International Students' Conference on Electrical, Electronics and Computer Science 
+Testing MapReduce program using Induction Method 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 
+
+Ashish Kumar Rai 
+Department of Computer Science and Engineering Kamla Nehru Institute of Technology (KNIT),       Sultanpur, UP, INDIA   
+email.ashishrai@gmail.com 
+Abstract—MapReduce  is  “divide  and  conquer”  applied paradigm  for  processing  large  volume  of  data  to  filter  out information to solve day to day complex challenges. MapReduce is core of big data applications.  The challenging part to test these applications  which  also  represent  the  characteristic  of  these applications  are  variation  in  data  due  to  different  format  and sources. In other words, poor quality of input data can deviate system towards failure if not handled properly programmatically for variety of input data. MapReduce program itself based on transformations  at  different  level  based  on  the  program  logic This  paper  proposes  the  testing  technique  based  on  the mathematical induction principle and considered as extension or conjunction other testing techniques already in used either based on transformations analysis from input to output as in MRFlow. Proposed  function  testing  can  be  used  in  business  acceptance testing  and  showcase  the  correctness  of  program,  further  can detect many defects even before shipping bigdata application in live. 
+ Keywords—MapReduce, Data Defects, Induction, MapReduce Testing, MapReduce business acceptance testing.  
+I. INTRODUCTION 
+Software testing is the process of finding error or defect in program or finding deviation (if any) in expected behaviour or end  result.  The  purpose  of  this  exercise  is  to  improve  the quality  of  software  and  reduce  related  cost  of  defect  fix  if encountered in live environment. To test bigdata application individual  testing  required  in  each  stage  from  extraction  of data, loading data in HFDS, transformation and utilization of data as per business requirement and further representing report or  dashboard.  To  meet  envisioned  purpose  of  business application  it  is  equally  desirable  to perform  functional  and non-functional  testing.  MapReduce  should  be  considered  as layer  of  bigdata  application  where  key  business  rules  get implemented. This makes testing of MapReduce as key factor for successful of the bigdata implementation. 
+Lecture “Big Data Essentials: HDFS, MapReduce and Spark RDD” available on coursera website, suggests performing unit, integration,  system  and  acceptance  testing  [3].  This  paper proposed  another  approach  of  functional  testing  based  on mathematical  induction  principle  and  help  to  showcase correctness of MapReduce program. This approach should be considered  as  harmonizing  other  method  used  to  perform functional testing of MapReduce application. 
+As per book Concrete Mathematics, Scientific acceptance of mathematical  induction  has  already  discussed  in  different articles and can be understood with example that we will climb as tall as we like on a stepping stool, by demonstrating that able to climb  onto  the foot rung  (the premise) which from  each rung we are able climb up to the following one (the step)[4]. 
+Dr. A. K. Malviya 
+Department of Computer Science and Engineering Kamla Nehru Institute of Technology (KNIT),       Sultanpur, UP, INDIA  
+anilkumarmalviya@gmail.com 
+This metaphor helps to utilize mathematical induction to solve by formal verification. 
+The remaining paper is organized as follows: section2 describe about  MapReduce  paradigm,  techniques,  tools  used  for MapReduce and related work done in this area. Next section 3 proposed  techniques  presenting  in  this  paper  along  with mathematical model of Induction method.  Section 4 is case study which showcase the example of proposed MapReduce testing technique. Further section is conclusion notes for this paper.    
+II. BACKGROUND
+As per press release on September 11, 2017 Gartner’s Hyper Cycle  revealed  that  big  data  would  achieve  mainstream maturity  within  two  to  five  year.  This  indicate  wider acceptability and future technology in IT as bigdata application to  support  business  need  and  identify  hidden  potential opportunities. Big Data shown high level of acceptance and maturity where MapReduce is intrinsic core framework for big data applications [1]. 
+
+Fig. 1.  Gartner’s Hyper Cycle  
+The  three  Vs  -  Variety,  Volume  and  Velocity  (sometime includes Veracity) - are commonly used to describe different aspects of big data or commonly known as Characteristics of Big Data. Sensors & Devices, Social Media, Enterprise and Internet are contributing exponential growth in data volume. With a rough estimation more than 2 trillion gigabytes of data created daily and need high velocity processing. The data may be structured and unstructured with diversify source such as error  log,  IoT,  data  from  social  networks  includes  but  not limited  to  image  data,  recordings,  visuals,  spreadsheet  data, 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 
+
+978-1-7281-4862-5/20/$31.00 ©2020 IEEE 
+text and many more. To resolve the 3Vs challenges of bigdata, 
+Hadoop  is  presented  as  a  solution.  As  per  Wikipedia  & 
+Apache,  Hadoop  provides  framework  for  distributed  storage  B.  Testing MapReduce 
+and processing by using MapReduce and can be considered as  Coursera lecture “Big Data Essentials: HDFS, MapReduce collection of multiple open source utilities to solve problem  and Spark RDD” suggest multiple level testings need to which  requires  more  computation  and/or  storage.  Before  be  performed  for  MapReduce  application  -  unit, finding test approach and strategy for bigdata application, one  integration, system and acceptance testing [3].    
+must understand that big data is not only about data volume. It  ￿  Unit Testing – Unit testing for MapReduce program can should be considered more as verification process at each step  be done separately for mapper and reducer function and and include functional and non-functional testing. Source level  can  be  run  on  local  node.  This  includes  white  box validation  to  verify  correct  extracted  data  loaded  in  HDFS,  texting of code. Different tools available to test mapper Validation of MapReduce to verify business logic validation on  or reducer function such as MRUnit [20] and Junit [21]. local  node (or  single  node) and  then  validating  on  multiple  Apart from mapper and reducer, MR Jobs can be tested nodes with validation of output target data to meet business  locally on single JVM.   
+outcome. This paper proposed first attempt testing MapReduce  ￿  Integration Testing – Once unit testing completed for based on mathematical induction and can be considered as part  individual  mapper  and  reducer  function,  integration of extended functional testing which provide further confidence  testing should be performed on local machine validating on  the  correctness  of  MapReduce  program  and  showcase  output  of  mapper  function  is  getting  accepted  by transformations are as expected.  reducer  function.  Further  Reducer  should  be  able  to 
+process data as per design. 
+A.  MapReduce   ￿  System  Testing  –  After  completion  of  integration testing, system testing should be performed and more 
+Define  MapReduce  is  a  framework  to  perform  parallel  likely on distributed environment, both functional and processing on large data stored in distributed over large number  non-function  testing  should  be  completed  before of  machines.  Each  machine  computes  data  stored  locally,  handling  over  application  for  acceptance  testing. which in turn contributes to distribute and parallel processing.  Function testing take cares of the business requirement The MapReduce follows the "divide and conquer" principle  and validate if application is meeting functional aspects [15] where dividing problem to subproblem can be considered  while  non-functional  testing  focus  on  validation  of as  Map  while  collating  results  from  subproblem  can  be  performance  aspects  and  volume  capabilities  of considered  as  Reduce.  With  advancement  of  Hadoop  application. 
+framework as Hadoop2.0, MapReduce is more focused on data  ￿  Acceptance Testing – This level of testing is performed processing while in Hadoop1.0 it was overloaded with cluster  just before shipping application in live environment and resources management which is now handled by Yarn [5].   show case the application is working as per agreement 
+and compliant with business requirement. Most of the 
+MapReduce consists of two steps:   time it should be performed by business users (or mix of 
+(1) Mapper   tester  along  with  business  user)  and  considered  as 
+(2) Reducer  consent  of  acceptance  for  software  application.  So, Mapper  function  processes  input  data  and  convert  them  to  MapReduce  application  should  be  tested  in  live  like intermediate set of data, generally documented as key- value  environment,  generally  black  box  testing  approach  is pair tuple, and further Reducer consume these key-value pair  applied for this kind of testing [8]. 
+and combine or process them in smaller set of tuples. 
+C.  Related Work 
+In logical terms, Map function applied on key value pair and  MapReduce programs and their testing have been studied returns list of different key value set while Reduce function  with  different  domain  like  finance,  retail,  health,  defense consume this output and process them as another collection of  [9][10] and found multiple challenges [18]. Most of the Big value  for  given  key.  The  multiple  process  of  mapper  and  Data  applications  are  developed  on  top  of  the  MapReduce reducer run in parallel on different node of Hadoop cluster  programs [15] which process variety of data having multiple locally to solve large volume big data problem.  sources consisting large volume and should be processed in high  velocity.  While  Camargo  and  Vergilio  studied MapReduce program testing and presented observation in their 
+paper [16].   
+ Authors L. Bu and Y. Xiong in their work tried to cover reachability  testing  in  MapReduce  program  which  run  in concurrent distributed environment [11]. The paper showcases the design and implementation of a parallel reachability testing approach based on Hadoop MapReduce (PRT) with dynamic loading. 
+On the other paper, Authors  worked on the detection of design fault in MapReduce where test data executed in parallel depends  on  test  input  data  and  test  configurations.  Authors 
+Fig. 2.  Map Reduce logical workflow 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 
+
+propose MRTest testing based techniques presented in paper to automate detection of configuration and design fault [12]. 
+With reference to [13], authors propose a testing technique for  different  infrastructure  configurations  execution  of  test cases on various input data to find out infrastructure related issue or environmental issues. The testing technique helps to automate  validation  through  test  engine  and  applied on  real world example. 
+Authors  propose  approach  to  test  security  policies  for MapReduce  [14].  Authors  suggest  FSM  formalization  for MapReduce in consideration of security policies specification conforming XACML language. 
+Chen, Ganapathi, Griffith and Katz studied MapReduce and presented paper with their finding as performance evaluation for MapReduce [17]. 
+Moran,  Riva,  and  Tuya  in  paper  “MRTree:  Functional testing  based  on  MapReduce’s  execution  behaviour”, showcases  the  functional  testing  method  for  MapReduce program  based  on  tree  node  navigations  depth  and  breadth coverage to find out potential faults in MapReduce program [19]. 
+
+Fig. 3.  Word count program - Reduce function 
+Moran,  Riva,  and  Tuya  in  another  paper  “Testing  data transformations in MapReduce programs” discussed approach to test MapReduce program based on data flow and proposed testing  technique  as  MRFlow  to  analyze  transformation  in MapReduce  program  by  depicting  graph  to  cover  different cases and to reveal defect [22]. For given WordCount program [7], authors presented MRFlow graph based on data flow. 
+
+Fig. 4.  MRFlow graph for Reduce function 
+In  paper  "Towards  Ex  Vivo  testing  of  MapReduce applications”,  authors  suggested  "Ex  Vivo"  context independent test approach to detect faults based live data and run  on  different  environment  [23].  On  the  other  hand,  in another  paper  authors  systematically  searches  for  bugs  in MapReduce program and generates test cases [24]. 
+The  author  tries  to  showcase  properties  of  inductive inference for showing correctness of program and using this for software testing [25]. 
+III. PROPOSED TESTING TECHNIQUE
+From  acceptance  testing  prospective,  considering  the complexity of MapReduce program, it is hard to test and verify if program is running correctly and application is working as per business requirement. Most of the time acceptance testing is  done  as  black  box  testing  with  minimal  code  structure knowledge. To support acceptance testing of applications based on MapReduce program, an approach can be adopted which is influenced by mathematical induction. It suggests that for given domain if it can be proved that application is working fine for base  case,  data  set  and  incremental  data  set  as  expected, application or program is more likely correct and conform to business requirement. In more simple words, induction proof supports  program  correctness.  Online  resource  [27]  further provides some example using induction to verify and prove correctness of program. 
+A. Matematical Induction  
+Finding  mathematical  results  based  on  mathematical principle to showcase  its larger  applicability:  an assertion A(i) for natural number i can be proved if base or initial case A(1) is true and assuming it is also true for A(n) where n is any other  natural  number  n  but  it  can  be  proved  true  for  next natural number n+1 implies that A(n+1) is also true. The proof of initial case A(1) is the first step while proof of A(n+1) is called the induction step and n is called the induction parameter .It  is  basis  for  inductive  definition  [26].  The  proof  can  be represented as following steps: 
+1. The base or initial case: proving statement holds for 0 or 1. 
+2. The induction step: with assumption statement holds for n and proving statement holds for n+1. 
+Axiom:  P(0/1)&∀x(P(x)⊃P(x+1))⊃∀x P(x). 
+B. Applied  Testing Technique 
+So  far  mathematical  induction  is  used  to prove program correctness  using  formal  method  or  logical  inference.  Other approach  based  on  induction  is  inductive  testing.  But  we recommend using the applied understanding of mathematical induction  for  acceptance  testing  MapReduce  application  in combination black box approach. Since acceptance testing is performed business user or mix of tester along with business user.  Following  suggested  algorithm  can  be  used  to  test MapReduce application 
+Algorithm  
+Step 1.  Run  Application  for  primitive  value  which  is 
+NULL 
+Step 2.  Validate  that  the  application  is  giving  correct 
+output with NULL value 
+Step 3.  Run  Application  for  primitive  value  which  is 
+Zero 
+Step 4.  Validate  that  the  application  is  giving  correct 
+output with Zero value 
+Step 5.  Run Application for base value which is minimal 
+data (or data set) 
+Step 6.  Validate  that  the  application  is  giving  correct 
+output with minimal data set 
+Step 7.  Run  the  application  for  given  data  set  X  and 
+record the output for further analysis 
+Step 8.  Add ΔX (delta) in given data set x 
+Step 9.  Run the application for X + ΔX data set 
+Step 10.  Compare the output with step 7 
+Step 11.  Validate if data is as per the acceptance criteria Step 12.  Output in Step 11 is as per the acceptance criteria Step 13.  Iterate the program from step 7 for other data sets 
+(variety of data) and validate 
+Step 14.  Validate  output  for  other  data  sets  to  see 
+correctness of the program 
+CONCLUSION
+The proposed testing technique is simple but effective to find  bugs  in  MapReduce  program  without  worrying  about architectural complexity of underlying framework. It provides confidence for program correctness and validation results for acceptance  testing  ensuring  meeting  business  functional requirement  in  live  like  environment.  The  MapReduce programs  are  more  prone  for  defects  due  to  incorrect validation, data type mismatch or following wrong processing for  key  value  pair  or  exception  handling.  Even  sometime defects can be for incorrect business calculations. These defects may cause program failure or may have business impacts. The proposed technique provides test cases for exception such as primitive  cases  along  with  validating  them  against  business requirement  for  given  data  set  show  casing  program correctness. 
+As future work we plan to apply sampling for variety or voluminous data or finding acceptance index for iteration on data set, further it can be automated with inclusion of machine learning for test coverage and execution. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 
+
+Depending  on  business  requirement  or  logical  inference 
+base case can be identified which represent minimal data set on 
+which program run. Step 1 and 3 validate program for NULL  REFERENCES
+and  Zero  to  provide  a  fair  chance  to  check  negative  test  [1]  Gartner  press  release  https://www.gartner.com/en/newsroom/press- condition if MapReduce program is built considering no input  releases/2017-09-11-gartner-hype-cycle-reveals-the-digitalization-of-
+or blank data. Since we are doing acceptance testing, output for  the-supply-chain 
+primitive cases for Zero or NULL along with base case can be  [2]  Weyuker,  E.  J.  ‘Assessing  test  data  adequacy  through  program validated based on business logic. For other input and output  inference’,  ACM  Transactions  on  Programming  Languages  and data  business  may  have  defined  domain  for  input  and  Systems, 5 (4), (1983) , 641-655. 
+corresponding  range  values  for  output.  Step  7  recommends  [3]  Chtotpusr:s/e/wRAww.courseMra.aoprRg/eldecutcuer e/big-datTae-esstisnegn tials/testing-t48UaLecture running application program for given test data set and record  [4]  Ronald L. Graham, Donald E. Knuth, and Oren Patashnik  ‘Review of 
+results considering it is inline as per business expectation. Now  Concrete  Mathematics:  A  Foundation  for  Computer  Science,  2nd Step 8 suggests adding a known Δ (delta – small) value in input  edition’Pg3 margin (1989)  
+data set X and validate if output changes are corresponding  [5]  Hadoop:  open-source  software  for  reliable,  scalable,  distributed input Δ changes in conjugation of output of step 7. Step 11 and  computing. http://hadoop.apache.org/.  
+12  helps  in  validation  of  input  and  output  matching  with  [6]  Institutions that are using hadoop for educational or production uses. corresponding domain and range along with meeting business  http://wiki.apache.org/hadoop.5. 
+logic of application.  [7]  Wordcount  1.0.  http://hadoop.apache.org/docs/r2.7.0/hadoop-
+mapreduce-client/hadoop-mapreduce-client-
+Since  MapReduce  program  usually  run  on  variety  of  core/MapReduceTutorial.html#Example:_WordCount_v1.0   
+volume data step 13 and 14 helps to iterate program for other  [8]  IEEE draft international standard for software and systems engineering– variety of data. To find how many iterations required sampling  software testing–part 4: Test techniques, 2014. 
+or  acceptance  index  can  be  identified.  This  converge  [9]  Schatz,  M.  C.  Cloudburst:  highly  sensitive  read  mapping  with acceptance testing objective to find program correctness and  mapreduce. Bioinformatics 25, 11 (2009), 1363–1369. 
+validating application for meeting business requirement.  [10]  Kocakulak, H., and Temizel, T. T. A hadoop solution for ballistic image analysis  and  recognition.  In  High  Performance  Computing  and 
+Simulation (HPCS), 2011 International Conference on (2011), IEEE, pp. 
+IV. CASE STUDY 836–842.. 
+While  exploring  the  applicability  of  proposed  testing  [11]  L. Bu and Y. Xiong (Eds.): SATE 2018, LNCS 11293, pp. 173–184, 
+2018. 
+techniques, it has been applied on popular know example of 
+MapReduce program WordCount[7] which is program written  [12]  "JAesuútos mMatoircánT,eAstnintgonoiaf  BDeerstioglninoF,auClltasuidni oMdaepRlaedRuivcea  AanpdplJiacvatiieornTs"uyina to  find  the  frequency  of  every  word  in  input  text.  To  test  IEEE Transactions on Reliability(2018) pp. 717-732. 
+WordCount program at unit  level authors Moran, Riva, and  [13]  J.  Morán,  B.  Rivas,  C.D.L.  Riva,  J.  Tuya,  I.  Caballero,  M. Tuya suggested different testing techniques MRFlow based on  Serrano,"Configuration/Infrastructure-aware  testing  of  MapReduce data  flow  [22].  But  approach  suggested  in  this  paper  is  programs", Advances in Science, Technology and Engineering Systems 
+primarily for acceptance testing and successful to find bug such  Journal, vol. 2, no. 1, (2017) pp. 90-96. 
+as given program fails for primitive case NULL where no input  [14]  Sara Hsaini, Salma Azzouzi and My El Hassan Charaf "FSM Modeling file  is  given.  Program  is  again  validated  with  text  file  not  oCfonTfeesretinncge (2S0e1cu9r)itpyp . P1o4l8ic0i-e1s48f5o.r   MapReduce  Frameworks"  in  IEEE 
+having any word for another primitive case. Further program is  [15]  Sharma,  M.,  Hasteer,  N.,  Tuli,  A.,  and  Bansal,  A.  Investigating  the validated for base case where only one word is present in input  inclinations of research and practices in hadoop: A systematic review. In text file. WordCount program is then run on given text file as  Confluence  The  Next  Generation  Information  Technology  Summit step 7 execution and result is recorded. Further given text file is  (Confluence),  2014  5th  International  Conference-  (2014),  IEEE,  pp. 
+modified  by  adding  known  frequency  of  certain  words.  227–231. 
+Program  ran  on  modified  text  file  as  step9  and  output  is  [16]  Camargo  L.  C.,  and  Vergilio  S.  R.  Mapreduce  program  testing:  a validated for known frequency changes in added words.  s(SysCteCmCa)t,i3c2nmdaIpnpteinrngatisotundaly.CoInnf erCehniclee aonf  thCeoCmopmutpeurtaSticoine n(2c0e13S)o. ciety 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 
+
+[17] Chen, Y., Ganapathi A., Griffith R., and Katz R. The case for evaluating mapreduce performance using workload suites. In Modeling, Analysis & Simulation of Computer and Telecommunication Systems (MASCOTS), 2011 IEEE 19th International 
+[18] Gudipati, M., Rao, S., Mohan, N. D., and Gajja, N. K. Big data: Testing approach  to  overcome  quality  challenges.  Big  Data:  Challenges  and Opportunities (2013), 65–72. 
+[19] J. Moran, C. de la Riva, and J. Tuya, “MRTree: Functional testing based on  MapReduce’s  execution  behaviour,”  in  proceedings  International Conference Future Internet Things Cloud, 2014, pp. 379–384. 
+[20] Apache MRUnit. [Online]. Available: http://mrunit.apache.org.   
+[21] JUnit. [Online]. Available: http://junit.org. 
+[22] J. Mor´an, C. de la Riva, and J. Tuya, “Testing data transformations in MapReduce programs,” in Proc. 6th Int. Workshop Automat. Test Case Design, Selection Evaluation, 2015, pp. 20–25. 
+[23] J. Mor´an, C. de la Riva, and J. Tuya, “Testing data transformations in MapReduce programs,” in proceedings. IEEE International Conference on Software Quality, Reliability and Security, 2017, pp. 73–80. 
+[24] Christoph Csallner, Leonidas Fegaras y Chengkai Li. New Ideas Track: Testing  MapReduce-Style  Programs.  Proceedings  of  the  19th  ACM SIGSOFT  symposium  and  the  13th  European  conference  on Foundations of software engineering. Pages 504-507. 
+[25] Zhu,  H.:  A  formal  interpretation  of  software  testing  as  inductive inference. Software Testing, Verification and Reliability 6(1) (1996) 3– 31 
+[26] Hazewinkel, Michiel, [1994], "Mathematical induction", Encyclopedia of  Mathematics,  Springer  Science+Business  Media  B.V.  /  Kluwer Academic  Publishers,  ISBN  978-1-55608-010-4  ed.  (2001)  [Online] https://www.encyclopediaofmath.org/index.php/Mathematical_induction 
+[27] Lecture  “Verifying  the  Correctness  of  Programs”  [Online] http://www.cs.cornell.edu/courses/cs312/2006sp/lectures/lec10.html 
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+SCEECS 2020 
+Authorized licensed use limited to: University of Exeter. Downloaded on June 19,2020 at 13:26:41 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,178 @@
+﻿
+Created with an evaluation copy of Aspose.Words. To remove all limitations, you can use Free Temporary License https://products.aspose.com/words/temporary-license/
+
+See discussions, stats, and author profiles for this publication at: https://www.researchgate.net/publication/337256634
+Foundations of Data Quality Assurance for IoT-based Smart Applications
+Conference Paper · November 2019
+DOI: 10.1109/LATINCOM48065.2019.8937930
+CITATIONS READS
+11 332
+4 authors:
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Rodrigo Togneri
+Escola de Administração de Empresas de São Paulo da Fundação Getulio Vargas 6 PUBLICATIONS 96 CITATIONS
+SEE PROFILE
+Juha-Pekka Soininen
+VTT Technical Research Centre of Finland 108 PUBLICATIONS 3,160 CITATIONS
+SEE PROFILE
+Gláuber Camponogara University of São Paulo
+12 PUBLICATIONS 182 CITATIONS
+SEE PROFILE
+Carlos Alberto Kamienski Universidade Federal do ABC (UFABC)
+218 PUBLICATIONS 2,215 CITATIONS
+SEE PROFILE
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+All content following this page was uploaded by Carlos Alberto Kamienski on 15 February 2020.
+The user has requested enhancement of the downloaded file.
+Foundations of Data Quality Assurance                    
+for IoT-based Smart Applications
+Rodrigo Togneri
+, Glauber Camponogara http://swamp-project.org/  5 Antifragility is a property of systems that increase in capability to thrive as a 
+, Juha-Pekka Soininen https://agrosmart.com.br/en/  result of stressors, shocks, volatility, noise, mistakes, faults, attacks, or failures 
+, Carlos Kamienski1 
+rodrigo.togneri@ufabc.edu.br, glauber@agrosmart.com.br, juha-pekka.soininen@vtt.fi, cak@ufabc.edu.br 1Federal University of ABC, Santo André / Brazil 
+2Agrosmart, Campinas / Brazil 
+3VTT Technical Research Centre of Finland, Oulu / Finland 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+Abstract — Most current scientific and industrial efforts in IoT are  geared  towards  building  integrated  platforms  to  finally realize its potential in commercial scale applications. The IoT and Big Data contemporary context brings a number of challenges, such as providing quality assurance (defined by availability and veracity)  for  sensor  data.  Traditional  signal  processing approaches  are  no  longer  sufficient,  requiring  combined approaches  in  both  architectural  and  analytical  layers.  This paper proposes a discussion on the adequate foundations of a new general  approach  aimed  at  increasing  robustness  and antifragility  of  IoT-based  smart  applications.  In  addition,  it shows results of preliminary experiments with real data in the context  of  precision  irrigation  using  multivariate  methods  to identify  relevant  situations,  such  as  sensor  failures  and  the mismatch  of  contextual  sensor  information  due  to  different spatial  granularities  capture.  Our  results  provide  initial indications of the adequacy of the proposed framework. 
+Index  Terms—  Data  quality,  internet  of  things,  smart applications, precision irrigation. 
+I. INTRODUCTION
+Nowadays,  the  Internet  of  Things  (IoT)  is  increasingly leaving the state of an idea and landing its technology in its first practical projects worldwide. Proof of this evolution is the recent  emergence  of  a  series  of  research  and  commercial initiatives  in  the  development  of  complete  technological platforms  that  integrate  IoT  to  the  applications.  Only  in precision  agriculture,  IOF20201  and  SWAMP2  [1],  and Agrosmart3  and  Agricolus https://www.agricolus.com/ [7].
+  are  important  scientific  and commercial  initiatives,  respectively.  The  technical  and application  challenges  are  enormous  since  these  platforms enable complex real-time control systems that combine the use of communication infrastructure, hardware, software, analytical techniques and application knowledge combined into multiple layers. 
+Within  the  context  of  current  challenges,  this  paper addresses the fundamental issue of input data quality. In any IoT-based smart application, the output is highly dependent on the data captured by field sensors. Dealing with the lack of data availability  and  veracity  can  be  synthetized  by  the  acronym GIGO  (Garbage-In,  Garbage-Out).  In  other  words,  however 
+sophisticated smart application models and algorithms are, poor quality input data will result in poor recommendations. 
+The  solution  to  this  challenge  is  to  increase  the  smart application  data  sensing  robustness  and  antifragility  5.  The 
+straightforward  benefit  is  that  robust  and  antifragile  sensing allows the system analytical core input data to be as good as possible.  As  a  result,  more  reliable  decisions  are  made, generating real value gains for applications and thus helping to maximize the end-user confidence in new technologies. 
+Within the strategic objective of realizing the benefits of this general solution, this paper brings two main contributions: 
+• The  Foundations  for  a  Data  Quality  Assurance Framework, as a new general vision to increase robustness and antifragility of sensing. Through the composition of complementary  approaches,  both  traditional  and  cutting- edge ones, the proposed vision is of general use in IoT- based  smart  applications,  although  examples  here represent the context of precision irrigation. 
+• Preliminary  Findings  with  Real  Precision  Irrigation  IoT Data  that  corroborate  with  the  data  quality  assurance vision.  Preliminary  experiments  were  undertaken  using raw sensor data provided by our partner Agrosmart, which raised  some  initial  interesting  insights  in  the  automatic identification  of  data  quality  problems,  diagnosis  and treatment. For example, the use of multivariate methods has helped us to identify specific sensor failures and the mismatch of contextual sensor information due to different spatial granularities capture. These results corroborate to part  of  the  proposed  vision,  particularly  related  to  the anomaly multivariate techniques to process IoT data from multiple  sources  as  a  way  to  implicitly  aggregate  the application context. 
+In  the  remainder  of  this  paper,  Section  II  brings  related work, Section III explains the foundations of the proposed data quality  assurance  vision,  Section  IV  develops  preliminary experiments with real data, Section V presents and discusses the  key  results  of  the  preliminary  experiments,  and  finally Section VI draws some conclusions. 
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+1 https://www.iof2020.eu/  
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+II. RELATED WORK
+Karkouch  et  al.  presented  an  overview  of  the  main approaches to data quality in IoT, and the main contributions were  the  proposition  of  data  quality  dimensions  and  its categories,  the  systematic  analysis  of  problems  and  the suggestion  of  techniques  for  the  treatment  thereof  [2].  Our work  complements  it  introducing  the  antifragility  concept, valuing multivariate analytical techniques as links between data and its semantics in the application context, and considering also the influence of IoT architecture on data quality. 
+Banerjee and Shet realized the importance of addressing the data  quality  problem  in  architectural  and  analytical  layers, although kept the discussion at a higher level [3]. Our work completes  that  discussion  by  introducing  more  practical elements  towards  IoT  platforms.  Dou  and  Nan  worked specifically on the architectural question seeking to determine the optimization of sensor distribution layout and connectivity [4], although without fitting it into the broader context of data quality. 
+Liu et al. discussed data veracity problems and solutions, while this paper seeks to integrate data availability and veracity issues in a single approach [5]. 
+Sanyal and Zhang presented a compelling solution to the IoT  data  veracity  issue  through  unsupervised  estimation methods that replaced low statistical confidence data [6]. Our work  complements  it  by  providing  a  more  sophisticated anomaly detection and classification approach that do not make use of estimation methods, providing a more reliable dataset (without disregarding anomalous but dependable data points – disregarded  by  estimation  methods  [7]).  Vilenski  et  al. proposed to use multivariate techniques in detecting anomalies in  agriculture  [9].  Our  work  goes  further  proposing  a  more generalist approach, although our practical experiments are also in agriculture. 
+OGC http://www.opengeospatial.org
+  (Open  Geospatial  Consortium)  developed  open standards for IoT applications, providing two standards suitable for  data  quality  solutions,  namely  UncertML  (Uncertainty Markup  Language)  and  QualityML  (Quality  Markup Language). This work is in accordance with these standards and intends to contribute with them when the vision proposed here is deployed as a functional framework. 
+III. FOUNDATIONS OF DATA QUALITY ASSURANCE
+A. Data Quality Issues: Availability and Veracity  
+Data  availability  and  veracity  are  key  issues  in  IoT operations. The former is straightforward, i.e., if there are no stimuli  coming  from  sensors,  there  is  no  reaction.  And,  the latter because if the sensor stimuli are relevantly inaccurate, the reactions may be inappropriate or even harmful. We want to maximize data availability, and within available data, we want to maximize their veracity. 
+Possible types of IoT data quality issues can be divided into availability and veracity problems. Data availability problems include: 
+• Error Data: Occurs when the sensors data capture system identifies a known problem, emitting a specific signal to it. The data is clearly invalid, and as it is easily identifiable, it must be converted into missing values. As a result, data becomes unavailable. 
+• Data  Interruption:  Occurs  when  a  sensor  data  does  not reach  its  reader.  Regardless  of  the  cause,  data  also becomes unavailable. 
+Data veracity problems include: 
+• Unbalanced Data: Occurs when sensor data is emitted and captured,  but  this  data  is  not  reliable  to  the  measured phenomenon. Data is available but is not dependable. 
+• Non-Correspondence  of  Different  Granularity  Data: Occurs when there are valid sensor data, although there is a  mismatch  between  different  sources  due  to  different space or time granularities of the sensing system.  
+B. Increasing Sensing Robustness and Antifragility 
+Data quality assurance can be achieved by acting on both architectural  and  analytical  layers  [3].  Fig.  1  shows  the  big picture of how these layers are placed in an IoT-based smart applications  data  flow.  The  Data  Quality  Assurance Framework  is  the  phase  coming  right  before  Information Processing, which is the system core analytical task. 
+
+Fig. 1: Data Quality Assurance Framework as a Data Transforming / Influencing Agent Through IoT-Based Automated Systems Data Flow. 
+Taleb  [7]  provided  an  important  contribution  to  risk management by stating that robustness is not the opposite of fragility, introducing the concept of antifragility and making it easier for systems to be built to evolve with exposure to its environment.  Since  then,  many  engineering  areas  have  been using advanced analytical techniques in the search for systems evolution [9] [10]. Taleb introduced a sensitivity scale of things to the environment instabilities (Fig. 2): at one extreme is the concept of fragility, in which things are harmed by instability; in  an  intermediate  position  is  the  concept  of  robustness,  in which  things  are  invariant  to  instability  (do  not  harm  or benefit); at the other extreme is the concept of antifragility, in which things benefit from  instability and become better, i.e. things  that  increase  in  capability  to  thrive  as  a  result  of 
+
+Fig. 2: Taleb Scale and Correspondence with Data Quality Assurance Effort Types (Architectural or Analytical). 
+stressors, shocks, volatility, noise, mistakes, faults, attacks, or failures [7]. 
+As  environment  instabilities  usually  bring  new  and unknown circumstances that cannot be managed by supervised machine learning [7], the antifragility vision states that these techniques  should  be  underprivileged  in  relation  to unsupervised and reinforcement machine learning, which are more adequate to really learn the unknown. Consequently, this is  our  first  suggestion  for  an  IoT  data  quality  assurance framework. 
+Thus,  between  the  two  data  quality  assurance  layers, although the architectural plays an important role, the one that has the greatest potential to flexibilize towards antifragility is the analytical, because it can evolve action rules over time by means of experiencing the data (machine learning). The more data and the more instabilities, the more the system learns and improves. 
+1) Analytical Layer Approaches 
+In the past, sensors were preferably subject of electric and electronic engineering, due to their use in equipment of highly specific  and  local  applications.  Data  treatment  was  fully performed  by  signal  processing  techniques  based  on mathematical filters for eliminating noise, and keeping only the signal (relevant data) of individual sensors. 
+On the other hand,  in the current IoT and Big Data era, data is becoming more complex and is directly linked to its meanings in smart applications: many dimensions, of different types,  with  nontrivial  relationships  among  each  other  - nonlinearities,  lag  effects  -  and  used  in  decisions  in  social environments or others of equal sensitivity.  For example, in precision irrigation, a series of meteorological, soil moisture and crop growing stage data can be collected as input to water need estimation, and the relationship among these variables can be  considered  of  high-complexity  [11].  Asymmetries  of  soil moisture behavior also occur as their value, soil depths and the time varies. There is still a data type variety: while most data are series of quantitative variables, others of great relevance as georeferenced  images  are  of  semi  or  non-structured  nature, mixing quantitative and qualitative values. 
+The complexity is not only in the nature of data but also from the data collection architecture, since sensors are sparsely spread  on  the  space  (they  often  have  geo-referential characterization),  have  different  periodicities  and  deal  with fault tolerance concepts. 
+Thus,  the  traditional  signal  processing  approach  is  no longer  sufficient,  requiring  an  evolution  that  here  we  call Signal  Processing  2.0,  which  is  an  IoT  adaptable  data  flow 
+based on multivariate unsupervised and reinforcement machine learning techniques. In this context, the analytical layer of our data quality assurance vision aims at bridging this gap. Further, the current scenario requires data treatment to be the target of the most powerful arsenal of machine learning techniques. 
+ Fig. 3 synthetizes the data treatment flow in the analytical layer at a higher level. Also, flows differ depending on the type of data problems. The four steps of the analytical layer are: 
+Fig. 3: Macro-flow of Data Quality Assurance in the Analytical-layer. 
+a) Anomaly Detection  
+Data veracity problems cannot be easily identified because data belong to the expected domain range, and for this reason it is customary to use data mining techniques [12]. In this sense, the  techniques  of  anomaly  detection  [13]  [14]  propose  to identify out of context values and sometimes classify it. In the traditional signal processing realm, univariate applications (a single signal) are more common. However, in the more modern context of IoT and Big Data, multivariate techniques, the ones that  consider  the  relationship  among  multiple  data  sources, gained  a  lot  of  attention  due  to  their  ability  to  identify anomalies inaccessible to univariate techniques. 
+b) Determining the Validity of Anomalous Values 
+A data point being anomalous does not mean that it is also invalid. It may simply be caused by the occurrence of a rare but real event, which obviously must be regarded as a valid point. At  this  step,  therefore,  one  must  seek  for:  i)  automatic separation  of  valid  from  invalid  anomalous  points,  through comparison with theoretical or empirical models [15], or using anomaly  detection  techniques;  and  ii)  in  case  of  an  invalid point, if possible, define which variables are the cause of the anomalous effect, for discarding only data from  the offending variable).  This  step  is  difficult  to  replicate  for  different applications,  as  it  relies  on  domain  specific  knowledge  (i.e. 
+theoretical or empirical models). 
+c) Assigning Missing Values to Invalid Values 
+Invalid values should not be used in analytical applications for  preventing  harmful  results.  This  is  the  easiest  step,  and since the invalid values have already been identified, the only task here is to replace invalid by missing values. 
+d) Data Reconstruction 
+The previous step gives us a more reliable dataset. In this step, missing values are reconstructed from valid ones using 
+different  techniques  such  as  estimation  methods  [16].  When time series anomaly detection techniques [13] are adequate, or when  there  were  incomplete  original  cases  (which  were therefore not considered in some anomaly detection approach), the reconstructed data come back to the anomaly detection step. 
+2) Architectural Layer Approaches 
+The architectural layer, encompassing elements as diverse as  hardware  /  software  development  and  data  capture  and communication solutions, naturally has a myriad of possible approaches.  Here  we  emphasize  higher-level  architectural aspects that are key to sensing robustness and antifragility.  
+Fig. 4 synthetizes the influence map of the architectural layer in the system. It highlights the two main practical approaches: (a) use of sensors grid [17] and, (b) use of image-based sensors (drones,  satellites)  [18].  Both  allow  a  lower  granularity  of physical space, potentiating contextual spatial knowledge, also impacting  the  analytical  layer  by  using  spatial  statistics techniques,  with  positive  consequences  in  the  system antifragility. 
+
+Fig. 4: Map of Influence of the Architectural Layer on the Analytical Layer of the Data Quality Assurance Framework. 
+The use of sensors grid naturally brings an additional gain of  robustness,  because  the  sensors  are  physically  distributed and a fault in one can be covered by a estimative from others nearby. Conversely, the gain in robustness is not natural in the use of image-based sensors, because sensors are concentrated in  a  single  equipment  (drone  or  satellite),  and,  in  case  of  a failure,  all  the  space  points  are  lost  simultaneously.  This  is known as SPOF (Single Point Of Failure) problem, which can be dealt with redundant equipment. 
+IV. PRELIMINARY EXPERIMENTS WITH REAL DATA
+We performed preliminary experiments with real data from the precision irrigation domain, which provides evidence of the potential  of  using  our  vision  for  data  quality  assurance. Specifically, these experiments work within the scope of the anomaly detection step of the analytical layer and demonstrate the value of multivariate approaches. 
+A. Agrosmart and the Dataset 
+Agrosmart  is  a  Brazilian  company  that  provides  crop intelligence  services,  using  a  proprietary  IoT  platform  and application of advanced analytical techniques. It provided raw data for this study, from operations of five farms with soybeans crop for a period of approximately 2 years, starting in the first 
+half of 2016 (depending on the beginning of each culture cycle) until  the  end  of  August  2018.  Each  farm  has  1  to  5 management zones, the internal spatial components of a farm, divided usually by soil characteristics. 
+This dataset contains sensor data, such as7: a) for the spatial granularity  of  the  whole  farm:  air  temperature  ℃ ,  soil temperature  (at  40  cm  deep)  ℃ ,  global  solar  radiation 
+/ , air relative humidity [%], wind speed  / , wind direction  ° and atmospheric precipitation (rainfall)  ; b) for  the  spatial  granularity  of  the  management  zone  (with  a single sensor probe): soil water tension8 (at 20, 40 and 60 cm 
+deep)  , irrigation management  , and, in some cases, atmospheric precipitation  . The temporal granularity of the raw data ranges between 5 and 30 minutes, depending on the variable and the farm or management zone. Further details are omitted due to confidentiality issues. 
+B. Approach 
+When  considering  the  anomaly  detection  step,  the  most important  aspect  is  if  multivariate  approaches  are  useful  to detect veracity problems. In order to simplify the results, only two variables are considered: atmospheric precipitation (farm) and  soil  water  tension  at  20  cm  deep9  (management  zone), aggregated by day. From the raw variables, we derived new ones, due to their semantics in the agriculture context: 
+• Previous Soil Water Tension 20cm-deep  : Soil water tension measured at 20 cm depth at the very beginning of the reference date (management zone). 
+• 1-Day-Delta  (Soil  Water  Tension  20cm-deep)  : Variation  value  of  soil  water  tension  20cm-deep  at  the reference date. 
+• 1-Day-Precipitation   :  The  total  precipitation occurred at the reference date (farm). 
+We used LOF (Local Outlier Factor algorithm) [19] [14], one of the most successful anomaly detection techniques for modern  Big  Data  environments.  LOF  is  a  multidimensional anomaly detection technique based on KNN10 for computing spatial density and providing a real numerical value (of domain 0, ∞ ) for each data point: the closer to 1, the more a certain point  is  similar  to  its  neighbors,  indicating  that  this  point belongs to a cluster of points sharing a common behavior. On the other hand, the more distant from 1, the more unusual is the behavior of that point, which becomes an anomaly candidate. 
+For  this  experiment,  data  was  cleaned  from  obviously invalid values (error data or domain outside values) And data was not reconstructed (i.e., data with missing values), as it is a simplified experiment. The presence of missing values makes that LOF is only applied in data points with non-missing values in all the considered variables. 
+7 All measurements are taken as recommended by [16].
+8 Pressure that the plant needs to exert to consume soil water. 0 kPa indicates extreme ease and 200 kPa represents a severe condition to plant.
+9 At this depth the response to water intake is immediate.
+10 In KNN (K Nearest Neighbor) algorithm, we used K = 15, arbitrated in response to the parameter stability criterion established in [14].
+V. RESULTS AND DISCUSSION
+LOF  generated  approximately  the  same  results  for  all management  zones  and  farms,  so  that,  without  loss  of generalization, only the results of one management zone of one farm is presented. Fig. 5 depicts the scatter plot of the 3 derived variables. Filled circles denote a behavior considered common by LOF Considered cut-off value: 4.
+, whereas points in other shapes represent anomalous behavior: 
+• Red triangle: The soil is previously dry (close to 200  , sensor  ceiling  value),  with  no  relevant  precipitation, although an extreme jump of water availability is observed in the soil, which is highly unexpected. 
+• Blue cross: Unusual soil drying jumps, when the expected behavior is a smoother drying process, even for days with no precipitation. 
+• Purple star: Extreme cases of the blue crosses, where soil water availability is high (values close to 0  ), but the 
+
+Fig. 5: Indication of Anomalous Points in the Data of One of the Management Zones and Farms - Scatter Plot Version.
+soil dried completely (values close to  200  ) in only one day, a highly unexpected phenomenon. 
+Fig. 6 complements the analysis of Fig. 5 showing results in a timeline. We can see that red triangles are usually preceded by points with an opposite movement (purple stars and blue crosses), and between them we usually see points characterized by  a  yellow  band,  which  are  sequential  points  without  any variation of values in the soil sensor (a time series anomaly behavior  itself).  By  the  domain  knowledge,  we  know  this pattern  means  soil  sensor  malfunction.  However,  we  could infer  that  conclusion  only  by  observing  these  rare  events together (anomaly convergence). It is a clear example of how multivariate techniques and the convergence (in space or time) of  multiple  anomalies  can  identify  real  problems,  and consequently differentiate them from rare but real phenomena. In other words, it is a way to use domain knowledge implicitly. 
+The  blue  crosses  are  harder  to  have  their  veracity determined  only  by  Fig.  5,  since  their  behavior  is  not  as extreme as the purple stars and red triangles. However, Fig. 6 highlights that when they have similar patterns, almost glued to a yellow band, it suggests that also indicate a failure. One time more, there is an anomaly convergence indicating a failure. 
+Other challenging case is the last red triangle point at the end of January 2017, because it is within the acceptable range of  the  three  variables.  However,  it  is  in  a  marginalized condition according to the joint behavior, something that only a multivariate technique can capture. This happens when there was  no  precipitation  but  a  significant  increase  in  soil  water tension  was  observed.  Such  abnormal  behavior  may  have occurred either by a sensor data distortion (precipitation may have  occurred  without  being  captured  in  data)  or  by  non- correspondence  of  different  granularity  data  (Section  III-A). The latter is the most likely reason, since the soil data is from the management zone and the precipitation data is from the farm. Sensor problems are also less likely to have happened in this case because the sequential points are of common behavior (the  red  triangle  in  question  is  a  single  anomaly  among common  ones).  Thus,  this  is  an  example  where  the  non- correspondence of different granularity data can insert invalid 
+data even though each sensor is emitting valid values. 
+Also in Fig. 6, most highlighted anomalous points occur in the off-season period (crop interval time), which makes sense, since the sensors can be in preventive maintenance or even are not  being  monitored  because  they  are  not  in  use  anyway. However, other anomalous points (such as the last red triangle point)  occurred  during  the  crop  period,  when  usually expressive anomalies are less frequent, making the detection more difficult. In all cases, the anomaly detection experiment revealed  interesting  results,  identifying  both  expressive  and subtle anomalies, in both off-season and season periods. Even in  a  simple  experiment  with  few  variables  and  a  single technique,  it  provided  a  preliminary  validation  of  our  data quality assurance framework vision, showing that future work is welcome to improve it. 
+
+Fig. 6: Indication of Anomalous Points in the Data of One of the Management Zones and Farms – Time Series Version.
+VI. CONCLUSION
+In response to the gap in the IoT literature in data quality, this paper proposes a new data quality assurance framework vision  as  a  new  approach  to  address  the  key  practical challenges imposed by the new IoT platforms in the context of Big Data. 
+Real data of precision irrigation operations were used in preliminary experiments seeking to find some evidence of the adequacy  of  some  of  the  key  elements  proposed  in  the framework. In this case it was the importance that unsupervised multivariate  criteria,  such  as  LOF,  can  play  in  the  process, mainly  helping  to  identify,  validate  and  interpret  anomalous values within the larger objective of guaranteeing data veracity. Most  of  the  identified  failures  in  the  experiment  were  not identifiable by normal signal processing approaches, but only by the joint of multivariate criteria (anomalies were subtle, in multivariate  context)  and  of  the  anomaly  convergence phenomenon (in some cases, it even replaced specific domain knowledge need). We have observed that, in identifying valid and invalid anomalies, of expressive or more subtle detection, the experiments could be considered successful in encouraging new ones in a more complete version of the proposed vision, as a functional framework. 
+A straightforward next step is to deepen the experiments and analysis with real data, by comparing several techniques of anomaly detection, veracity criteria and data reconstruction as 
+well as the establishment of a feature engineering process for the  capture  of  asymmetries  and  time  effects  among  the variables. 
+REFERENCES
+[1] C. Kamienski, J.-P. Soininen, M. Taumberger, R. Dantas, A. Toscano, T. Salmon  Cinotti,  R.  F.  Maia  and  A.  Torre  Neto,  "Smart  Water Management Platform: IoT-Based Precision Irrigation for Agriculture," Sensors 2019, vol. 19, p. 276, 2019.  
+[2] A.  Karkouch,  H.  Mousannif,  H.  Al  Moatassime  and  T.  Noel,  "Data Quality  in  Internet  of  Things:  A  State-of-the-Art  Survey,"  Journal  of Network  and  Computer  Applications,  vol.  73,  pp.  57-81,  September 2016.  
+[3] T. Banerjee and A. Shet, "IoT Quality Control for Data and Application Needs," IEEE Intelligent Systems, vol. 32, no. 2, April 2017.  
+[4] R.  Dou  and  G.  Nan,  "Optimizing  Sensor  Network  Coverage  and Regional  Connectivity  in  Industrial  IoT  Systems,"  IEEE  Systems Journal, vol. 11, no. 3, September 2017.  
+[5] X. Liu, S. Tamminen, X. Su, P. Siirtola, J. Röning, J. Riekki, J. Kiljander and S. J.-P., "Enhancing Veracity of IoT Generated Big Data in Decision Making," IEEE International Conference on Pervasive Computing and Communications Workshops (PerCom Workshops), 2018.  
+[6] S.  Sanyal  and  P.  Zhang,  "Improving  Quality  of  Data:  IoT  Data Aggregation Using Device to Device Communications," IEEE Access, vol. 6, November 2018.  
+[7] N.  N.  Taleb,  Antifragile:  Things  That  Gain  From  Disorder,  Random House Incorporated, 2012.  
+[8] E.  Vilenski,  P.  Bak  and  J.  D.  Rosenblatt,  "Multivariate  Anomaly Detection for Ensuring Data Quality of Dendrometer Sensor Networks," Computers and Electronics in Agriculture, vol. 162, pp. 412 - 421, 2019.  
+[9] M. Lichtman, M. T. Vondal, T. C. Clancy and J. H. Reed, "Antifragile Communications," IEEE Systems Journal, vol. 12, no. 1, March 2018.  
+[10] M.  Monperrus,  Towards  Antifragile  Software:  Knowledge-driven Perturbation of Software Systems with Active Learning, P Preux, 2016.  
+[11] R. Allen, L. Pereira, D. Raes and M. Smith, "Crop Evapotranspiration- Guidelines for Computing Crop Water," FAO Irrigation and Drainage Paper 56, FAO, 1998.  
+[12] V.  Pendyala,  Veracity  of  Big  Data:  Machine  Learning  and  Other Approaches to Verifying Truthfulness, Apress Berkely, 2018.  
+[13] V.  Chandola,  A.  Banerjee  and  V.  Kumar,  "Anomaly  Detection:  A Survey," ACM Computing Surveys, September 2009.  
+[14] L.  Cao,  C.  Kuhlman  and  E.  Rundesteiner,  "Distributed  Local  Outlier Detection in Big Data," Conference Paper, August 2017.  
+[15] L. Berti-Équille and J. Borge-Holthoefer, Veracity of Data: From Truth Discovery  Computation  Algorithms  to  Models  of  Misinformation Dynamics, Morgan & Claypool Publishers, 2018.  
+[16] C. Crocetta, Theoretical and Applied Statistics, Treviso: Springer, 2015.  
+[17] A.-u. Rehman, A. Z. Abbasi, N. Islam and Z. A. Shaikh, "A Review of Wireless Sensors and Networks' Applications in Agriculture," Computer Standards & Interfaces, vol. 36, no. 2, pp. 263-270, February 2014.  
+[18] M. Kulbacki, J. Segen, W. Knieć, R. Klempous, K. Kluwak, J. Nikodem, 
+J. Kulbacka  and  A.  Serester,  "Survey  of  Drones  for  Agriculture Automation  from  Planting  to  Harvest,"  IEEE  22nd  International Conference on Intelligent Engineering Systems (INES), 2018.  
+[19] M. M. Breunig, H.-P. Kriegel, R. T. Ng and J. Sander, "LOF: Identifying Density-Based Local Outliers," Proceedings of the 2000 ACM SIGMOD international conference on Management of Data, pp. 93-104, 2000.  
+
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.
+
+View publication stats
+Evaluation Only. Created with Aspose.Words. Copyright 2003-2024 Aspose Pty Ltd.

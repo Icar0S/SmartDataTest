@@ -22,6 +22,22 @@ if not exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
 :: Ativar ambiente virtual Python
 call "%PROJECT_DIR%.venv\Scripts\activate.bat"
 
+:: ── RAG Index: build once, reuse forever ─────────────────────────────────────
+set RAG_INDEX=%PROJECT_DIR%storage\vectorstore\documents.json
+if not exist "%RAG_INDEX%" (
+    echo [RAG] Índice RAG não encontrado. Construindo a partir de docs_to_import/...
+    echo [RAG] Isso ocorre apenas na primeira execucao ou apos --rebuild.
+    call "%PROJECT_DIR%scripts\build_rag_index.bat"
+    if errorlevel 1 (
+        echo [AVISO] Falha ao construir índice RAG. O backend usará fallback.
+    ) else (
+        echo [RAG] Índice pronto.
+    )
+) else (
+    echo [RAG] Índice RAG já existe — carregando do cache.
+)
+echo.
+
 :: Iniciar backend em uma nova janela
 echo [1/3] Iniciando backend...
 start cmd /k "title Backend && cd %PROJECT_DIR%src && %PROJECT_DIR%.venv\Scripts\python.exe api.py"

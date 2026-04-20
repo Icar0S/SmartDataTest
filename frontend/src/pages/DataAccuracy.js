@@ -33,7 +33,7 @@ const DataAccuracy = () => {
 
   // Focus on page load
   useEffect(() => {
-    document.title = 'Acurácia de Dados - DataForgeTest';
+    document.title = 'Acurácia de Dados - SmartDataTest';
   }, []);
 
   const handleGoldFileSelect = async (file) => {

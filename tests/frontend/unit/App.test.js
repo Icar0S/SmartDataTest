@@ -37,9 +37,23 @@ jest.mock('../../../frontend/src/pages/AdvancedPySparkGenerator', () =>
 jest.mock('../../../frontend/src/pages/MethodologyPage', () =>
   function MockMethodologyPage() { return <div data-testid="methodology">MethodologyPage</div>; }
 );
+jest.mock('../../../frontend/src/pages/LoginPage', () =>
+  function MockLoginPage() { return <div data-testid="login-page">LoginPage</div>; }
+);
 jest.mock('../../../frontend/src/components/SupportButton', () =>
   function MockSupportButton() { return <button data-testid="support-button">Support</button>; }
 );
+jest.mock('../../../frontend/src/components/ProtectedRoute', () =>
+  function MockProtectedRoute({ children }) { return <div data-testid="protected-route">{children}</div>; }
+);
+jest.mock('../../../frontend/src/context/AuthContext', () => ({
+  AuthProvider: ({ children }) => <div>{children}</div>,
+  useAuthContext: () => ({ isAuthenticated: true, hasProfile: true, isLoading: false }),
+}));
+jest.mock('../../../frontend/src/context/LanguageContext', () => ({
+  LanguageProvider: ({ children }) => <div>{children}</div>,
+  useLanguage: () => ({ language: 'pt-BR', changeLanguage: jest.fn() }),
+}));
 
 import App from '../../../frontend/src/App';
 

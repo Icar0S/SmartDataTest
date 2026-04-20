@@ -16,6 +16,8 @@ venv/
 
 # Ignore data files
 data/
+# EXCEPT: frontend source data (user definitions)
+!frontend/src/data/
 
 # Ignore output files
 output/

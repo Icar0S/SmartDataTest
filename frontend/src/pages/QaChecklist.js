@@ -128,7 +128,7 @@ const QaChecklist = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate DSL and PySpark code');
+        throw new Error('Failed to generate JSON and PySpark code');
       }
 
       const data = await response.json();
@@ -203,7 +203,7 @@ const QaChecklist = () => {
             {/* Success message */}
             <div className="flex items-center gap-3 p-4 bg-green-900/30 border border-green-700/50 rounded-lg">
               <CheckCircle className="w-6 h-6 text-green-400" />
-              <p className="text-green-300 font-medium">DSL e código PySpark gerados com sucesso!</p>
+              <p className="text-green-300 font-medium">JSON e código PySpark gerados com sucesso!</p>
             </div>
 
             {/* Error display */}
@@ -215,7 +215,7 @@ const QaChecklist = () => {
 
             {/* DSL Section */}
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-              <h2 className="text-2xl font-bold text-white mb-4">DSL (Domain Specific Language)</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">JSON</h2>
               <div className="bg-gray-900/90 rounded-lg overflow-hidden">
                 <SyntaxHighlighter
                   language="json"
@@ -355,7 +355,7 @@ const QaChecklist = () => {
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    <span>Gerar DSL e PySpark</span>
+                    <span>Gerar JSON e PySpark</span>
                   </>
                 )}
               </button>

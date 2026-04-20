@@ -373,7 +373,7 @@ describe('DatasetMetrics Component', () => {
   describe('Accessibility', () => {
     test('sets document title', () => {
       renderWithRouter(<DatasetMetrics />);
-      expect(document.title).toBe('Dataset Metrics - DataForgeTest');
+      expect(document.title).toBe('Dataset Metrics - SmartDataTest');
     });
 
     test('has proper button roles', () => {

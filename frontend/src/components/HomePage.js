@@ -1,15 +1,143 @@
 import React, { useState } from 'react';
-import { Zap, Code, Bug, CheckCircle, AlertTriangle, FileText, GitCompare, Sparkles, Brain, TrendingUp, Shield, Clock, Globe, BarChart3, MessageSquare, Eye, GitBranch } from 'lucide-react';
+import { Zap, Code, Bug, CheckCircle, AlertTriangle, FileText, GitCompare, Sparkles, Brain, TrendingUp, Shield, Clock, Globe, BarChart3, MessageSquare, Eye, GitBranch, LogOut, Heart } from 'lucide-react';
 import RAGButton from './RAGButton';
 import DataAccuracyDropdown from './DataAccuracyDropdown';
 import PySparkDropdown from './PySparkDropdown';
+import LanguageToggle from './LanguageToggle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer, slideIn, scaleIn } from '../styles/animations';
+import { useAuthContext } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import useAuth from '../hooks/useAuth';
 
 const DataQualityLLMSystem = () => {
   const [selectedStructure, setSelectedStructure] = useState('synthetic');
   const [selectedFeature, setSelectedFeature] = useState('dataQuality');
+
+  const { user } = useAuthContext();
+  const { language } = useLanguage();
+  const { handleLogout } = useAuth();
+
+  // ---------------------------------------------------------------------------
+  // Translations
+  // ---------------------------------------------------------------------------
+  const translations = {
+    'pt-BR': {
+      navHome: 'Home',
+      navMethodology: 'Metodologia',
+      navChecklist: 'Checklist QA',
+      logout: 'Sair',
+      heroTitle: 'SmartDataTest\nTestes de Qualidade para Big Data',
+      heroSubtitle: 'Testes avançados de qualidade com métricas, suporte LLM + RAG e\ngeração automatizada de código PySpark',
+      btnChecklist: 'Checklist Support QA',
+      btnGenerate: 'Gerar Dataset',
+      btnMethodology: 'Metodologia',
+      sectionStructures: 'Estruturas de Dados',
+      sectionWorkflow: 'Fluxo de Trabalho LLM',
+      sectionProblems: 'Cenários de Qualidade de Dados',
+      sectionTips: 'Diretrizes de Implementação',
+      sectionFuture: 'Roadmap de Funcionalidades Futuras',
+      footerCopyright: '© 2026 SmartDataTest. Todos os direitos reservados.',
+      footerRights: 'Plataforma de Automação de Qualidade de Dados para Big Data com LLM + RAG.',
+      footerBuiltWith: 'Desenvolvido com',
+      footerTech: 'React · Python · PySpark · LLM · RAG',
+    },
+    'en-US': {
+      navHome: 'Home',
+      navMethodology: 'Methodology',
+      navChecklist: 'QA Checklist',
+      logout: 'Logout',
+      heroTitle: 'SmartDataTest\nBig Data Quality Testing',
+      heroSubtitle: 'Advanced data quality testing with metrics, LLM + RAG support, and\nautomated PySpark code generation',
+      btnChecklist: 'Checklist Support QA',
+      btnGenerate: 'Generate Dataset',
+      btnMethodology: 'Methodology',
+      sectionStructures: 'Data Structures',
+      sectionWorkflow: 'LLM Workflow',
+      sectionProblems: 'Data Quality Scenarios',
+      sectionTips: 'Implementation Guidelines',
+      sectionFuture: 'Future Features Roadmap',
+      footerCopyright: '© 2026 SmartDataTest. All rights reserved.',
+      footerRights: 'Data Quality Automation Platform for Big Data with LLM + RAG.',
+      footerBuiltWith: 'Built with',
+      footerTech: 'React · Python · PySpark · LLM · RAG',
+    },
+  };
+  const t = translations[language] ?? translations['en-US'];
+
+  // ---------------------------------------------------------------------------
+  // HomeHeader — internal component
+  // ---------------------------------------------------------------------------
+  const HomeHeader = () => (
+    <header className="sticky top-0 z-50 w-full border-b border-gray-700/50 bg-gray-900/80 backdrop-blur-md">
+      <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+        {/* Left — Logo */}
+        <span className="text-lg font-bold">
+          <span className="text-white">⚡ </span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+            SmartDataTest
+          </span>
+        </span>
+
+        {/* Centre — Nav links (visible md+) */}
+        <nav className="hidden md:flex items-center gap-6 text-sm">
+          <span className="text-purple-400 font-medium">{t.navHome}</span>
+          <Link to="/methodology" className="text-gray-400 hover:text-white transition-colors">
+            {t.navMethodology}
+          </Link>
+          <Link to="/checklist" className="text-gray-400 hover:text-white transition-colors">
+            {t.navChecklist}
+          </Link>
+          <Link to="/generate-dataset" className="text-gray-400 hover:text-white transition-colors">
+            {t.navGenerate}
+          </Link>
+        </nav>
+
+        {/* Right — User area */}
+        <div className="flex items-center gap-3">
+          <LanguageToggle size="sm" />
+          <div className="w-px h-6 bg-gray-700" />
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {user?.avatar || '?'}
+          </div>
+          <span className="text-sm font-medium text-white hidden md:block">{user?.name}</span>
+          <button
+            onClick={handleLogout}
+            title={t.logout}
+            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+
+  // ---------------------------------------------------------------------------
+  // HomeFooter — internal component
+  // ---------------------------------------------------------------------------
+  const HomeFooter = () => (
+    <footer className="mt-12 border-t border-gray-700/50 bg-gray-900/70 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Shield className="w-4 h-4 text-purple-500" />
+            <span className="font-semibold text-gray-300">SmartDataTest</span>
+            <span className="text-gray-600">·</span>
+            <span>{t.footerCopyright}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <span>{t.footerBuiltWith}</span>
+            <Heart className="w-3 h-3 text-pink-600 fill-pink-600" />
+            <span className="font-mono text-gray-500">{t.footerTech}</span>
+          </div>
+          <span className="text-xs text-gray-600 font-mono">v1.0.0 · 2026</span>
+        </div>
+        <p className="mt-2 text-center text-xs text-gray-600">{t.footerRights}</p>
+      </div>
+    </footer>
+  );
 
   const structures = {
     synthetic: {
@@ -234,6 +362,9 @@ const DataQualityLLMSystem = () => {
       animate="animate"
       className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#1a1a2e] text-white overflow-x-hidden"
     >
+      {/* Header */}
+      <HomeHeader />
+
       {/* Hero Section */}
       <motion.div 
         variants={fadeIn}
@@ -242,19 +373,15 @@ const DataQualityLLMSystem = () => {
         <div className="max-w-7xl mx-auto text-center">
           <motion.h1 
             variants={slideIn}
-            className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600"
+            className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 whitespace-pre-line"
           >
-            DataForgeTest
-            <br />
-            Big Data Quality Testing
+            {t.heroTitle}
           </motion.h1>
           <motion.p 
             variants={fadeIn}
-            className="text-xl md:text-2xl text-purple-300 mb-8"
+            className="text-xl md:text-2xl text-purple-300 mb-8 whitespace-pre-line"
           >
-            Advanced data quality testing with metrics, LLM + RAG support, and
-            <br />
-            automated PySpark code generation
+            {t.heroSubtitle}
           </motion.p>
           <div className="flex gap-4 justify-center flex-wrap">
             <motion.div
@@ -275,7 +402,7 @@ const DataQualityLLMSystem = () => {
                 aria-label="Checklist Support QA"
               >
                 <CheckCircle className="w-5 h-5" />
-                Checklist Support QA
+                {t.btnChecklist}
               </Link>
             </motion.div>
             <motion.div
@@ -296,7 +423,7 @@ const DataQualityLLMSystem = () => {
                 aria-label="Generate Synthetic Dataset"
               >
                 <Sparkles className="w-5 h-5" />
-                Generate Synthetic Dataset
+                {t.btnGenerate}
               </Link>
             </motion.div>
             <motion.div
@@ -310,7 +437,7 @@ const DataQualityLLMSystem = () => {
                 aria-label="Methodology Framework"
               >
                 <GitBranch className="w-5 h-5" />
-                Methodology
+                {t.btnMethodology}
               </Link>
             </motion.div>
             <RAGButton />
@@ -422,7 +549,7 @@ const DataQualityLLMSystem = () => {
         >
           <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
             <Zap className="text-yellow-400" />
-            System Workflow
+            {t.sectionWorkflow}
           </h3>
           <div className="space-y-8">
             <motion.div 
@@ -496,7 +623,7 @@ const DataQualityLLMSystem = () => {
           variants={fadeIn}
           className="mt-12 bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-sm rounded-2xl p-8 border border-purple-700/50"
         >
-          <h3 className="text-2xl font-bold text-white mb-6">🎯 Data Quality Scenarios</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">🎯 {t.sectionProblems}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <motion.div 
               variants={slideIn}
@@ -555,7 +682,7 @@ const DataQualityLLMSystem = () => {
           variants={fadeIn}
           className="mt-12 bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50"
         >
-          <h3 className="text-2xl font-bold text-white mb-6">💡 Implementation Guidelines</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">💡 {t.sectionTips}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <motion.div 
               variants={slideIn}
@@ -611,10 +738,10 @@ const DataQualityLLMSystem = () => {
         >
           <h3 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
             <Sparkles className="text-blue-400" />
-            Future Features Roadmap
+            {t.sectionFuture}
           </h3>
           <p className="text-blue-300 text-lg mb-8">
-            Innovative features planned to enhance your DataForgeTest platform
+            Innovative features planned to enhance your SmartDataTest platform
           </p>
 
           {/* Feature Navigation */}
@@ -701,7 +828,7 @@ const DataQualityLLMSystem = () => {
           </motion.div>
         </motion.div>
 
-        <div className="mb-20"></div>
+        <HomeFooter />
       </motion.div>
     </motion.div>
   );
