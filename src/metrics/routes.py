@@ -1,6 +1,8 @@
 """Flask routes for Dataset Metrics feature."""
 
 import gc
+import json
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -53,8 +55,53 @@ config = MetricsConfig.from_env()
 # Ensure storage directories exist
 config.storage_path.mkdir(parents=True, exist_ok=True)
 
-# Track processing status
+# Track processing status (in-memory cache; disk is the source of truth)
 processing_status = {}
+
+
+def _session_file(session_id: str) -> Path:
+    """Return the path of the JSON metadata file for a session."""
+    return config.storage_path / session_id / "session.json"
+
+
+def _load_session(session_id: str) -> dict | None:
+    """Load session metadata from memory cache or disk.
+
+    Returns the session dict, or None if the session does not exist.
+    """
+    if session_id in processing_status:
+        return processing_status[session_id]
+
+    path = _session_file(session_id)
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                session = json.load(fh)
+            # Warm the in-memory cache for this worker
+            processing_status[session_id] = session
+            return session
+        except (json.JSONDecodeError, OSError) as exc:
+            # Corrupt or unreadable session file — treat as non-existent
+            import logging
+            logging.getLogger(__name__).warning(
+                "Could not read session file %s: %s", path, exc
+            )
+            return None
+
+    return None
+
+
+def _save_session(session_id: str, session: dict) -> None:
+    """Persist session metadata to disk atomically and update the in-memory cache."""
+    processing_status[session_id] = session
+    path = _session_file(session_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Write to a temp file first, then rename for atomic replacement so that a
+    # worker reading concurrently never sees a half-written file.
+    tmp_path = path.with_suffix(".json.tmp")
+    with open(tmp_path, "w", encoding="utf-8") as fh:
+        json.dump(session, fh)
+    os.replace(tmp_path, path)
 
 
 def _metrics_rate_limit_key():
@@ -131,15 +178,18 @@ def upload_dataset():
         # Save file
         file.save(file_path)
 
-        # Read dataset to get preview
-        df = read_dataset(file_path)
+        # Read only up to max_rows+1 rows to avoid loading a huge file into
+        # memory before the size check (prevents worker OOM / SIGKILL).
+        df = read_dataset(file_path, nrows=config.max_rows + 1)
 
-        # Validate row count
+        # Validate row count — fail fast before building the sample
         if len(df) > config.max_rows:
+            del df
+            gc.collect()
             return (
                 jsonify(
                     {
-                        "error": f"Dataset too large: {len(df)} rows exceeds maximum of {config.max_rows} rows for current plan.",
+                        "error": f"Dataset too large: exceeds {config.max_rows} row limit for current plan.",
                         "suggestion": "Please reduce dataset size or upgrade to a higher plan.",
                     }
                 ),
@@ -150,22 +200,33 @@ def upload_dataset():
         sample = df.head(config.sample_size).to_dict(orient="records")
         sample = convert_to_json_serializable(sample)
 
+        # Capture values needed for the response before releasing the DataFrame
+        columns = list(df.columns)
+        total_rows = len(df)
+
+        # Free memory as soon as we have what we need
+        del df
+        gc.collect()
+
         # Store session info
-        processing_status[session_id] = {
-            "file_path": str(file_path),
-            "filename": filename,
-            "uploaded_at": datetime.now().isoformat(),
-            "rows": len(df),
-            "columns": len(df.columns),
-        }
+        _save_session(
+            session_id,
+            {
+                "file_path": str(file_path),
+                "filename": filename,
+                "uploaded_at": datetime.now().isoformat(),
+                "rows": total_rows,
+                "columns": len(columns),
+            },
+        )
 
         return jsonify(
             {
                 "sessionId": session_id,
-                "columns": list(df.columns),
+                "columns": columns,
                 "sample": sample,
                 "format": file_ext.lstrip("."),
-                "rows": len(df),
+                "rows": total_rows,
             }
         )
 
@@ -191,17 +252,18 @@ def analyze_dataset():
         if not session_id:
             return jsonify({"error": "sessionId is required"}), 400
 
-        if session_id not in processing_status:
+        session = _load_session(session_id)
+        if session is None:
             return jsonify({"error": "Invalid session ID"}), 404
 
         # Get file path
-        file_path = Path(processing_status[session_id]["file_path"])
+        file_path = Path(session["file_path"])
 
         if not file_path.exists():
             return jsonify({"error": "File not found"}), 404
 
         # Check row count before loading full dataset
-        row_count = processing_status[session_id]["rows"]
+        row_count = session["rows"]
         if row_count > config.max_rows:
             return (
                 jsonify(
@@ -226,9 +288,10 @@ def analyze_dataset():
         del df
         gc.collect()
 
-        # Store report in session
-        processing_status[session_id]["report"] = report
-        processing_status[session_id]["analyzed_at"] = datetime.now().isoformat()
+        # Persist updated session (including the report) to disk
+        session["report"] = report
+        session["analyzed_at"] = datetime.now().isoformat()
+        _save_session(session_id, session)
 
         return jsonify(report)
 
@@ -262,13 +325,14 @@ def get_report():
         if not session_id:
             return jsonify({"error": "sessionId is required"}), 400
 
-        if session_id not in processing_status:
+        session = _load_session(session_id)
+        if session is None:
             return jsonify({"error": "Invalid session ID"}), 404
 
-        if "report" not in processing_status[session_id]:
+        if "report" not in session:
             return jsonify({"error": "No report available. Run analysis first."}), 404
 
-        return jsonify(processing_status[session_id]["report"])
+        return jsonify(session["report"])
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

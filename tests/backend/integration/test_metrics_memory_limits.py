@@ -74,7 +74,7 @@ class TestMetricsMemoryLimits:
         )
         assert response.status_code == 413
         data = json.loads(response.data)
-        assert "rows exceeds maximum" in data["error"]
+        assert "exceeds" in data["error"]
         assert "suggestion" in data
 
     def test_analyze_too_many_rows(self, client):

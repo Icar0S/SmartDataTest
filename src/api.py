@@ -23,15 +23,26 @@ app.config["RATELIMIT_DEFAULT_LIMITS"] = ["200 per day", "50 per hour"]
 
 # Allowed origins for CORS — loaded from env var with safe default
 _CORS_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS", "https://dataforgetest.onrender.com,http://localhost:3000"
+    "CORS_ALLOWED_ORIGINS",
+    "https://data-forge-test.vercel.app,https://dataforgetest.onrender.com,http://localhost:3000",
 ).split(",")
 
 CORS(
     app,
-    origins=_CORS_ORIGINS,
-    methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
-    supports_credentials=False,
+    resources={
+        r"/api/checklist/*": {
+            "origins": _CORS_ORIGINS,
+            "methods": ["GET", "POST", "PUT", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": False,
+        },
+        r"/*": {
+            "origins": _CORS_ORIGINS,
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": False,
+        },
+    },
 )
 
 

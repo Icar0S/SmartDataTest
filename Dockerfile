@@ -32,7 +32,22 @@ RUN mkdir -p storage/vectorstore \
     storage/accuracy \
     storage/gold \
     storage/metrics \
-    uploads
+    uploads \
+    initial_vectorstore
+
+# Pre-build the RAG document index so cold starts don't need to re-parse PDFs.
+# The resulting documents.json is baked into the image at /app/initial_vectorstore/
+# and is used by SimpleRAG when the persistent-disk copy doesn't exist yet.
+RUN cd /app/src && \
+    VECTOR_STORE_PATH=/app/initial_vectorstore python -c "\
+import os, sys; \
+sys.path.insert(0, '.'); \
+from rag.simple_rag import SimpleRAG; \
+from rag.config_simple import RAGConfig; \
+config = RAGConfig.from_env(); \
+rag = SimpleRAG(config); \
+print('[Docker build] Pre-built index:', len(rag.documents), 'documents'); \
+"
 
 # Create and switch to non-root user
 RUN useradd -m -u 1000 -s /bin/bash appuser \
@@ -50,5 +65,10 @@ WORKDIR /app/src
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/', timeout=5)"
 
-# Run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "api:app"]
+# Run the application with gunicorn.
+# --preload  : load the app in the master process before forking workers so
+#              that heavy initialisation (RAG document loading) only runs once.
+# --workers 2: two workers keep memory inside the Render starter-plan limit
+#              (512 MB) while still allowing some request concurrency.
+# --timeout 300: large CSV uploads need more than the 120s default.
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "300", "--preload", "--access-logfile", "-", "--error-logfile", "-", "api:app"]

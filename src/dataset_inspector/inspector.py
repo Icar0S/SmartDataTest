@@ -59,13 +59,16 @@ def detect_encoding(file_path: str) -> str:
     encoding = result["encoding"] or "utf-8"
     confidence = result.get("confidence", 0.0)
 
-    # When chardet is not confident about a specific ISO-8859-x variant (e.g.
-    # it returns iso-8859-3 for a file with only a handful of special bytes),
-    # normalise to iso-8859-1 which is the most prevalent Latin encoding for
-    # Portuguese/Brazilian content.  A high-confidence detection is respected
-    # so that legitimately different encodings (e.g. iso-8859-2 for Central
-    # European content) are preserved.
-    if encoding.lower().startswith("iso-8859-") and confidence < 0.9:
+    # When chardet/charset_normalizer is not confident about a specific
+    # ISO-8859-x variant (e.g. it returns iso-8859-3 or iso8859-3 for a file
+    # with only a handful of special bytes), normalise to iso-8859-1 which is
+    # the most prevalent Latin encoding for Portuguese/Brazilian content.
+    # A high-confidence detection is respected so that legitimately different
+    # encodings (e.g. iso-8859-2 for Central European content) are preserved.
+    # Note: charset_normalizer may omit the hyphen between "iso" and "8859"
+    # (e.g. "iso8859-3"), so we normalise the name before comparing.
+    enc_normalised = encoding.lower().replace("iso8859", "iso-8859")
+    if enc_normalised.startswith("iso-8859-") and confidence < 0.9:
         return "iso-8859-1"
 
     return encoding

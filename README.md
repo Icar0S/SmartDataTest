@@ -1,4 +1,4 @@
-# DataForgeTest
+# SmartDataTest
 
 ![CI Pipeline](https://github.com/Icar0S/DataForgeTest/actions/workflows/ci.yml/badge.svg)
 ![Deploy](https://github.com/Icar0S/DataForgeTest/actions/workflows/deploy.yml/badge.svg)

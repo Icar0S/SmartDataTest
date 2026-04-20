@@ -89,8 +89,46 @@ class SimpleRAG:
             print(f"[WARNING] File lock unavailable ({e}); importing without lock")
             self._auto_import_or_fallback()
 
+    def _find_prebuilt_documents(self) -> Optional[Path]:
+        """Locate the pre-built documents.json embedded in the Docker image.
+
+        During the Docker build a script pre-imports all PDFs/TXTs from
+        docs_to_import and saves the resulting index to
+        /app/initial_vectorstore/documents.json.  This file is baked into the
+        image so that the first cold-start loads the index from a simple JSON
+        copy rather than re-parsing every PDF.
+        """
+        candidates = [
+            # Absolute path used in the Dockerfile pre-build step
+            Path("/app/initial_vectorstore/documents.json"),
+            # Relative to the project root (useful in local dev / CI)
+            Path(__file__).parent.parent.parent / "initial_vectorstore" / "documents.json",
+        ]
+        for candidate in candidates:
+            try:
+                if candidate.exists():
+                    return candidate
+            except OSError:
+                pass
+        return None
+
     def _auto_import_or_fallback(self):
-        """Try auto-importing from docs_to_import folder; fall back to hardcoded docs."""
+        """Try auto-importing from docs_to_import folder; fall back to hardcoded docs.
+
+        Fast path: if a pre-built ``initial_vectorstore/documents.json`` exists
+        (baked into the Docker image at build time), load from it and save a copy
+        to the persistent storage path.  This avoids re-parsing every PDF on every
+        cold start and dramatically reduces startup time.
+        """
+        prebuilt = self._find_prebuilt_documents()
+        if prebuilt is not None:
+            print(f"[INFO] Loading pre-built documents from {prebuilt}...")
+            self._load_from_file(prebuilt)
+            # Persist to the configured storage path so subsequent restarts
+            # load straight from the persistent disk without touching this file.
+            self._save_documents()
+            return
+
         docs_dir = self._find_docs_to_import()
         if docs_dir is not None:
             print(f"[INFO] Auto-importing documents from {docs_dir}...")

@@ -195,11 +195,10 @@ jobs:
 
       - name: Frontend security tests
         run: |
-          cd frontend && npx jest \
+          cd frontend && npx craco test \
             --testPathPattern="tests/frontend/security" \
             --watchAll=false \
-            --ci \
-            --env=node
+            --ci
 
   production-sla:
     name: 📈 Production SLA Tests
@@ -227,7 +226,9 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
 
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE" >> $GITHUB_ENV
