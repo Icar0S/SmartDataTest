@@ -121,8 +121,8 @@ describe('HomePage Component', () => {
     test('renders main heading', () => {
       renderWithRouter(<HomePage />);
 
-      // HomePage contains DataForge text
-      const dataforgeElements = screen.queryAllByText(/DataForge/i);
+      // HomePage contains SmartData text
+      const dataforgeElements = screen.queryAllByText(/SmartData/i);
       expect(dataforgeElements.length).toBeGreaterThan(0);
     });
 
@@ -225,7 +225,7 @@ describe('HomePage Component', () => {
       renderWithRouter(<HomePage />);
 
       // Check main heading is present
-      const dataforgeElements = screen.queryAllByText(/DataForge/i);
+      const dataforgeElements = screen.queryAllByText(/SmartData/i);
       expect(dataforgeElements.length).toBeGreaterThan(0);
     });
   });
