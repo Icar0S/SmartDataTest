@@ -9,8 +9,9 @@
 DataForgeTest is a comprehensive solution for automating data quality testing in Big Data environments. It combines Large Language Models (LLMs) with advanced data processing capabilities to generate synthetic datasets, validate data accuracy, and create intelligent testing workflows for scalable data systems.
 
 <div align="center">
-  <img width="1024" height="1024" alt="DataForgeTest Logo" src="https://github.com/user-attachments/assets/f17fd7ad-e9e9-464a-a55b-5d80af8ec578" />
+  <img width="2048" height="2048" alt="SmartDataTest Logo" src="https://github.com/user-attachments/assets/f1142360-46c9-4221-ac6d-67a193a7ad87" />
 </div>
+
 
 ## 🚀 Key Features
 
