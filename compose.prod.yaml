@@ -94,19 +94,29 @@ services:
       - GOLD_REQUEST_TIMEOUT=${GOLD_REQUEST_TIMEOUT:-300}
       - MAX_ROWS_WARN=${MAX_ROWS_WARN:-500000}
 
-      # Auth store (JSON array). Unset => empty store => every login fails.
-      # Keep the real value in .env, never here.
-      - AUTH_USERS=${AUTH_USERS:-}
-
-      # Bearer token(s) for the business API, comma-separated for rotation.
-      # Mandatory in production: the app refuses to start without it. Every
-      # route is protected except /, /api/stats, /api/auth/validate and the
-      # per-blueprint /health probes. Keep the real value in .env.
-      - API_TOKENS=${API_TOKENS:-}
+    # Secrets come from .env via env_file, NOT via ${VAR} interpolation in the
+    # environment: block above.
+    #
+    # This matters: Compose expands $ in interpolated values, and a werkzeug
+    # password hash looks like "scrypt:32768:8:1$salt$digest". Interpolating it
+    # ate everything from the second $ onwards, so AUTH_USERS reached the
+    # container truncated and every login failed with "Invalid password".
+    # env_file passes values through literally.
+    #
+    # Provides AUTH_USERS and API_TOKENS. Anything also named in environment:
+    # above is overridden by that value, which is why the storage paths there
+    # still win over the relative ones in .env.
+    env_file:
+      - path: .env
+        required: false
 
     volumes:
       - ./storage:/app/storage
       - ./uploads:/app/uploads
+      # The auth store lives in a file, not an env var: Compose interpolates $
+      # in .env and env_file alike, which truncated the werkzeug password hash.
+      # File contents are read directly and never interpolated. git-ignored.
+      - ./secrets/auth_users.json:/run/secrets/auth_users.json:ro
 
     # Container hardening
     read_only: true

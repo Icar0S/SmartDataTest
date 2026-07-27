@@ -28,9 +28,44 @@ from werkzeug.security import check_password_hash, generate_password_hash
 logger = logging.getLogger(__name__)
 
 
+def _validate_password_hash(user: dict) -> None:
+    """Reject a password hash that is not intact.
+
+    werkzeug hashes are ``method$salt$digest`` — exactly three ``$``-separated
+    parts. A hash with fewer has been mangled in transit, and the usual cause is
+    variable interpolation: Docker Compose expands ``$`` in both ``environment:``
+    values and ``env_file`` entries, so an unescaped hash silently loses
+    everything from its first ``$`` onwards. That produced a store that loaded
+    without error and then rejected every correct password.
+
+    Fail loudly at startup instead. In .env, either escape each ``$`` as ``$$``
+    or use AUTH_USERS_FILE, which is never interpolated.
+    """
+    parts = user["password_hash"].split("$")
+    if len(parts) != 3 or not all(parts):
+        raise RuntimeError(
+            f"password_hash for {user.get('email', '?')} is malformed "
+            f"({len(parts)} $-separated parts, expected 3). It was probably "
+            "truncated by $-interpolation. Escape each $ as $$ in .env, or set "
+            "AUTH_USERS_FILE to a JSON file, which is passed through literally."
+        )
+
+
 def _load_users() -> list[dict]:
-    """Build the in-memory user store from the environment."""
-    raw = os.environ.get("AUTH_USERS", "").strip()
+    """Build the in-memory user store.
+
+    AUTH_USERS_FILE takes precedence over AUTH_USERS. Prefer it: file contents
+    are read directly and never pass through Compose interpolation.
+    """
+    path = os.environ.get("AUTH_USERS_FILE", "").strip()
+    if path:
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                raw = handle.read().strip()
+        except OSError as exc:
+            raise RuntimeError(f"AUTH_USERS_FILE {path!r} could not be read: {exc}") from exc
+    else:
+        raw = os.environ.get("AUTH_USERS", "").strip()
 
     if raw:
         try:
@@ -45,6 +80,7 @@ def _load_users() -> list[dict]:
             missing = {"id", "name", "email", "password_hash", "role"} - set(user)
             if missing:
                 raise RuntimeError(f"AUTH_USERS entry is missing keys: {sorted(missing)}")
+            _validate_password_hash(user)
             user.setdefault("avatar", None)
         return users
 

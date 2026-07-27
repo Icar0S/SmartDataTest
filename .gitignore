@@ -52,3 +52,6 @@ htmlcov/
 docs_to_import/*.pdf
 docs_to_import/*.docx
 
+
+# Local secrets (auth store, tokens) — never commit
+secrets/

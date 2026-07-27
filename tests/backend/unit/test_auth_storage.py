@@ -87,6 +87,56 @@ class TestUserStoreLoading(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 _reload_storage()
 
+    def test_loads_users_from_file(self):
+        """AUTH_USERS_FILE is read literally, bypassing $-interpolation."""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            json.dump(TEST_USERS, handle)
+            path = handle.name
+        with mock.patch.dict(os.environ, {"AUTH_USERS_FILE": path, "AUTH_USERS": ""}):
+            storage = _reload_storage()
+            self.assertEqual(storage.USERS[0]["email"], "admin@example.test")
+        os.unlink(path)
+
+    def test_file_takes_precedence_over_env(self):
+        import tempfile
+
+        other = [dict(TEST_USERS[0], email="from-file@example.test")]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            json.dump(other, handle)
+            path = handle.name
+        with mock.patch.dict(
+            os.environ, {"AUTH_USERS_FILE": path, "AUTH_USERS": json.dumps(TEST_USERS)}
+        ):
+            storage = _reload_storage()
+            self.assertEqual(storage.USERS[0]["email"], "from-file@example.test")
+        os.unlink(path)
+
+    def test_unreadable_file_raises(self):
+        with mock.patch.dict(os.environ, {"AUTH_USERS_FILE": "/nonexistent/nope.json"}):
+            with self.assertRaises(RuntimeError):
+                _reload_storage()
+
+    def test_truncated_password_hash_fails_loudly(self):
+        """A hash mangled by $-interpolation must not load silently.
+
+        Compose expands $ in .env and env_file values alike, so an unescaped
+        werkzeug hash ("method$salt$digest") arrives cut at the first $. That
+        used to produce a store that loaded fine and rejected every correct
+        password. It must be a startup error instead.
+        """
+        mangled = [dict(TEST_USERS[0], password_hash="scrypt:32768:8:1")]
+        with mock.patch.dict(os.environ, {"AUTH_USERS": json.dumps(mangled)}):
+            with self.assertRaises(RuntimeError) as ctx:
+                _reload_storage()
+        self.assertIn("malformed", str(ctx.exception))
+
+    def test_intact_password_hash_accepted(self):
+        with mock.patch.dict(os.environ, {"AUTH_USERS": json.dumps(TEST_USERS)}):
+            storage = _reload_storage()
+            self.assertEqual(len(storage.USERS[0]["password_hash"].split("$")), 3)
+
     def test_no_hardcoded_demo_credentials_in_source(self):
         """The historical demo passwords must not reappear in the module source."""
         import auth.storage
