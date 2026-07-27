@@ -114,14 +114,20 @@ def init_api_token_auth(app) -> None:
     # effective configuration depend on the environment at call time.
     admin_tokens = _load_admin_tokens()
 
+    # Destructive operations are guarded even when general API authentication
+    # is off. Without this, a deployment that simply lacks API_TOKENS — as
+    # happened on the Render instance, where FLASK_ENV is not "production" —
+    # left POST /api/rag/reload and DELETE /api/rag/sources/<id> callable by
+    # anyone, which is precisely what ADMIN_TOKENS exists to prevent.
+    general_auth_off = _auth_disabled() or not tokens
+
     if _auth_disabled():
         logger.critical(
-            "API_AUTH_DISABLED is set: every business route is reachable "
-            "without a token. Never do this on an internet-facing instance."
+            "API_AUTH_DISABLED is set: business routes are reachable without a "
+            "token. Never do this on an internet-facing instance. Destructive "
+            "operations remain gated by ADMIN_TOKENS."
         )
-        return
-
-    if not tokens:
+    elif not tokens:
         if is_production:
             raise RuntimeError(
                 "API_TOKENS must be set when FLASK_ENV=production. Generate one "
@@ -131,9 +137,9 @@ def init_api_token_auth(app) -> None:
             )
         logger.warning(
             "API_TOKENS is not set — business routes are unauthenticated. "
-            "This is allowed outside production only."
+            "This is allowed outside production only. Destructive operations "
+            "remain gated by ADMIN_TOKENS."
         )
-        return
 
     @app.before_request
     def _require_api_token():  # pylint: disable=unused-variable
@@ -148,6 +154,7 @@ def init_api_token_auth(app) -> None:
         presented = _presented_token()
 
         if _is_admin_operation(request.method, request.path):
+            # Enforced regardless of general_auth_off.
             # Fails closed: with no ADMIN_TOKENS configured, destructive routes
             # are unreachable rather than falling back to the public token.
             if admin_tokens and presented and any(
@@ -155,6 +162,9 @@ def init_api_token_auth(app) -> None:
             ):
                 return None
             return jsonify({"error": "Unauthorized"}), 401
+
+        if general_auth_off:
+            return None
 
         if presented and any(hmac.compare_digest(presented, known) for known in tokens):
             return None

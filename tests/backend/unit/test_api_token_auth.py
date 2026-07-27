@@ -242,3 +242,30 @@ class TestAdminFailsClosed(unittest.TestCase):
             "/api/rag/sources", headers={"Authorization": f"Bearer {TOKEN}"}
         )
         self.assertNotEqual(response.status_code, 401)
+
+
+class TestAdminGatedEvenWithoutGeneralAuth(unittest.TestCase):
+    """Destructive routes stay closed when general API auth is not configured.
+
+    A deployment that merely lacks API_TOKENS — the state the Render instance
+    was found in, where FLASK_ENV is not "production" — must not end up with
+    POST /api/rag/reload and DELETE /api/rag/sources/<id> callable by anyone.
+    """
+
+    def test_no_tokens_at_all_still_blocks_admin(self):
+        client = _client({"API_TOKENS": "", "ADMIN_TOKENS": ""})
+        self.assertEqual(client.post("/api/rag/reload").status_code, 401)
+        self.assertEqual(client.delete("/api/rag/sources/doc-1").status_code, 401)
+
+    def test_explicit_opt_out_still_blocks_admin(self):
+        client = _client({"API_TOKENS": "", "API_AUTH_DISABLED": "true", "ADMIN_TOKENS": ""})
+        self.assertEqual(client.post("/api/rag/reload").status_code, 401)
+        # Business routes remain open, which is what the opt-out is for.
+        self.assertNotEqual(client.post("/ask", json={"answers": {}}).status_code, 401)
+
+    def test_admin_token_still_works_without_general_auth(self):
+        client = _client({"API_TOKENS": "", "ADMIN_TOKENS": ADMIN_TOKEN})
+        response = client.post(
+            "/api/rag/reload", headers={"Authorization": f"Bearer {ADMIN_TOKEN}"}
+        )
+        self.assertNotEqual(response.status_code, 401)
