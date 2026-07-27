@@ -172,3 +172,73 @@ def tearDownModule():
 
 if __name__ == "__main__":
     unittest.main()
+
+
+ADMIN_TOKEN = "admin-token-cccccccccccccccccccccc"
+
+
+class TestAdminOperations(unittest.TestCase):
+    """Destructive routes need a separate credential from the public one.
+
+    The ordinary token ships inside the Vercel bundle, so it cannot protect an
+    operation that deletes data. Cloudflare Access cannot cover these either:
+    it matches on path, and GET /api/rag/sources (used by the frontend) shares
+    a path with DELETE /api/rag/sources/<id>.
+    """
+
+    def setUp(self):
+        self.client = _client({"API_TOKENS": TOKEN, "ADMIN_TOKENS": ADMIN_TOKEN})
+
+    def test_delete_source_rejects_public_token(self):
+        response = self.client.delete(
+            "/api/rag/sources/doc-1", headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_delete_source_accepts_admin_token(self):
+        response = self.client.delete(
+            "/api/rag/sources/doc-1", headers={"Authorization": f"Bearer {ADMIN_TOKEN}"}
+        )
+        self.assertNotEqual(response.status_code, 401)
+
+    def test_ingest_and_reload_reject_public_token(self):
+        for path in ("/api/rag/ingest", "/api/rag/reload"):
+            with self.subTest(path=path):
+                response = self.client.post(
+                    path, headers={"Authorization": f"Bearer {TOKEN}"}
+                )
+                self.assertEqual(response.status_code, 401)
+
+    def test_get_sources_still_works_with_public_token(self):
+        """Same path, safe method: the frontend must not be broken by this."""
+        response = self.client.get(
+            "/api/rag/sources", headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        self.assertNotEqual(response.status_code, 401)
+
+    def test_chat_still_works_with_public_token(self):
+        response = self.client.post(
+            "/api/rag/chat",
+            json={"message": "oi"},
+            headers={"Authorization": f"Bearer {TOKEN}"},
+        )
+        self.assertNotEqual(response.status_code, 401)
+
+
+class TestAdminFailsClosed(unittest.TestCase):
+    """With no ADMIN_TOKENS set, destructive routes are simply unreachable."""
+
+    def setUp(self):
+        self.client = _client({"API_TOKENS": TOKEN, "ADMIN_TOKENS": ""})
+
+    def test_delete_rejected_even_with_valid_public_token(self):
+        response = self.client.delete(
+            "/api/rag/sources/doc-1", headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_read_routes_unaffected(self):
+        response = self.client.get(
+            "/api/rag/sources", headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        self.assertNotEqual(response.status_code, 401)

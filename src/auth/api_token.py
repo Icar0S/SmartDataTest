@@ -39,10 +39,41 @@ PUBLIC_PATHS = frozenset(
 )
 
 
+# Operations that change or destroy server-side state, matched as
+# (method, path prefix). These need a separate, stronger credential.
+#
+# The ordinary API token is inlined into the Vercel bundle by design, so it is
+# readable by anyone who opens DevTools — adequate for raising the cost of
+# anonymous abuse, useless as protection for a destructive call. Cloudflare
+# Access cannot cover these either: it matches on path, and
+# "GET /api/rag/sources" (used by the frontend) shares a path with
+# "DELETE /api/rag/sources/<id>" (deletes a document from the knowledge base).
+ADMIN_OPERATIONS = (
+    ("POST", "/api/rag/ingest"),
+    ("POST", "/api/rag/reload"),
+    ("DELETE", "/api/rag/sources"),
+)
+
+
 def _load_tokens() -> list[str]:
     """Return the configured API tokens."""
     raw = os.environ.get("API_TOKENS", "")
     return [token.strip() for token in raw.split(",") if token.strip()]
+
+
+def _load_admin_tokens() -> list[str]:
+    """Return the configured admin tokens (comma-separated, for rotation)."""
+    raw = os.environ.get("ADMIN_TOKENS", "")
+    return [token.strip() for token in raw.split(",") if token.strip()]
+
+
+def _is_admin_operation(method: str, path: str) -> bool:
+    """True if this request mutates or destroys server-side state."""
+    normalised = path.rstrip("/")
+    return any(
+        method == required_method and normalised.startswith(prefix)
+        for required_method, prefix in ADMIN_OPERATIONS
+    )
 
 
 def _auth_disabled() -> bool:
@@ -79,6 +110,9 @@ def init_api_token_auth(app) -> None:
     """
     is_production = os.environ.get("FLASK_ENV", "").strip().lower() == "production"
     tokens = _load_tokens()
+    # Read once at startup, like `tokens`. Reading per request would make the
+    # effective configuration depend on the environment at call time.
+    admin_tokens = _load_admin_tokens()
 
     if _auth_disabled():
         logger.critical(
@@ -112,6 +146,16 @@ def init_api_token_auth(app) -> None:
             return None
 
         presented = _presented_token()
+
+        if _is_admin_operation(request.method, request.path):
+            # Fails closed: with no ADMIN_TOKENS configured, destructive routes
+            # are unreachable rather than falling back to the public token.
+            if admin_tokens and presented and any(
+                hmac.compare_digest(presented, known) for known in admin_tokens
+            ):
+                return None
+            return jsonify({"error": "Unauthorized"}), 401
+
         if presented and any(hmac.compare_digest(presented, known) for known in tokens):
             return None
 
