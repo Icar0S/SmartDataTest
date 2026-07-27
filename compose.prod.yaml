@@ -1,0 +1,164 @@
+# Production compose for self-hosting DataForgeTest behind a Cloudflare Tunnel.
+#
+# This file is separate from docker-compose.yml on purpose: that one is the
+# development flow and publishes ports on every interface. Nothing here is ever
+# reachable from the LAN or the router — the only path in is the tunnel, which
+# connects outbound to Cloudflare and forwards to 127.0.0.1:5000.
+#
+#   docker compose -f compose.prod.yaml up -d --build
+#
+# Its compose project name is its own, so it can never collide with the
+# unrelated `meu-app` stack (Postgres) running on the same machine.
+name: dataforgetest
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dataforgetest-backend:prod
+    container_name: dataforgetest-backend
+
+    ports:
+      # Loopback ONLY. cloudflared reaches this; the local network cannot.
+      # Never change this to "5000:5000" — that publishes on 0.0.0.0.
+      - "127.0.0.1:5000:5000"
+
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+
+      # Required in production — the app refuses to start without it. This is
+      # the *frontend* origin (Vercel), not the API domain.
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://smart-data-test.vercel.app}
+
+      # LLM: the Ollama already installed on the host. No API key, no data
+      # leaving the machine.
+      #
+      # Ollama is NOT containerised here, on purpose. A Linux container on
+      # macOS gets no Metal GPU passthrough, so an in-container Ollama would
+      # run CPU-only (the host does 23.1 tok/s on qwen2.5-coder:7b), and it
+      # would re-download ~6.2 GB that already exists in ~/.ollama.
+      #
+      # Security is unchanged: the host Ollama must be bound to 127.0.0.1
+      # (Ollama.app > Settings > uncheck "Expose Ollama to the network"), so it
+      # is not reachable from the LAN. Verified that OrbStack still routes a
+      # container to a host service bound strictly to loopback via
+      # host.docker.internal, so the backend reaches it without that service
+      # listening on any external interface.
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=${LLM_MODEL:-qwen2.5-coder:7b}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+      # Uploads. MAX_UPLOAD_MB is the single limit every module reads; the hard
+      # Flask wall is derived from it plus the overhead margin.
+      - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-10}
+      - UPLOAD_OVERHEAD_MB=${UPLOAD_OVERHEAD_MB:-2}
+
+      # Rate limiting. memory:// is per-process, which is correct here only
+      # because gunicorn runs a single worker (see the Dockerfile CMD): the
+      # configured limit is now the real one, measured at exactly 10 of 20
+      # requests admitted for "10 per minute", against 20 of 30 with 2 workers.
+      # Counters still reset on restart. Point this at a shared backend
+      # (redis://...) before adding workers or replicas.
+      - RATELIMIT_STORAGE_URI=${RATELIMIT_STORAGE_URI:-memory://}
+
+      # Diagnostics off: /api/rag/debug discloses provider, key presence,
+      # absolute paths and indexed document names.
+      - RAG_DEBUG_ENDPOINT=false
+
+      # tests/ is excluded from the image, so /api/stats cannot count at runtime.
+      - PLATFORM_TESTS_TOTAL=${PLATFORM_TESTS_TOTAL:-886}
+
+      # Storage paths — absolute on purpose.
+      # The working directory is /app/src, so a relative "./uploads/metrics"
+      # resolves to /app/src/uploads and misses the bind mount entirely. That
+      # is how metrics uploads and checklist runs were being written outside
+      # persistent storage and lost on every restart.
+      - VECTOR_STORE_PATH=/app/storage/vectorstore
+      - SYNTH_STORAGE_PATH=/app/storage/synth
+      - ACCURACY_STORAGE_PATH=/app/storage/accuracy
+      - GOLD_STORAGE_PATH=/app/storage/gold
+      - METRICS_STORAGE_PATH=/app/uploads/metrics
+      - CHECKLIST_STORAGE_PATH=/app/storage/checklist
+
+      # Feature limits
+      - CHUNK_SIZE=${CHUNK_SIZE:-512}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - TOP_K=${TOP_K:-4}
+      - SYNTH_MAX_ROWS=${SYNTH_MAX_ROWS:-1000000}
+      - SYNTH_REQUEST_TIMEOUT=${SYNTH_REQUEST_TIMEOUT:-300}
+      - SYNTH_MAX_MEM_MB=${SYNTH_MAX_MEM_MB:-2048}
+      - ACCURACY_MAX_ROWS=${ACCURACY_MAX_ROWS:-2000000}
+      - ACCURACY_REQUEST_TIMEOUT=${ACCURACY_REQUEST_TIMEOUT:-120}
+      - METRICS_MAX_ROWS=${METRICS_MAX_ROWS:-50000}
+      - GOLD_ALLOWED_FILE_TYPES=${GOLD_ALLOWED_FILE_TYPES:-.csv,.xlsx,.xls,.parquet}
+      - GOLD_REQUEST_TIMEOUT=${GOLD_REQUEST_TIMEOUT:-300}
+      - MAX_ROWS_WARN=${MAX_ROWS_WARN:-500000}
+
+    # Secrets come from .env via env_file, NOT via ${VAR} interpolation in the
+    # environment: block above.
+    #
+    # This matters: Compose expands $ in interpolated values, and a werkzeug
+    # password hash looks like "scrypt:32768:8:1$salt$digest". Interpolating it
+    # ate everything from the second $ onwards, so AUTH_USERS reached the
+    # container truncated and every login failed with "Invalid password".
+    # env_file passes values through literally.
+    #
+    # Provides AUTH_USERS and API_TOKENS. Anything also named in environment:
+    # above is overridden by that value, which is why the storage paths there
+    # still win over the relative ones in .env.
+    env_file:
+      - path: .env
+        required: false
+
+    volumes:
+      - ./storage:/app/storage
+      - ./uploads:/app/uploads
+      # The auth store lives in a file, not an env var: Compose interpolates $
+      # in .env and env_file alike, which truncated the werkzeug password hash.
+      # File contents are read directly and never interpolated. git-ignored.
+      - ./secrets/auth_users.json:/run/secrets/auth_users.json:ro
+
+    # Container hardening
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      # read_only makes the whole root filesystem immutable, so anything that
+      # writes outside the two bind mounts above needs an explicit tmpfs.
+      - /tmp:rw,noexec,nosuid,size=256m
+      - /home/appuser/.cache:rw,noexec,nosuid,size=64m
+      # gunicorn's control server writes here and logs an error without it.
+      - /home/appuser/.gunicorn:rw,noexec,nosuid,size=16m
+
+    # Sized against the 8192 MiB / 10 CPU OrbStack VM, leaving room for the
+    # unrelated meu-app Postgres. Ollama runs on the host, outside this VM, so
+    # it does not compete for these limits — but it does compete for the 16 GB
+    # of physical RAM, which is why this is not sized to fill the VM.
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 3g
+
+    extra_hosts:
+      # Lets the container reach the host's loopback-bound Ollama.
+      - "host.docker.internal:host-gateway"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

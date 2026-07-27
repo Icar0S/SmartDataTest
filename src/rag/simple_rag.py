@@ -15,6 +15,54 @@ from typing import Dict, List, Optional
 _AUTO_IMPORT_EXTENSIONS = {".txt", ".md", ".pdf", ".csv"}
 
 
+def _relative_filepath(file_path, root) -> str:
+    """Return *file_path* relative to *root*, falling back to its basename.
+
+    Document metadata travels back to API clients in chat citations, so it must
+    never carry an absolute host path.
+    """
+    try:
+        return str(file_path.relative_to(root))
+    except ValueError:
+        return file_path.name
+
+
+def _sanitise_filepath(value: str) -> str:
+    """Reduce a stored filepath to something safe to publish.
+
+    Indexes built before filepaths were made relative contain absolute paths
+    from whichever machine ran the ingest — including Windows paths such as
+    ``C:\\Users\\<name>\\...`` — and those are echoed to API clients in chat
+    citations. Sanitising on load fixes existing data, wherever it came from,
+    without needing a migration step.
+    """
+    if not value:
+        return value
+    # Split on both separators: the value may have been produced on Windows.
+    tail = value.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+    return tail or value
+
+
+def _sanitise_documents(documents: dict) -> int:
+    """Strip absolute paths from loaded document metadata. Returns count fixed."""
+    fixed = 0
+    for doc in documents.values():
+        if not isinstance(doc, dict):
+            continue
+        metadata = doc.get("metadata")
+        if not isinstance(metadata, dict):
+            continue
+        original = metadata.get("filepath")
+        if not isinstance(original, str):
+            continue
+        cleaned = _sanitise_filepath(original)
+        if cleaned != original:
+            metadata["filepath"] = cleaned
+            fixed += 1
+    return fixed
+
+
+
 class SimpleRAG:
     """Simple RAG implementation without complex dependencies."""
 
@@ -47,6 +95,9 @@ class SimpleRAG:
                 data = json.load(f)
                 self.documents = data.get("documents", {})
                 self.document_chunks = data.get("chunks", {})
+                sanitised = _sanitise_documents(self.documents)
+                if sanitised:
+                    print(f"[OK] Stripped absolute paths from {sanitised} document(s)")
                 # Rebuild missing chunks from document content
                 for doc_id, doc_data in self.documents.items():
                     if doc_id not in self.document_chunks:
@@ -228,7 +279,11 @@ class SimpleRAG:
                 doc_id = str(uuid.uuid4())
                 metadata = {
                     "filename": file_path.name,
-                    "filepath": str(file_path),
+                    # Relative to the import folder, never absolute. This value
+                    # is echoed back to API clients inside chat citations, and
+                    # storing str(file_path) leaked the full filesystem layout
+                    # of whichever machine ran the ingest.
+                    "filepath": _relative_filepath(file_path, folder),
                     "size": file_path.stat().st_size,
                     "source": "docs_to_import",
                 }

@@ -4,11 +4,16 @@ FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
+# Set environment variables.
+# PIP_DEFAULT_TIMEOUT / PIP_RETRIES: builds on a home/residential link stall on
+# pip's default 15s read timeout. Be patient and retry instead of failing the
+# whole image build.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10
 
 # Install system dependencies required for some Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -66,9 +71,23 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/', timeout=5)"
 
 # Run the application with gunicorn.
-# --preload  : load the app in the master process before forking workers so
-#              that heavy initialisation (RAG document loading) only runs once.
-# --workers 2: two workers keep memory inside the Render starter-plan limit
-#              (512 MB) while still allowing some request concurrency.
+#
+# --workers 1 --threads 8: ONE process, several threads.
+#
+# The rate limiter stores its counters in process memory (memory://), so each
+# worker kept its own. With two workers a nominal "10 per minute" admitted 20
+# requests, measured. A single process makes the configured limit the real one.
+#
+# Threads restore the concurrency that dropping to one worker would otherwise
+# cost: requests here spend most of their time waiting on Ollama or on disk,
+# and a single-threaded worker would serialise every request behind the
+# slowest LLM call. Threads share the process, so the counters stay shared.
+#
+# If this is ever scaled back to multiple workers or replicas, move
+# RATELIMIT_STORAGE_URI to a shared backend (redis://...) at the same time, or
+# the limits silently multiply again.
+#
+# --preload: load the app in the master process before forking so heavy
+#            initialisation (RAG document loading) only runs once.
 # --timeout 300: large CSV uploads need more than the 120s default.
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "300", "--preload", "--access-logfile", "-", "--error-logfile", "-", "api:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "8", "--worker-class", "gthread", "--timeout", "300", "--preload", "--access-logfile", "-", "--error-logfile", "-", "api:app"]

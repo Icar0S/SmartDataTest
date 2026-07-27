@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Eye, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer } from '../styles/animations';
-import { getApiUrl } from '../config/api';
+import { apiFetch, apiFetchUrl, getApiUrl } from '../config/api';
 
 const COLUMN_TYPES = [
   'string', 'integer', 'float', 'boolean', 'date', 'datetime',
@@ -124,7 +124,7 @@ const GenerateDataset = () => {
     setPreviewData(null);
 
     try {
-      const response = await fetch(getApiUrl('/api/synth/preview'), {
+      const response = await apiFetch('/api/synth/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +165,7 @@ const GenerateDataset = () => {
     setIsGenerating(true);
 
     try {
-      const response = await fetch(getApiUrl('/api/synth/generate'), {
+      const response = await apiFetch('/api/synth/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -227,6 +227,27 @@ const GenerateDataset = () => {
       if (!isPreviewing && !isGenerating) {
         handlePreview();
       }
+    }
+  };
+
+  // Downloads go through fetch, not a plain <a href>. The download route needs
+  // the API token and an anchor cannot send an Authorization header, so it
+  // would simply 401. Fetch the blob, then hand it to a temporary link.
+  const handleDownload = async () => {
+    try {
+      const response = await apiFetchUrl(downloadUrl);
+      if (!response.ok) throw new Error(`Download failed (${response.status})`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = downloadUrl.split('/').pop() || 'dataset';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -597,14 +618,14 @@ const GenerateDataset = () => {
                 <p>Duration: {generationSummary.durationSec}s</p>
               </div>
             )}
-            <a
-              href={downloadUrl}
-              download
+            <button
+              type="button"
+              onClick={handleDownload}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold shadow-lg hover:shadow-green-500/30 transition-all duration-300"
             >
               <Download className="w-5 h-5" />
               Download Dataset
-            </a>
+            </button>
           </motion.div>
         )}
 

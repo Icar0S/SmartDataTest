@@ -10,10 +10,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 from flask_limiter.util import get_remote_address
 from werkzeug.utils import secure_filename
 
-from limiter import limiter
+from limiter import limit_for, limiter
 
 from .config import MetricsConfig
 from .processor import generate_quality_report, read_dataset
@@ -105,12 +106,15 @@ def _save_session(session_id: str, session: dict) -> None:
 
 
 def _metrics_rate_limit_key():
-    """Combine client IP with session id to avoid cross-session throttling."""
-    payload = {}
-    if request.method == "POST":
-        payload = request.get_json(silent=True) or {}
-    session_id = payload.get("sessionId") or ""
-    return f"{get_remote_address()}:{session_id}"
+    """Rate-limit key for the analyze endpoint.
+
+    Keyed on the client address only. A previous version appended the
+    client-supplied ``sessionId`` from the request body, which made the limit
+    trivially bypassable: sending a fresh random sessionId on every request
+    produced a fresh bucket each time, so the "20 per minute" cap never
+    applied. Any component of a rate-limit key must not be attacker-controlled.
+    """
+    return get_remote_address()
 
 
 @metrics_bp.route("/health", methods=["GET"])
@@ -120,6 +124,7 @@ def health_check():
 
 
 @metrics_bp.route("/upload", methods=["POST"])
+@limiter.limit(limit_for("UPLOAD"))
 def upload_dataset():
     """Handle dataset upload.
 

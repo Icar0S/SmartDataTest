@@ -8,6 +8,10 @@ import '@testing-library/jest-dom';
 // Mock getApiUrl
 jest.mock('../../../frontend/src/config/api', () => ({
   getApiUrl: (path) => `http://localhost:5000${path}`,
+  // apiFetch must still go through global.fetch so jest.spyOn intercepts it.
+  apiFetch: (path, options) => fetch(`http://localhost:5000${path}`, options),
+  apiFetchUrl: (url, options) => fetch(url, options),
+  getAuthHeaders: () => ({}),
 }));
 
 const MOCK_RESPONSE = {

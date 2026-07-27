@@ -486,3 +486,78 @@ describe('ChecklistPage - Extended Coverage', () => {
     expect(buttons.length).toBeGreaterThan(2);
   });
 });
+
+describe('ChecklistPage — authenticated report download', () => {
+  // These went through apiFetch when the API started requiring a bearer token.
+  // The response is consumed as a blob and handed to a temporary link, so an
+  // anchor pointing straight at the endpoint would have returned 401.
+  let clickSpy;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.fetch.mockClear();
+    clickSpy = jest.fn();
+    globalThis.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    globalThis.URL.revokeObjectURL = jest.fn();
+    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = document.createElementNS('http://www.w3.org/1999/xhtml', tag);
+      if (tag === 'a') el.click = clickSpy;
+      return el;
+    });
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  const mockAll = (reportResponse) => {
+    global.fetch.mockImplementation((url, options) => {
+      if (url.includes('/report')) return Promise.resolve(reportResponse);
+      if (url.includes('/api/checklist/template')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockTemplate) });
+      }
+      if (url.includes('/api/checklist/runs') && !url.includes('/runs/')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRun) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+  };
+
+  test('downloads the markdown report as a blob', async () => {
+    mockAll({ ok: true, blob: async () => new Blob(['# report']) });
+    render(<ChecklistPage />);
+    await waitFor(() => expect(screen.getByText(/Download MD/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText(/Download MD/i).closest('button'));
+
+    await waitFor(() => {
+      const call = global.fetch.mock.calls.find(([u]) => String(u).includes('/report'));
+      expect(call).toBeDefined();
+      expect(JSON.parse(call[1].body).format).toBe('md');
+    });
+    await waitFor(() => expect(clickSpy).toHaveBeenCalled());
+  });
+
+  test('downloads the pdf report as a blob', async () => {
+    mockAll({ ok: true, blob: async () => new Blob(['%PDF']) });
+    render(<ChecklistPage />);
+    await waitFor(() => expect(screen.getByText(/Download PDF/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText(/Download PDF/i).closest('button'));
+
+    await waitFor(() => {
+      const call = global.fetch.mock.calls.find(([u]) => String(u).includes('/report'));
+      expect(JSON.parse(call[1].body).format).toBe('pdf');
+    });
+  });
+
+  test('surfaces an error when the report request is refused', async () => {
+    mockAll({ ok: false, status: 401 });
+    render(<ChecklistPage />);
+    await waitFor(() => expect(screen.getByText(/Download MD/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText(/Download MD/i).closest('button'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Erro ao baixar relat/i)).toBeInTheDocument();
+    });
+  });
+});

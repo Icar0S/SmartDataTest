@@ -3,7 +3,10 @@ import os
 import tempfile
 
 from flask import Blueprint, jsonify, request
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
+
+from limiter import limit_for, limiter
 
 from code_generator.pyspark_generator import generate_pyspark_code
 from dataset_inspector.dsl_generator import generate_dsl_from_metadata
@@ -55,6 +58,7 @@ def health_check():
 
 
 @dataset_inspector_bp.route("/inspect", methods=["POST"])
+@limiter.limit(limit_for("UPLOAD"))
 def inspect_uploaded_dataset():
     """Inspect an uploaded dataset file.
 

@@ -38,11 +38,20 @@ class TestCSVEncodingIntegration(unittest.TestCase):
             # Test auto-detection (no encoding specified)
             result = inspect_csv(temp_path, {})
 
-            # Verify correct detection (chardet may return ISO-8859-1, WINDOWS-1252,
-            # windows-1252, or latin-1 depending on version/platform; compare lowercase)
+            # Assert on the outcome, not on chardet's label for it.
+            #
+            # chardet names this byte pattern differently across versions and
+            # platforms — iso-8859-1, windows-1252, latin-1 and (newer
+            # releases) macroman are all reported for the same file. Pinning
+            # the list of acceptable names made the test fail whenever chardet
+            # was upgraded, while saying nothing about whether the file was
+            # read correctly. What matters is that the detected encoding
+            # actually decodes the Portuguese characters.
             detected_enc = result["detected_options"]["encoding"]
-            self.assertIn(
-                detected_enc.lower(), ["iso-8859-1", "windows-1252", "latin-1"]
+            self.assertEqual(
+                csv_content.encode("latin-1").decode(detected_enc),
+                csv_content,
+                f"detected encoding {detected_enc!r} does not round-trip the content",
             )
             self.assertEqual(result["detected_options"]["delimiter"], "\t")
             self.assertEqual(len(result["columns"]), 4)
@@ -145,9 +154,13 @@ class TestCSVEncodingIntegration(unittest.TestCase):
 
             # Verify DSL contains detected options
             self.assertIn("detected_options", dsl["dataset"])
+            # As above: assert the encoding decodes the content rather than
+            # pinning chardet's name for it.
             detected_enc = dsl["dataset"]["detected_options"]["encoding"]
-            self.assertIn(
-                detected_enc.lower(), ["iso-8859-1", "windows-1252", "latin-1"]
+            self.assertEqual(
+                csv_content.encode("latin-1").decode(detected_enc),
+                csv_content,
+                f"detected encoding {detected_enc!r} does not round-trip the content",
             )
             self.assertEqual(dsl["dataset"]["detected_options"]["delimiter"], "\t")
 

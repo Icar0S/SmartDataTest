@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, ChevronLeft, Trash2, CheckCircle } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 // Questions structure matching backend QUESTIONS
 const QUESTIONS = {
@@ -119,7 +119,7 @@ const QaChecklist = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(getApiUrl('/ask'), {
+      const response = await apiFetch('/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 // Last-known baselines used while loading or when the API fails
 const FALLBACK = {
@@ -29,7 +29,7 @@ export default function useStats() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch(getApiUrl('/api/stats'), {
+        const res = await apiFetch('/api/stats', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           // Short timeout — login page must not stall for stats

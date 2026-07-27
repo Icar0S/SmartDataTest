@@ -123,7 +123,10 @@ describe('GenerateDataset Component', () => {
         '/api/synth/preview',
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          // objectContaining, not equality: apiFetch also attaches an
+          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // which is exactly the production case.
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })
       );
     });
@@ -180,7 +183,10 @@ describe('GenerateDataset Component', () => {
         '/api/synth/generate',
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          // objectContaining, not equality: apiFetch also attaches an
+          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // which is exactly the production case.
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })
       );
     });
@@ -207,12 +213,14 @@ describe('GenerateDataset Component', () => {
     
     await waitFor(() => {
       expect(screen.getByText(/Download Ready/i)).toBeInTheDocument();
-      const downloadLink = screen.getByText(/Download Dataset/i);
-      expect(downloadLink.closest('a')).toHaveAttribute(
-        'href',
-        '/api/synth/download/test-session/dataset.csv'
-      );
     });
+
+    // The download is a button, not an <a href>. Download routes require the
+    // API token and an anchor cannot send an Authorization header, so a plain
+    // link would 401. The click fetches the blob instead.
+    const downloadButton = screen.getByText(/Download Dataset/i).closest('button');
+    expect(downloadButton).toBeInTheDocument();
+    expect(screen.getByText(/Download Dataset/i).closest('a')).toBeNull();
   });
 
   test('shows error message on API failure', async () => {
@@ -320,5 +328,67 @@ describe('GenerateDataset Component', () => {
     const dateInputs = screen.getAllByDisplayValue('');
     const hasDateType = dateInputs.some(input => input.type === 'date');
     expect(hasDateType).toBe(true);
+  });
+});
+
+describe('GenerateDataset — authenticated download', () => {
+  // The download used to be a plain <a href={downloadUrl} download>. Download
+  // routes require the API token and an anchor cannot send an Authorization
+  // header, so that link returned 401 with nothing visible in the console.
+  // These cover the fetch-and-blob replacement.
+  const generateResponse = {
+    ok: true,
+    json: async () => ({
+      summary: { rows: 500, cols: 3, fileType: 'csv', durationSec: 2.1 },
+      downloadUrl: '/api/synth/download/sess-1/dataset.csv',
+      logs: [],
+    }),
+  };
+
+  let clickSpy;
+
+  beforeEach(() => {
+    fetch.mockClear();
+    clickSpy = jest.fn();
+    globalThis.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    globalThis.URL.revokeObjectURL = jest.fn();
+    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = Object.assign(document.createElementNS('http://www.w3.org/1999/xhtml', tag), {});
+      if (tag === 'a') {
+        el.click = clickSpy;
+      }
+      return el;
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  const generateThenDownload = async (downloadResponse) => {
+    renderWithRouter(<GenerateDataset />);
+    // Both responses are queued before any click: the download fires
+    // synchronously from the button handler.
+    fetch.mockResolvedValueOnce(generateResponse).mockResolvedValueOnce(downloadResponse);
+    fireEvent.click(screen.getByLabelText(/Generate full dataset/i));
+    await waitFor(() => expect(screen.getByText(/Download Ready/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByText(/Download Dataset/i).closest('button'));
+  };
+
+  test('fetches the file and hands the blob to a temporary link', async () => {
+    await generateThenDownload({ ok: true, blob: async () => new Blob(['a,b\n1,2']) });
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(fetch.mock.calls[1][0]).toContain('/api/synth/download/sess-1/dataset.csv');
+    await waitFor(() => expect(clickSpy).toHaveBeenCalled());
+    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalled();
+  });
+
+  test('shows an error when the download is rejected', async () => {
+    await generateThenDownload({ ok: false, status: 401 });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Download failed \(401\)/i)).toBeInTheDocument();
+    });
   });
 });

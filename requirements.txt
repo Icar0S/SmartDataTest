@@ -1,4 +1,8 @@
-pyspark==3.5.1
+# NOTE: pyspark is deliberately NOT a dependency.
+# src/code_generator/pyspark_generator.py only emits PySpark source code as a
+# string for the user to run in Google Colab; nothing in this backend imports
+# pyspark at runtime. Shipping it cost a 317 MB download per image build (and
+# made builds fail on slow links) for zero runtime benefit.
 Flask
 Flask-Cors
 Flask-Limiter>=3.5.0

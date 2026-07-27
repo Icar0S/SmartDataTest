@@ -160,8 +160,12 @@ class TestOversizedPayload:
     """Oversized request bodies must be rejected to prevent memory exhaustion."""
 
     def test_large_body_rejected_on_ask(self, client):
-        """A body larger than 10 MB sent to /ask must be rejected with 413."""
-        large_body = b"X" * (11 * 1024 * 1024)  # 11 MB
+        """A body larger than the configured limit sent to /ask must be rejected."""
+        # Derived from the app rather than hard-coded: MAX_CONTENT_LENGTH is now
+        # computed from MAX_UPLOAD_MB, so a fixed 11 MB no longer reliably
+        # exceeds it.
+        limit = client.application.config["MAX_CONTENT_LENGTH"]
+        large_body = b"X" * (limit + 1024 * 1024)
         response = client.post(
             "/ask",
             data=large_body,
@@ -169,7 +173,7 @@ class TestOversizedPayload:
         )
         if response.status_code not in (400, 413):
             pytest.fail(
-                f"[SECURITY] Oversized payload (11 MB) was NOT rejected on /ask. "
+                f"[SECURITY] Oversized payload ({len(large_body)} bytes) was NOT rejected on /ask. "
                 f"Got status {response.status_code}. Expected 413 (Request Entity Too Large). "
                 "This allows memory exhaustion / DoS attacks. "
                 "Recommendation: set Flask MAX_CONTENT_LENGTH. "
@@ -177,8 +181,9 @@ class TestOversizedPayload:
             )
 
     def test_large_body_rejected_on_synth_generate(self, client):
-        """A body larger than 10 MB sent to /api/synth/generate must be rejected."""
-        large_body = b"Y" * (11 * 1024 * 1024)
+        """A body larger than the configured limit must be rejected."""
+        limit = client.application.config["MAX_CONTENT_LENGTH"]
+        large_body = b"Y" * (limit + 1024 * 1024)
         response = client.post(
             "/api/synth/generate",
             data=large_body,
@@ -186,7 +191,7 @@ class TestOversizedPayload:
         )
         if response.status_code not in (400, 413):
             pytest.fail(
-                f"[SECURITY] Oversized payload (11 MB) accepted on /api/synth/generate. "
+                f"[SECURITY] Oversized payload ({len(large_body)} bytes) accepted on /api/synth/generate. "
                 f"Got status {response.status_code}. Expected 413. "
                 "OWASP A05 – Security Misconfiguration."
             )

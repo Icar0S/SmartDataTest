@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getApiUrl } from '../config/api';
+import { apiFetch, apiFetchUrl } from '../config/api';
 
 const useDataAccuracy = () => {
   const [sessionId, setSessionId] = useState(null);
@@ -40,7 +40,7 @@ const useDataAccuracy = () => {
         ...(sessionId && { sessionId })
       });
 
-      const response = await fetch(getApiUrl(`/api/accuracy/upload?${queryParams}`), {
+      const response = await apiFetch(`/api/accuracy/upload?${queryParams}`, {
         method: 'POST',
         body: formData
       });
@@ -100,7 +100,7 @@ const useDataAccuracy = () => {
     setError(null);
 
     try {
-      const response = await fetch(getApiUrl('/api/accuracy/compare-correct'), {
+      const response = await apiFetch('/api/accuracy/compare-correct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -131,8 +131,9 @@ const useDataAccuracy = () => {
 
   const downloadFile = useCallback(async (url) => {
     try {
-      // Fetch the file as a blob to ensure proper download
-      const response = await fetch(url);
+      // Fetch the file as a blob to ensure proper download.
+      // apiFetchUrl, not fetch: download routes require the API token too.
+      const response = await apiFetchUrl(url);
       
       if (!response.ok) {
         throw new Error('Download failed');

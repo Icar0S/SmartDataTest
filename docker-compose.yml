@@ -10,7 +10,12 @@ services:
       # Flask Settings
       - FLASK_ENV=production
       - FLASK_DEBUG=False
-      
+
+      # CORS — required whenever FLASK_ENV=production. There is no built-in
+      # production default any more, so this must be set explicitly or the
+      # app refuses to start.
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+
       # LLM Configuration
       # Choose provider: 'ollama' (default, no cost) or 'anthropic' (requires credits)
       - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
@@ -27,7 +32,14 @@ services:
       - CHUNK_SIZE=${CHUNK_SIZE:-512}
       - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
       - TOP_K=${TOP_K:-4}
+
+      # Upload limits. MAX_UPLOAD_MB is the single value every feature module
+      # reads; the hard Flask wall is derived from it plus the overhead margin.
       - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-10}
+      - UPLOAD_OVERHEAD_MB=${UPLOAD_OVERHEAD_MB:-2}
+
+      # Diagnostics — /api/rag/debug discloses provider, key presence and paths.
+      - RAG_DEBUG_ENDPOINT=${RAG_DEBUG_ENDPOINT:-false}
       
       # Synthetic Data Generation
       - SYNTH_STORAGE_PATH=./storage/synth
@@ -37,7 +49,8 @@ services:
       
       # Data Accuracy
       - ACCURACY_STORAGE_PATH=./storage/accuracy
-      - ACCURACY_MAX_UPLOAD_MB=${ACCURACY_MAX_UPLOAD_MB:-50}
+      # NOTE: ACCURACY_MAX_UPLOAD_MB used to be set here but no code ever read
+      # it — the accuracy module reads MAX_UPLOAD_MB like every other module.
       - ACCURACY_MAX_ROWS=${ACCURACY_MAX_ROWS:-2000000}
       - ACCURACY_REQUEST_TIMEOUT=${ACCURACY_REQUEST_TIMEOUT:-120}
       

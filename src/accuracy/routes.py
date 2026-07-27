@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
+
+from limiter import limit_for, limiter
 
 from .config import AccuracyConfig
 from .processor import compare_and_correct, normalize_column_name, read_dataset
@@ -30,6 +33,7 @@ def health_check():
 
 
 @accuracy_bp.route("/upload", methods=["POST"])
+@limiter.limit(limit_for("UPLOAD"))
 def upload_dataset():
     """Handle dataset upload.
 
@@ -138,6 +142,7 @@ def upload_dataset():
 
 
 @accuracy_bp.route("/compare-correct", methods=["POST"])
+@limiter.limit(limit_for("HEAVY"))
 def compare_correct():
     """Compare and correct datasets.
 

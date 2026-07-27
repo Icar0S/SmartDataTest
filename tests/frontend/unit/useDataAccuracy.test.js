@@ -9,6 +9,10 @@ import useDataAccuracy from '../../../frontend/src/hooks/useDataAccuracy';
 // Mock config/api
 jest.mock('../../../frontend/src/config/api', () => ({
   getApiUrl: (path) => `http://localhost${path}`,
+  // apiFetch must still go through global.fetch so jest.spyOn intercepts it.
+  apiFetch: (path, options) => fetch(`http://localhost${path}`, options),
+  apiFetchUrl: (url, options) => fetch(url, options),
+  getAuthHeaders: () => ({}),
 }));
 
 // Mock DOM methods used by downloadFile
@@ -390,7 +394,9 @@ describe('useDataAccuracy Hook', () => {
         await result.current.downloadFile('/api/accuracy/download/file.csv');
       });
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/accuracy/download/file.csv');
+      // Downloads go through apiFetchUrl, which passes an options object
+      // carrying the Authorization header, so assert on the URL argument.
+      expect(global.fetch.mock.calls[0][0]).toBe('/api/accuracy/download/file.csv');
     });
 
     test('sets error on download failure', async () => {

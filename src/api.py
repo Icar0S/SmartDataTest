@@ -9,23 +9,67 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from flask_limiter.util import get_remote_address
+from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from chatbot.main import process_chatbot_request
 from limiter import limiter
 
 app = Flask(__name__)
-# Limit request body size to 10 MB to prevent DoS via oversized payloads
-app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB
-# Rate limiting configuration
-app.config["RATELIMIT_STORAGE_URI"] = "memory://"
-app.config["RATELIMIT_DEFAULT_LIMITS"] = ["200 per day", "50 per hour"]
 
-# Allowed origins for CORS — loaded from env var with safe default
-_CORS_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "https://data-forge-test.vercel.app,https://dataforgetest.onrender.com,http://localhost:3000",
-).split(",")
+# ── Upload limits ──────────────────────────────────────────────────────────
+# MAX_UPLOAD_MB is the single knob every feature module reads (metrics, rag,
+# accuracy and gold all call os.getenv("MAX_UPLOAD_MB", ...) in their config).
+# MAX_CONTENT_LENGTH is the hard Flask wall enforced before any route code
+# runs, so it must sit *above* MAX_UPLOAD_MB — otherwise an upload between the
+# two values dies with a bare 413 instead of the module's descriptive JSON
+# error. The overhead margin covers multipart/form-data framing.
+#
+# Previously MAX_CONTENT_LENGTH was hard-coded to 10 MB with no relation to
+# MAX_UPLOAD_MB, and ACCURACY_MAX_UPLOAD_MB was declared in render.yaml and
+# docker-compose.yml but read by no code at all. That variable is gone; use
+# MAX_UPLOAD_MB.
+_MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "10"))
+_UPLOAD_OVERHEAD_MB = int(os.environ.get("UPLOAD_OVERHEAD_MB", "2"))
+app.config["MAX_UPLOAD_MB"] = _MAX_UPLOAD_MB
+app.config["MAX_CONTENT_LENGTH"] = (_MAX_UPLOAD_MB + _UPLOAD_OVERHEAD_MB) * 1024 * 1024
+
+# ── Rate limiting ──────────────────────────────────────────────────────────
+# "memory://" is per-process: with N gunicorn workers the effective limit is
+# N times the configured one. The deployment runs a single worker with threads
+# precisely so these counters are shared and the configured limit is the real
+# one. Add workers or replicas and you must move RATELIMIT_STORAGE_URI to a
+# shared backend (e.g. redis://...) in the same change.
+app.config["RATELIMIT_STORAGE_URI"] = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+# The config key is RATELIMIT_DEFAULT. It was previously spelled
+# RATELIMIT_DEFAULT_LIMITS, which Flask-Limiter does not recognise, so the
+# documented "200 per day, 50 per hour" global limit silently never applied —
+# only routes carrying an explicit @limiter.limit were ever limited. Verified
+# against flask_limiter.constants.ConfigVars.
+app.config["RATELIMIT_DEFAULT"] = os.environ.get(
+    "RATELIMIT_DEFAULT", "200 per day;50 per hour"
+)
+
+# ── CORS ───────────────────────────────────────────────────────────────────
+# Allowed origins come from CORS_ALLOWED_ORIGINS. There is deliberately NO
+# production fallback: the old built-in default silently allowed a hard-coded
+# list of hosts (including the Render domain) on any deployment that forgot to
+# set the variable. In production we refuse to start rather than serve an
+# origin allowlist nobody chose.
+_IS_PRODUCTION = os.environ.get("FLASK_ENV", "").strip().lower() == "production"
+_cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
+
+if _cors_env:
+    _CORS_ORIGINS = [origin.strip() for origin in _cors_env.split(",") if origin.strip()]
+elif _IS_PRODUCTION:
+    raise RuntimeError(
+        "CORS_ALLOWED_ORIGINS must be set explicitly when FLASK_ENV=production. "
+        "Set it to the exact frontend origin(s), comma-separated, e.g. "
+        "CORS_ALLOWED_ORIGINS=https://data-forge-test.vercel.app"
+    )
+else:
+    # Development-only convenience default.
+    _CORS_ORIGINS = ["http://localhost:3000"]
 
 CORS(
     app,
@@ -89,6 +133,19 @@ def add_security_headers(response):
     return response
 
 
+@app.errorhandler(HTTPException)
+def handle_http_exception(exc):
+    """Return HTTP errors as JSON, preserving their status code.
+
+    This is a JSON API, so an error must not fall through to Flask's default
+    HTML page — clients parse the body. Registering this centrally also means
+    a route that lets a client error propagate (malformed JSON raising
+    BadRequest out of get_json(), a 401 from the token check, a 413 from the
+    size guard) still answers in the same shape as every other response.
+    """
+    return jsonify({"error": exc.description, "status": exc.code}), exc.code
+
+
 # Import and register blueprints with error handling
 # Critical blueprints are imported first
 blueprints_to_register = [
@@ -104,6 +161,13 @@ blueprints_to_register = [
     # Auth (login validation)
     ("auth", "auth.routes", "auth_bp"),
 ]
+
+# Token enforcement is installed before the blueprints so that it covers every
+# route they register, including any added later. See src/auth/api_token.py:
+# everything is protected unless explicitly allowlisted.
+from auth.api_token import init_api_token_auth  # noqa: E402
+
+init_api_token_auth(app)
 
 for feature_name, module_path, blueprint_name in blueprints_to_register:
     try:
@@ -144,11 +208,25 @@ def platform_stats():
 
     total_tests = backend_tests + frontend_tests
 
+    # The container image deliberately excludes tests/ (see .dockerignore), so
+    # the globs above find nothing and the dashboard would report "0 tests".
+    # Fall back to a build-time baseline instead of publishing a wrong zero.
+    if total_tests == 0:
+        total_tests = int(os.environ.get("PLATFORM_TESTS_TOTAL", "0"))
+
     # ── Dataset files in storage ─────────────────────────────────────────────
+    # Capped walk: storage/ grows without bound as sessions accumulate, and an
+    # uncapped rglob on every request turns a public endpoint into disk I/O
+    # amplification.
     storage_path = base / "storage"
     dataset_count = 0
     if storage_path.exists():
-        dataset_count = sum(1 for p in storage_path.rglob("*") if p.is_file())
+        scan_limit = int(os.environ.get("STATS_SCAN_LIMIT", "5000"))
+        for path in storage_path.rglob("*"):
+            if path.is_file():
+                dataset_count += 1
+                if dataset_count >= scan_limit:
+                    break
 
     # ── Coverage from cobertura XML (generated by Jest --coverage) ───────────
     coverage_pct = 86  # last known baseline
@@ -208,6 +286,12 @@ def ask_question():
                 "warnings": warnings,
             }
         )
+    except HTTPException:
+        # Malformed JSON makes get_json() raise BadRequest. Letting the broad
+        # handler below catch it turned a client error into a 500, so the
+        # response said "400 Bad Request" while the status code said 500.
+        # Re-raise so Flask returns the status the exception carries.
+        raise
     except Exception as ex:  # pylint: disable=broad-exception-caught
         # Catching all exceptions to provide a stable API response
         print(f"Error in ask_question: {ex}")

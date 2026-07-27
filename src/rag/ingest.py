@@ -97,7 +97,8 @@ class DocumentIngestor:
                 content = self._extract_text_from_file(file_path)
                 metadata = {
                     "filename": file_path.name,
-                    "filepath": str(file_path),
+                    # Basename only: this metadata is echoed to API clients.
+                    "filepath": file_path.name,
                     "size": file_path.stat().st_size,
                 }
 
