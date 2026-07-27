@@ -36,9 +36,10 @@ app.config["MAX_CONTENT_LENGTH"] = (_MAX_UPLOAD_MB + _UPLOAD_OVERHEAD_MB) * 1024
 
 # ── Rate limiting ──────────────────────────────────────────────────────────
 # "memory://" is per-process: with N gunicorn workers the effective limit is
-# N times the configured one, and it resets on every restart. That is fine for
-# local development but not for an internet-exposed deployment — set
-# RATELIMIT_STORAGE_URI to a shared backend (e.g. redis://...) there.
+# N times the configured one. The deployment runs a single worker with threads
+# precisely so these counters are shared and the configured limit is the real
+# one. Add workers or replicas and you must move RATELIMIT_STORAGE_URI to a
+# shared backend (e.g. redis://...) in the same change.
 app.config["RATELIMIT_STORAGE_URI"] = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
 app.config["RATELIMIT_DEFAULT_LIMITS"] = [
     limit.strip()

@@ -55,10 +55,12 @@ services:
       - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-10}
       - UPLOAD_OVERHEAD_MB=${UPLOAD_OVERHEAD_MB:-2}
 
-      # Rate limiting. NOTE: memory:// is per-process — with 2 gunicorn workers
-      # the real limit is double what is configured, and it resets on restart.
-      # Measured: a nominal "10 per minute" admitted 20 requests. Point this at
-      # a shared backend before relying on these numbers.
+      # Rate limiting. memory:// is per-process, which is correct here only
+      # because gunicorn runs a single worker (see the Dockerfile CMD): the
+      # configured limit is now the real one, measured at exactly 10 of 20
+      # requests admitted for "10 per minute", against 20 of 30 with 2 workers.
+      # Counters still reset on restart. Point this at a shared backend
+      # (redis://...) before adding workers or replicas.
       - RATELIMIT_STORAGE_URI=${RATELIMIT_STORAGE_URI:-memory://}
 
       # Diagnostics off: /api/rag/debug discloses provider, key presence,
