@@ -30,7 +30,7 @@ services:
 
       # Required in production — the app refuses to start without it. This is
       # the *frontend* origin (Vercel), not the API domain.
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://data-forge-test.vercel.app}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://smart-data-test.vercel.app}
 
       # LLM: the Ollama already installed on the host. No API key, no data
       # leaving the machine.

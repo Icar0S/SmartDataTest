@@ -4,7 +4,7 @@ import { MessageCircle, Send, Trash2, X } from 'react-feather';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 // Generate unique IDs for messages
 let messageIdCounter = 0;
@@ -58,7 +58,7 @@ const ChatWindow = ({ onClose }) => {
     // Cleanup EventSource on unmount
     return () => {
       if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+        eventSourceRef.current.abort();
         eventSourceRef.current = null;
       }
     };
@@ -100,42 +100,70 @@ const ChatWindow = ({ onClose }) => {
       setError(null);
       setSources([]);
 
-      // Close any previous stream before opening a new one
+      // Abort any stream still running before starting another
       if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+        eventSourceRef.current.abort();
       }
 
       const assistantMessageId = generateMessageId();
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
-      const eventSourceUrl = `${getApiUrl('/api/rag/chat')}?message=${encodeURIComponent(userMessage)}`;
-      const eventSource = new EventSource(eventSourceUrl);
-      eventSourceRef.current = eventSource;
+      // Streamed over fetch rather than EventSource.
+      //
+      // EventSource cannot set request headers — the spec gives no way to do
+      // it — so it cannot send the Authorization bearer token the API now
+      // requires, and every message came back 401. fetch can, and reading
+      // response.body gives the same incremental rendering.
+      const controller = new AbortController();
+      eventSourceRef.current = controller;
       let currentMessage = '';
 
-      eventSource.onmessage = (event) => {
-        if (event.data === '[DONE]') {
-          setIsLoading(false);
-          eventSource.close();
-          eventSourceRef.current = null;
-          return;
-        }
+      const response = await apiFetch('/api/rag/chat-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
+        signal: controller.signal,
+      });
 
-        try {
-          const parsed = JSON.parse(event.data);
-          currentMessage = processEventData(parsed, currentMessage);
-        } catch (parseError) {
-          console.warn('Failed to parse SSE data:', parseError);
-        }
-      };
+      if (!response.ok || !response.body) {
+        throw new Error(`Chat failed (${response.status})`);
+      }
 
-      eventSource.onerror = () => {
-        setError('Connection error. Please try again.');
-        setMessages(prev => prev.slice(0, -1));
-        setIsLoading(false);
-        eventSource.close();
-        eventSourceRef.current = null;
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let done = false;
+
+      while (!done) {
+        const { value, done: streamDone } = await reader.read();
+        done = streamDone;
+        if (!value) continue;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE frames are separated by a blank line; keep the trailing partial
+        // frame in the buffer until the rest of it arrives.
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() || '';
+
+        for (const frame of frames) {
+          const dataLine = frame.split('\n').find(l => l.startsWith('data:'));
+          if (!dataLine) continue;
+          const payload = dataLine.slice(5).trim();
+          if (payload === '[DONE]') {
+            done = true;
+            break;
+          }
+          try {
+            currentMessage = processEventData(JSON.parse(payload), currentMessage);
+          } catch (parseError) {
+            console.warn('Failed to parse SSE data:', parseError);
+          }
+        }
+      }
+
+      setIsLoading(false);
+      eventSourceRef.current = null;
     } catch (err) {
       console.error('Chat error:', err);
       setError('Connection error. Please try again.');
