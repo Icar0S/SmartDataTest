@@ -1,6 +1,8 @@
 """Flask routes for GOLD Dataset Testing feature."""
 
 import json
+import logging
+import os
 import time
 import uuid
 from datetime import datetime, timezone
@@ -9,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 from limiter import limit_for, limiter
@@ -38,6 +41,85 @@ config.storage_path.mkdir(parents=True, exist_ok=True)
 
 # Track processing status
 processing_status = {}
+
+
+def _to_json_safe(obj):
+    """Recursively convert pandas/numpy values into JSON-serialisable ones.
+
+    Cleaning a dataset that has a date column produced a report holding pandas
+    Timestamps, and json.dump refuses those: /api/gold/clean returned
+    500 "Object of type Timestamp is not JSON serializable" for any dataset
+    with a date. Metrics already normalises its payloads the same way.
+    """
+    if isinstance(obj, dict):
+        return {k: _to_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_json_safe(v) for v in obj]
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        value = float(obj)
+        return None if (np.isnan(value) or np.isinf(value)) else value
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.ndarray):
+        return _to_json_safe(obj.tolist())
+    if isinstance(obj, float):
+        return None if (np.isnan(obj) or np.isinf(obj)) else obj
+    if isinstance(obj, (pd.Timestamp, datetime)):
+        return obj.isoformat()
+    if isinstance(obj, pd.Timedelta):
+        return str(obj)
+    if obj is pd.NaT:
+        return None
+    return obj
+
+
+
+def _status_file(session_id: str) -> Path:
+    """Path of the JSON status file for a cleaning session."""
+    return config.storage_path / session_id / "status.json"
+
+
+def _save_status(session_id: str) -> None:
+    """Persist a session's status to disk.
+
+    processing_status is a per-process dict, and gunicorn runs two workers. A
+    /clean handled by one worker left the other with no record of the session,
+    so the frontend's /status polling returned "Session not found" for roughly
+    half its requests. Metrics already solved this by making disk the source of
+    truth; this mirrors that. Written to a temp file and renamed so a concurrent
+    reader never sees a half-written file.
+    """
+    status = processing_status.get(session_id)
+    if status is None:
+        return
+    path = _status_file(session_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(".json.tmp")
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump(_to_json_safe(status), fh)
+        os.replace(tmp_path, path)
+    except OSError as exc:
+        logging.getLogger(__name__).warning("Could not persist status %s: %s", path, exc)
+
+
+def _load_status(session_id: str) -> dict | None:
+    """Return a session's status from memory, falling back to disk."""
+    if session_id in processing_status:
+        return processing_status[session_id]
+    path = _status_file(session_id)
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                status = json.load(fh)
+            processing_status[session_id] = status
+            return status
+        except (json.JSONDecodeError, OSError) as exc:
+            logging.getLogger(__name__).warning("Could not read status %s: %s", path, exc)
+    return None
+
 
 
 @gold_bp.route("/health", methods=["GET"])
@@ -232,6 +314,7 @@ def clean_dataset():
             "progress": {"current": 0, "total": 100, "phase": "initializing"},
             "startedAt": datetime.now(timezone.utc).isoformat(),
         }
+        _save_status(session_id)
 
         # Start cleaning process
         try:
@@ -266,10 +349,11 @@ def clean_dataset():
             else:
                 processing_status[session_id]["state"] = "failed"
                 processing_status[session_id]["error"] = "Unsupported format"
+                _save_status(session_id)
                 return jsonify({"error": "Unsupported format"}), 415
 
             # Generate report
-            report = processing_status[session_id].get("report", {})
+            report = _to_json_safe(processing_status[session_id].get("report", {}))
             report["finishedAt"] = datetime.now(timezone.utc).isoformat()
             report["durationSec"] = time.time() - start_time
 
@@ -285,6 +369,7 @@ def clean_dataset():
                 "total": 100,
                 "phase": "completed",
             }
+            _save_status(session_id)
 
             # Generate download links
             download_links = {"csv": f"/api/gold/download/{session_id}/gold_clean.csv"}
@@ -337,10 +422,10 @@ def get_status():
     if not session_id:
         return jsonify({"error": "sessionId is required"}), 400
 
-    if session_id not in processing_status:
+    status = _load_status(session_id)
+    if status is None:
         return jsonify({"error": "Session not found"}), 404
 
-    status = processing_status[session_id]
     return jsonify(status)
 
 

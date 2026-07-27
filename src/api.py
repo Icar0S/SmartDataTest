@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from flask_limiter.util import get_remote_address
+from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from chatbot.main import process_chatbot_request
@@ -126,6 +127,19 @@ def add_security_headers(response):
     # HSTS (only meaningful in production/HTTPS, safe to always add)
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(exc):
+    """Return HTTP errors as JSON, preserving their status code.
+
+    This is a JSON API, so an error must not fall through to Flask's default
+    HTML page — clients parse the body. Registering this centrally also means
+    a route that lets a client error propagate (malformed JSON raising
+    BadRequest out of get_json(), a 401 from the token check, a 413 from the
+    size guard) still answers in the same shape as every other response.
+    """
+    return jsonify({"error": exc.description, "status": exc.code}), exc.code
 
 
 # Import and register blueprints with error handling
@@ -268,6 +282,12 @@ def ask_question():
                 "warnings": warnings,
             }
         )
+    except HTTPException:
+        # Malformed JSON makes get_json() raise BadRequest. Letting the broad
+        # handler below catch it turned a client error into a 500, so the
+        # response said "400 Bad Request" while the status code said 500.
+        # Re-raise so Flask returns the status the exception carries.
+        raise
     except Exception as ex:  # pylint: disable=broad-exception-caught
         # Catching all exceptions to provide a stable API response
         print(f"Error in ask_question: {ex}")

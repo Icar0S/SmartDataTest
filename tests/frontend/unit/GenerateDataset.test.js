@@ -123,7 +123,10 @@ describe('GenerateDataset Component', () => {
         '/api/synth/preview',
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          // objectContaining, not equality: apiFetch also attaches an
+          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // which is exactly the production case.
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })
       );
     });
@@ -180,7 +183,10 @@ describe('GenerateDataset Component', () => {
         '/api/synth/generate',
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          // objectContaining, not equality: apiFetch also attaches an
+          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // which is exactly the production case.
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })
       );
     });
@@ -207,12 +213,14 @@ describe('GenerateDataset Component', () => {
     
     await waitFor(() => {
       expect(screen.getByText(/Download Ready/i)).toBeInTheDocument();
-      const downloadLink = screen.getByText(/Download Dataset/i);
-      expect(downloadLink.closest('a')).toHaveAttribute(
-        'href',
-        '/api/synth/download/test-session/dataset.csv'
-      );
     });
+
+    // The download is a button, not an <a href>. Download routes require the
+    // API token and an anchor cannot send an Authorization header, so a plain
+    // link would 401. The click fetches the blob instead.
+    const downloadButton = screen.getByText(/Download Dataset/i).closest('button');
+    expect(downloadButton).toBeInTheDocument();
+    expect(screen.getByText(/Download Dataset/i).closest('a')).toBeNull();
   });
 
   test('shows error message on API failure', async () => {

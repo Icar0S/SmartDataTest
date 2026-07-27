@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 from flask_limiter.util import get_remote_address
 from werkzeug.utils import secure_filename
 

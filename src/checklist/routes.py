@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 
 from limiter import limit_for, limiter
 

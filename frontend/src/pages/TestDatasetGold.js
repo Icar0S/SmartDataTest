@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Upload, Download, FileCheck, Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer } from '../styles/animations';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 /* eslint-disable no-undef */
 
@@ -44,7 +44,7 @@ const TestDatasetGold = () => {
     if (isProcessing && sessionId) {
       pollingRef.current = setInterval(async () => {
         try {
-          const response = await fetch(getApiUrl(`/api/gold/status?sessionId=${sessionId}`));
+          const response = await apiFetch(`/api/gold/status?sessionId=${sessionId}`);
           if (response.ok) {
             const data = await response.json();
             setStatus(data);
@@ -132,7 +132,7 @@ const TestDatasetGold = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(getApiUrl('/api/gold/upload'), {
+      const response = await apiFetch('/api/gold/upload', {
         method: 'POST',
         body: formData,
       });
@@ -169,7 +169,7 @@ const TestDatasetGold = () => {
     setStatus({ state: 'running', progress: { current: 0, total: 100, phase: 'initializing' } });
 
     try {
-      const response = await fetch(getApiUrl('/api/gold/clean'), {
+      const response = await apiFetch('/api/gold/clean', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ const TestDatasetGold = () => {
       if (data.status === 'completed') {
         // Get the detailed report from the status endpoint
         try {
-          const statusResponse = await fetch(getApiUrl(`/api/gold/status?sessionId=${sessionId}`));
+          const statusResponse = await apiFetch(`/api/gold/status?sessionId=${sessionId}`);
           if (statusResponse.ok) {
             const statusData = await statusResponse.json();
             setReport(statusData.report);
@@ -212,7 +212,7 @@ const TestDatasetGold = () => {
     if (!sessionId) return;
 
     try {
-      const response = await fetch(getApiUrl(`/api/gold/download/${sessionId}/${filename}`));
+      const response = await apiFetch(`/api/gold/download/${sessionId}/${filename}`);
       
       if (!response.ok) {
         throw new Error('Download failed');

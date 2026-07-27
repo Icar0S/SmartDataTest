@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Upload, TrendingUp, AlertCircle, CheckCircle, Activity, Database, BarChart3, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer } from '../styles/animations';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 const DatasetMetrics = () => {
   // State
@@ -92,7 +92,7 @@ const DatasetMetrics = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(getApiUrl('/api/metrics/upload'), {
+      const response = await apiFetch('/api/metrics/upload', {
         method: 'POST',
         body: formData,
       });
@@ -121,7 +121,7 @@ const DatasetMetrics = () => {
     setError(null);
 
     try {
-      const response = await fetch(getApiUrl('/api/metrics/analyze'), {
+      const response = await apiFetch('/api/metrics/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

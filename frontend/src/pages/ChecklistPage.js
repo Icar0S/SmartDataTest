@@ -12,7 +12,7 @@ import {
   FileDown,
   ClipboardEdit
 } from 'lucide-react';
-import { getApiUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 
 /* eslint-disable no-undef */
 
@@ -45,7 +45,7 @@ const ChecklistPage = () => {
 
   const loadTemplate = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/checklist/template'));
+      const response = await apiFetch('/api/checklist/template');
       if (!response.ok) throw new Error('Failed to load template');
       
       const data = await response.json();
@@ -62,7 +62,7 @@ const ChecklistPage = () => {
 
   const createRun = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/checklist/runs'), {
+      const response = await apiFetch('/api/checklist/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,7 +111,7 @@ const ChecklistPage = () => {
         status
       }));
       
-      const response = await fetch(getApiUrl(`/api/checklist/runs/${runId}`), {
+      const response = await apiFetch(`/api/checklist/runs/${runId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -144,7 +144,7 @@ const ChecklistPage = () => {
       );
       const missingItemIds = allItemIds.filter(id => marks[id] !== 'DONE');
       
-      const response = await fetch(getApiUrl(`/api/checklist/runs/${runId}/recommendations`), {
+      const response = await apiFetch(`/api/checklist/runs/${runId}/recommendations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ missingItemIds })
@@ -168,7 +168,7 @@ const ChecklistPage = () => {
     setError(null);
     
     try {
-      const response = await fetch(getApiUrl(`/api/checklist/runs/${runId}/report`), {
+      const response = await apiFetch(`/api/checklist/runs/${runId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

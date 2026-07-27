@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 from limiter import limit_for, limiter

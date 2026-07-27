@@ -164,3 +164,55 @@ class TestRagDebugEndpointGated(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDocumentMetadataDoesNotLeakPaths(unittest.TestCase):
+    """Chat citations must not disclose the ingest machine's filesystem layout."""
+
+    def test_windows_absolute_path_reduced_to_basename(self):
+        from rag.simple_rag import _sanitise_filepath
+
+        leaked = r"C:\Users\Icaro\Documents\projetos\docs_to_import\strategies.md"
+        self.assertEqual(_sanitise_filepath(leaked), "strategies.md")
+
+    def test_posix_absolute_path_reduced_to_basename(self):
+        from rag.simple_rag import _sanitise_filepath
+
+        self.assertEqual(_sanitise_filepath("/app/docs_to_import/a.pdf"), "a.pdf")
+
+    def test_already_relative_value_untouched(self):
+        from rag.simple_rag import _sanitise_filepath
+
+        self.assertEqual(_sanitise_filepath("notes.txt"), "notes.txt")
+
+    def test_loaded_documents_are_sanitised(self):
+        from rag.simple_rag import _sanitise_documents
+
+        documents = {
+            "a": {"metadata": {"filepath": r"C:\Users\Icaro\docs\x.md", "filename": "x.md"}},
+            "b": {"metadata": {"filepath": "y.md"}},
+            "c": {"metadata": {}},
+            "d": "not-a-dict",
+        }
+        fixed = _sanitise_documents(documents)
+        self.assertEqual(fixed, 1)
+        self.assertEqual(documents["a"]["metadata"]["filepath"], "x.md")
+        self.assertEqual(documents["b"]["metadata"]["filepath"], "y.md")
+
+    def test_shipped_index_has_no_absolute_paths(self):
+        """The committed vectorstore must not carry absolute paths either."""
+        import json
+
+        index = REPO_ROOT / "storage" / "vectorstore" / "documents.json"
+        if not index.exists():
+            self.skipTest("no local vectorstore")
+        data = json.loads(index.read_text(encoding="utf-8"))
+        offenders = [
+            meta.get("filepath")
+            for doc in data.get("documents", {}).values()
+            if isinstance(doc, dict)
+            for meta in [doc.get("metadata") or {}]
+            if isinstance(meta.get("filepath"), str)
+            and ("\\" in meta["filepath"] or meta["filepath"].startswith("/"))
+        ]
+        self.assertEqual(offenders, [], f"absolute paths in index: {offenders[:3]}")

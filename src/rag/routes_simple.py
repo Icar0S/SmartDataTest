@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from flask import Blueprint, Response, jsonify, request
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 from limiter import limit_for, limiter
