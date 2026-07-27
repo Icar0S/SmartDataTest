@@ -3,12 +3,21 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
+
+# This module talks to the live Gemini API, so it needs a real key. Raising at
+# import time aborted collection for the *entire* test suite on any machine
+# without one; skip the module instead so the rest of the suite still runs.
+if "GEMINI_API_KEY" not in os.environ:
+    pytest.skip(
+        "GEMINI_API_KEY is not set; skipping live Gemini integration test",
+        allow_module_level=True,
+    )
 
 # Configure Gemini
 os.environ["LLM_PROVIDER"] = "gemini"
-if "GEMINI_API_KEY" not in os.environ:
-    raise ValueError("GEMINI_API_KEY environment variable is required")
 os.environ["GEMINI_MODEL"] = "gemini-2.5-flash-lite"
 
 from rag.config_simple import RAGConfig  # type: ignore  # noqa: E402

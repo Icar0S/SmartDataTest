@@ -7,6 +7,8 @@ from pathlib import Path
 from flask import Blueprint, Response, jsonify, request
 from werkzeug.utils import secure_filename
 
+from limiter import limit_for, limiter
+
 from .config_simple import RAGConfig
 from .simple_chat import SimpleChatEngine
 from .simple_rag import SimpleRAG
@@ -30,7 +32,17 @@ print(f"Current working directory: {os.getcwd()}")
 
 @rag_bp.route("/debug", methods=["GET"])
 def debug_rag():
-    """Debug endpoint to check RAG system state."""
+    """Debug endpoint to check RAG system state.
+
+    Disabled unless RAG_DEBUG_ENDPOINT=true. This route discloses the
+    configured LLM provider and model, which API keys are present, absolute
+    filesystem paths, the process working directory and the names of indexed
+    documents. That is reconnaissance material and it must not be reachable by
+    default on an internet-exposed deployment.
+    """
+    if os.getenv("RAG_DEBUG_ENDPOINT", "false").strip().lower() not in ("true", "1", "yes"):
+        return jsonify({"error": "Not found"}), 404
+
     total_chunks = sum(len(chunks) for chunks in rag_system.document_chunks.values())
 
     docs_file = config.storage_path / "documents.json"
@@ -67,6 +79,7 @@ def debug_rag():
 
 
 @rag_bp.route("/ingest", methods=["POST"])
+@limiter.limit(limit_for("ADMIN"))
 def ingest_documents():
     """Scan docs_to_import folder and import any files not yet in the index.
 
@@ -89,6 +102,7 @@ def ingest_documents():
 
 
 @rag_bp.route("/reload", methods=["POST"])
+@limiter.limit(limit_for("ADMIN"))
 def reload_rag():
     """Reload RAG system to pick up new documents/chunks."""
     global rag_system, chat_engine  # pylint: disable=global-statement
@@ -112,6 +126,7 @@ def reload_rag():
 
 
 @rag_bp.route("/search", methods=["POST"])
+@limiter.limit(limit_for("HEAVY"))
 def search():
     """Handle search requests."""
     try:
@@ -135,6 +150,7 @@ def search():
 
 
 @rag_bp.route("/chat", methods=["POST"])
+@limiter.limit(limit_for("LLM"))
 def chat():
     """Handle chat requests."""
     try:
@@ -154,6 +170,7 @@ def chat():
 
 
 @rag_bp.route("/chat-stream", methods=["POST"])
+@limiter.limit(limit_for("LLM"))
 def chat_stream():
     """Handle streaming chat requests."""
     try:
@@ -197,6 +214,7 @@ def chat_stream():
 
 
 @rag_bp.route("/chat", methods=["GET"])
+@limiter.limit(limit_for("LLM"))
 def chat_stream_get():
     """Handle streaming chat requests via GET for EventSource."""
     try:
@@ -242,6 +260,7 @@ def chat_stream_get():
 
 
 @rag_bp.route("/upload", methods=["POST"])
+@limiter.limit(limit_for("UPLOAD"))
 def upload_document():
     """Handle document upload."""
     try:
@@ -315,6 +334,7 @@ def get_sources():
 
 
 @rag_bp.route("/sources/<doc_id>", methods=["DELETE"])
+@limiter.limit(limit_for("ADMIN"))
 def delete_source(doc_id):
     """Delete a document source."""
     try:

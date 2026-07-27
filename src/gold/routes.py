@@ -11,6 +11,8 @@ import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
 from werkzeug.utils import secure_filename
 
+from limiter import limit_for, limiter
+
 from .config import GoldConfig
 from .processor import (
     clean_dataframe_chunk,
@@ -45,6 +47,7 @@ def health_check():
 
 
 @gold_bp.route("/upload", methods=["POST"])
+@limiter.limit(limit_for("UPLOAD"))
 def upload_dataset():
     """Handle dataset upload.
 
@@ -167,6 +170,7 @@ def upload_dataset():
 
 
 @gold_bp.route("/clean", methods=["POST"])
+@limiter.limit(limit_for("HEAVY"))
 def clean_dataset():
     """Clean dataset with specified options.
 

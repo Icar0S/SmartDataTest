@@ -4,11 +4,16 @@ FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
+# Set environment variables.
+# PIP_DEFAULT_TIMEOUT / PIP_RETRIES: builds on a home/residential link stall on
+# pip's default 15s read timeout. Be patient and retry instead of failing the
+# whole image build.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10
 
 # Install system dependencies required for some Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \

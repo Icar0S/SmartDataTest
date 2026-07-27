@@ -7,6 +7,8 @@ import pandas as pd
 from flask import Blueprint, jsonify, request, send_file
 from werkzeug.utils import secure_filename
 
+from limiter import limit_for, limiter
+
 from .config import SyntheticConfig
 from .generator import SyntheticDataGenerator
 from .validators import (
@@ -51,6 +53,7 @@ def health_check():
 
 
 @synth_bp.route("/preview", methods=["POST"])
+@limiter.limit(limit_for("LLM"))
 def preview():
     """Generate preview of synthetic data.
 
@@ -107,6 +110,7 @@ def preview():
 
 
 @synth_bp.route("/generate", methods=["POST"])
+@limiter.limit(limit_for("GENERATE"))
 def generate():
     """Generate full synthetic dataset.
 

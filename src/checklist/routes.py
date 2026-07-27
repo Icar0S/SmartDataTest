@@ -5,6 +5,8 @@ from pathlib import Path
 
 from flask import Blueprint, jsonify, request, send_file
 
+from limiter import limit_for, limiter
+
 from .models import run_to_dict, template_to_dict
 from .reports import generate_markdown_report, generate_pdf_report
 from .storage import ChecklistStorage, load_template
@@ -150,7 +152,29 @@ def update_run(run_id):
         return jsonify({"error": str(e)}), 500
 
 
+_rag_system = None
+
+
+def _get_rag_system():
+    """Return a lazily-built, process-wide SimpleRAG instance.
+
+    Building a SimpleRAG parses the whole document store (tens of documents,
+    thousands of chunks) into memory. Doing that per request — as this route
+    used to — made every recommendation call re-read and re-chunk the entire
+    knowledge base, which is the most expensive thing an unauthenticated
+    caller could trigger. Build it once and reuse it.
+    """
+    global _rag_system  # pylint: disable=global-statement
+    if _rag_system is None:
+        from rag.config_simple import RAGConfig
+        from rag.simple_rag import SimpleRAG
+
+        _rag_system = SimpleRAG(RAGConfig.from_env())
+    return _rag_system
+
+
 @checklist_bp.route("/runs/<run_id>/recommendations", methods=["POST"])
+@limiter.limit(limit_for("HEAVY"))
 def generate_recommendations(run_id):
     """Generate recommendations using RAG for missing items.
 
@@ -195,13 +219,7 @@ def generate_recommendations(run_id):
 
             # Call RAG system (import here to avoid circular dependency)
             try:
-                from rag.config_simple import RAGConfig
-                from rag.simple_rag import SimpleRAG
-
-                rag_config = RAGConfig.from_env()
-                rag_system = SimpleRAG(rag_config)
-
-                results = rag_system.search(query, top_k=5)
+                results = _get_rag_system().search(query, top_k=5)
 
                 # Format recommendations
                 recommendations = []
@@ -256,6 +274,7 @@ def generate_recommendations(run_id):
 
 
 @checklist_bp.route("/runs/<run_id>/report", methods=["POST"])
+@limiter.limit(limit_for("HEAVY"))
 def download_report(run_id):
     """Download report in PDF or Markdown format.
 
