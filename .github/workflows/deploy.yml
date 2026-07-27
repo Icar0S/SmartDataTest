@@ -32,27 +32,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check required secrets
+      - name: Check Render deploy hook
+        id: render_hook
         run: |
+          # The backend is self-hosted now and Render is being retired. Once
+          # RENDER_DEPLOY_HOOK_URL is removed there is nothing to deploy, and a
+          # missing secret must not turn every merge into a red pipeline — so
+          # this reports and skips rather than failing.
           if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            echo "❌ Secret RENDER_DEPLOY_HOOK_URL is not set."
-            echo "   Add it at: Settings → Secrets → Actions → New repository secret"
-            exit 1
+            echo "ℹ️  RENDER_DEPLOY_HOOK_URL is not set — skipping the Render deploy."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ RENDER_DEPLOY_HOOK_URL is configured"
+            echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "✅ RENDER_DEPLOY_HOOK_URL is configured"
 
       - name: Trigger Render deploy webhook
+        if: steps.render_hook.outputs.configured == 'true'
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
             -H "Content-Type: application/json" \
             --fail-with-body
 
       - name: Confirm deploy trigger
+        if: steps.render_hook.outputs.configured == 'true'
         run: |
           echo "Deploy triggered successfully on Render"
           echo "Monitor deploy at: https://dashboard.render.com"
 
       - name: Health check — wait for backend
+        if: steps.render_hook.outputs.configured == 'true'
         continue-on-error: true
         run: |
           MAX_ATTEMPTS=40
