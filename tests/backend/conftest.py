@@ -30,6 +30,11 @@ os.environ.setdefault("API_AUTH_DISABLED", "true")
 for _category in ("LLM", "GENERATE", "UPLOAD", "HEAVY", "ADMIN"):
     os.environ.setdefault(f"RATELIMIT_{_category}", "1000000 per hour")
 
+# Same reasoning for the global default. It only started taking effect once the
+# config key was corrected from RATELIMIT_DEFAULT_LIMITS (which Flask-Limiter
+# ignores) to RATELIMIT_DEFAULT; before that the suite never met it.
+os.environ.setdefault("RATELIMIT_DEFAULT", "1000000 per hour")
+
 # The application no longer ships built-in accounts, so the suite brings its
 # own. These are test fixtures, not deployable credentials.
 os.environ.setdefault(

@@ -41,11 +41,14 @@ app.config["MAX_CONTENT_LENGTH"] = (_MAX_UPLOAD_MB + _UPLOAD_OVERHEAD_MB) * 1024
 # one. Add workers or replicas and you must move RATELIMIT_STORAGE_URI to a
 # shared backend (e.g. redis://...) in the same change.
 app.config["RATELIMIT_STORAGE_URI"] = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
-app.config["RATELIMIT_DEFAULT_LIMITS"] = [
-    limit.strip()
-    for limit in os.environ.get("RATELIMIT_DEFAULT", "200 per day,50 per hour").split(",")
-    if limit.strip()
-]
+# The config key is RATELIMIT_DEFAULT. It was previously spelled
+# RATELIMIT_DEFAULT_LIMITS, which Flask-Limiter does not recognise, so the
+# documented "200 per day, 50 per hour" global limit silently never applied —
+# only routes carrying an explicit @limiter.limit were ever limited. Verified
+# against flask_limiter.constants.ConfigVars.
+app.config["RATELIMIT_DEFAULT"] = os.environ.get(
+    "RATELIMIT_DEFAULT", "200 per day;50 per hour"
+)
 
 # ── CORS ───────────────────────────────────────────────────────────────────
 # Allowed origins come from CORS_ALLOWED_ORIGINS. There is deliberately NO

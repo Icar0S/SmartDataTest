@@ -2,10 +2,27 @@
 
 import os
 
+from flask import request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-limiter = Limiter(key_func=get_remote_address)
+
+def _exempt_from_default_limits() -> bool:
+    """Keep liveness probes out of the global default limit.
+
+    The container HEALTHCHECK polls "/" every 30s — 120 requests an hour, well
+    past the 50/hour default. Counting those would drive the container
+    unhealthy on a completely idle system. Routes that cost something carry
+    their own explicit limits (see limit_for) and are unaffected by this.
+    """
+    path = request.path.rstrip("/")
+    return path == "" or path.endswith("/health")
+
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits_exempt_when=_exempt_from_default_limits,
+)
 
 
 # Default per-route limits.
