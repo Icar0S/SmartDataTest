@@ -59,16 +59,29 @@ def detect_encoding(file_path: str) -> str:
     encoding = result["encoding"] or "utf-8"
     confidence = result.get("confidence", 0.0)
 
-    # When chardet/charset_normalizer is not confident about a specific
-    # ISO-8859-x variant (e.g. it returns iso-8859-3 or iso8859-3 for a file
-    # with only a handful of special bytes), normalise to iso-8859-1 which is
-    # the most prevalent Latin encoding for Portuguese/Brazilian content.
-    # A high-confidence detection is respected so that legitimately different
-    # encodings (e.g. iso-8859-2 for Central European content) are preserved.
-    # Note: charset_normalizer may omit the hyphen between "iso" and "8859"
-    # (e.g. "iso8859-3"), so we normalise the name before comparing.
+    # A short sample gives chardet almost nothing to work with: a 27-byte
+    # header of Portuguese column names comes back as MacRoman with confidence
+    # 0.01, and decoding with it turns "Mês" into "MÍs". Any single-byte Latin
+    # guess made at low confidence is normalised to iso-8859-1, which is the
+    # prevalent encoding for Portuguese/Brazilian content and decodes the same
+    # bytes correctly.
+    #
+    # Only single-byte families are normalised. A wrong guess among multi-byte
+    # encodings (utf-16, shift_jis, big5, euc-*) is a different problem and
+    # forcing Latin-1 on those would corrupt more than it fixes. A confident
+    # detection is always respected, so genuinely Central European
+    # (iso-8859-2) or Cyrillic (windows-1251) content survives.
+    #
+    # charset_normalizer may omit the hyphen in "iso8859-3", so normalise the
+    # name before comparing.
     enc_normalised = encoding.lower().replace("iso8859", "iso-8859")
-    if enc_normalised.startswith("iso-8859-") and confidence < 0.9:
+    single_byte_latin = (
+        enc_normalised.startswith("iso-8859-")
+        or enc_normalised.startswith("windows-125")
+        or enc_normalised.startswith("cp125")
+        or enc_normalised in {"macroman", "mac-roman", "macintosh", "latin-1", "ascii"}
+    )
+    if single_byte_latin and confidence < 0.9:
         return "iso-8859-1"
 
     return encoding

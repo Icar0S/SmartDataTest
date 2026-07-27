@@ -535,3 +535,99 @@ describe('TestDatasetGold - Processing and Report', () => {
     expect(checkboxes[0]).toBeInTheDocument();
   });
 });
+
+describe('TestDatasetGold — authenticated download', () => {
+  // Every call on this page moved to apiFetch when the API began requiring a
+  // bearer token; the download in particular consumes a blob rather than
+  // pointing an anchor at the endpoint, which would have returned 401.
+  let clickSpy;
+
+  const metadata = {
+    sessionId: 'gold-1',
+    datasetId: 'ds-1',
+    format: 'csv',
+    columns: ['id', 'nome'],
+    sample: [{ id: 1, nome: 'Ana' }],
+  };
+  const report = {
+    rowsRead: 10,
+    rowsWritten: 9,
+    nullsPerColumn: { before: {}, after: {} },
+    duplicatesRemoved: 1,
+  };
+
+  beforeEach(() => {
+    fetch.mockClear();
+    clickSpy = jest.fn();
+    globalThis.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    globalThis.URL.revokeObjectURL = jest.fn();
+    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = document.createElementNS('http://www.w3.org/1999/xhtml', tag);
+      if (tag === 'a') el.click = clickSpy;
+      return el;
+    });
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  const driveToReport = async (downloadResponse) => {
+    fetch.mockImplementation((url) => {
+      const u = String(url);
+      if (u.includes('/api/gold/upload')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(metadata) });
+      }
+      if (u.includes('/api/gold/clean')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'completed' }) });
+      }
+      if (u.includes('/api/gold/status')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ state: 'completed', report }),
+        });
+      }
+      if (u.includes('/api/gold/download/')) return Promise.resolve(downloadResponse);
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+
+    renderWithRouter(<TestDatasetGold />);
+
+    const input = document.querySelector('input[type="file"]');
+    const file = new File(['id,nome\n1,Ana'], 'gold.csv', { type: 'text/csv' });
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [file] } });
+    });
+    await waitFor(() => expect(screen.getByText('Dataset Information')).toBeInTheDocument());
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Generate GOLD Dataset/i }));
+    });
+    await waitFor(() => expect(screen.getByText(/Download CSV/i)).toBeInTheDocument());
+  };
+
+  test('fetches the cleaned file through apiFetch and hands it to a link', async () => {
+    await driveToReport({ ok: true, blob: async () => new Blob(['id,nome\n1,Ana']) });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Download CSV/i).closest('button'));
+    });
+
+    await waitFor(() => {
+      const call = fetch.mock.calls.find(([u]) => String(u).includes('/api/gold/download/'));
+      expect(call).toBeDefined();
+      expect(String(call[0])).toContain('gold_clean.csv');
+    });
+    await waitFor(() => expect(clickSpy).toHaveBeenCalled());
+  });
+
+  test('reports an error when the download is refused', async () => {
+    await driveToReport({ ok: false, status: 401 });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Download CSV/i).closest('button'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Download failed/i)).toBeInTheDocument();
+    });
+  });
+});
