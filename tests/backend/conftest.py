@@ -15,6 +15,12 @@ from werkzeug.security import generate_password_hash  # noqa: E402
 # CORS no longer has a built-in production fallback; give the suite an origin.
 os.environ.setdefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
 
+# Business routes now require a bearer token (src/auth/api_token.py). The bulk
+# of the suite predates that and calls those routes directly, so authentication
+# is explicitly disabled here. test_api_token_auth.py overrides this to exercise
+# enforcement, and always restores it afterwards.
+os.environ.setdefault("API_AUTH_DISABLED", "true")
+
 # The per-category production rate limits (see src/limiter.py) are sized for a
 # human using a browser. The suite drives dozens of uploads and heavy requests
 # per second from a single address, which would otherwise return 429 and fail

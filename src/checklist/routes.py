@@ -1,5 +1,6 @@
 """Flask routes for Checklist Support QA."""
 
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -14,8 +15,15 @@ from .storage import ChecklistStorage, load_template
 # Create blueprint
 checklist_bp = Blueprint("checklist", __name__, url_prefix="/api/checklist")
 
-# Initialize storage
-STORAGE_PATH = Path(__file__).parent.parent.parent / "data" / "checklist"
+# Initialize storage.
+#
+# The path used to be hard-coded to <repo>/data/checklist, which in a container
+# resolves to /app/data — outside the persistent volume, so every checklist run
+# was silently lost on restart. It is configurable now so deployments can point
+# it at durable storage; the default is unchanged for local development.
+STORAGE_PATH = Path(
+    os.getenv("CHECKLIST_STORAGE_PATH", str(Path(__file__).parent.parent.parent / "data" / "checklist"))
+)
 storage = ChecklistStorage(STORAGE_PATH)
 
 # Load template once at startup

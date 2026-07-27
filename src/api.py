@@ -144,6 +144,13 @@ blueprints_to_register = [
     ("auth", "auth.routes", "auth_bp"),
 ]
 
+# Token enforcement is installed before the blueprints so that it covers every
+# route they register, including any added later. See src/auth/api_token.py:
+# everything is protected unless explicitly allowlisted.
+from auth.api_token import init_api_token_auth  # noqa: E402
+
+init_api_token_auth(app)
+
 for feature_name, module_path, blueprint_name in blueprints_to_register:
     try:
         module = __import__(module_path, fromlist=[blueprint_name])

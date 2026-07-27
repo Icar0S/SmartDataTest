@@ -32,11 +32,23 @@ services:
       # the *frontend* origin (Vercel), not the API domain.
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://data-forge-test.vercel.app}
 
-      # LLM: local Ollama only. No API key, no data leaving the machine.
-      # Reached over the internal compose network; ollama publishes no port.
+      # LLM: the Ollama already installed on the host. No API key, no data
+      # leaving the machine.
+      #
+      # Ollama is NOT containerised here, on purpose. A Linux container on
+      # macOS gets no Metal GPU passthrough, so an in-container Ollama would
+      # run CPU-only (the host does 23.1 tok/s on qwen2.5-coder:7b), and it
+      # would re-download ~6.2 GB that already exists in ~/.ollama.
+      #
+      # Security is unchanged: the host Ollama must be bound to 127.0.0.1
+      # (Ollama.app > Settings > uncheck "Expose Ollama to the network"), so it
+      # is not reachable from the LAN. Verified that OrbStack still routes a
+      # container to a host service bound strictly to loopback via
+      # host.docker.internal, so the backend reaches it without that service
+      # listening on any external interface.
       - LLM_PROVIDER=ollama
       - LLM_MODEL=${LLM_MODEL:-qwen2.5-coder:7b}
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
 
       # Uploads. MAX_UPLOAD_MB is the single limit every module reads; the hard
       # Flask wall is derived from it plus the overhead margin.
@@ -56,11 +68,17 @@ services:
       # tests/ is excluded from the image, so /api/stats cannot count at runtime.
       - PLATFORM_TESTS_TOTAL=${PLATFORM_TESTS_TOTAL:-886}
 
-      # Storage paths
-      - VECTOR_STORE_PATH=./storage/vectorstore
-      - SYNTH_STORAGE_PATH=./storage/synth
-      - ACCURACY_STORAGE_PATH=./storage/accuracy
-      - GOLD_STORAGE_PATH=./storage/gold
+      # Storage paths — absolute on purpose.
+      # The working directory is /app/src, so a relative "./uploads/metrics"
+      # resolves to /app/src/uploads and misses the bind mount entirely. That
+      # is how metrics uploads and checklist runs were being written outside
+      # persistent storage and lost on every restart.
+      - VECTOR_STORE_PATH=/app/storage/vectorstore
+      - SYNTH_STORAGE_PATH=/app/storage/synth
+      - ACCURACY_STORAGE_PATH=/app/storage/accuracy
+      - GOLD_STORAGE_PATH=/app/storage/gold
+      - METRICS_STORAGE_PATH=/app/uploads/metrics
+      - CHECKLIST_STORAGE_PATH=/app/storage/checklist
 
       # Feature limits
       - CHUNK_SIZE=${CHUNK_SIZE:-512}
@@ -80,6 +98,12 @@ services:
       # Keep the real value in .env, never here.
       - AUTH_USERS=${AUTH_USERS:-}
 
+      # Bearer token(s) for the business API, comma-separated for rotation.
+      # Mandatory in production: the app refuses to start without it. Every
+      # route is protected except /, /api/stats, /api/auth/validate and the
+      # per-blueprint /health probes. Keep the real value in .env.
+      - API_TOKENS=${API_TOKENS:-}
+
     volumes:
       - ./storage:/app/storage
       - ./uploads:/app/uploads
@@ -95,19 +119,22 @@ services:
       # writes outside the two bind mounts above needs an explicit tmpfs.
       - /tmp:rw,noexec,nosuid,size=256m
       - /home/appuser/.cache:rw,noexec,nosuid,size=64m
+      # gunicorn's control server writes here and logs an error without it.
+      - /home/appuser/.gunicorn:rw,noexec,nosuid,size=16m
 
-    # Sized against a 16 GB host whose OrbStack VM has 8192 MiB and 10 CPUs.
-    # backend + ollama must both fit inside the VM alongside the unrelated
-    # meu-app Postgres.
+    # Sized against the 8192 MiB / 10 CPU OrbStack VM, leaving room for the
+    # unrelated meu-app Postgres. Ollama runs on the host, outside this VM, so
+    # it does not compete for these limits — but it does compete for the 16 GB
+    # of physical RAM, which is why this is not sized to fill the VM.
     deploy:
       resources:
         limits:
-          cpus: "3.0"
-          memory: 2g
+          cpus: "4.0"
+          memory: 3g
 
-    depends_on:
-      ollama:
-        condition: service_healthy
+    extra_hosts:
+      # Lets the container reach the host's loopback-bound Ollama.
+      - "host.docker.internal:host-gateway"
 
     restart: unless-stopped
 
@@ -123,44 +150,3 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: dataforgetest-ollama
-
-    # NO ports section, deliberately. Ollama is reachable only from the backend
-    # over the internal compose network, as http://ollama:11434. Publishing it
-    # would expose an unauthenticated model-inference API.
-
-    volumes:
-      - ollama_models:/root/.ollama
-
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434  # inside the container's own namespace only
-
-    # Ollama needs headroom for the model weights. Running in a Linux container
-    # on macOS means CPU-only inference — there is no Metal GPU passthrough —
-    # so it also wants CPU.
-    deploy:
-      resources:
-        limits:
-          cpus: "6.0"
-          memory: 5g
-
-    restart: unless-stopped
-
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  ollama_models:
