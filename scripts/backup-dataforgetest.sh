@@ -24,13 +24,17 @@ set -euo pipefail
 # retenção por dias, log próprio.
 #
 # Por que via container e não `tar` direto no diretório:
-# o projeto vive em ~/Documents, que é protegido pelo TCC do macOS. Um processo
-# lançado pelo launchd não tem essa permissão e falha com
-# "Operation not permitted" — testado. O OrbStack já tem acesso ao diretório
-# (é ele quem monta o volume), então a leitura acontece dentro do container e
-# só a escrita do arquivo final acontece no host, em ~/srv, que não é protegido.
+#
+# HISTÓRICO: a decisão nasceu porque o projeto vivia em ~/Documents, protegido
+# pelo TCC do macOS — um processo do launchd falhava com "Operation not
+# permitted". Em 2026-08-04 o projeto foi movido para ~/srv/dataforgetest-app,
+# onde o TCC não se aplica, então essa restrição DEIXOU DE EXISTIR.
+#
+# Mantido assim por outro motivo, que continua válido: ler de dentro do
+# container garante que o backup enxerga exatamente o mesmo conteúdo que a
+# aplicação enxerga, inclusive o que estiver em volume montado.
 
-APP_DIR="$HOME/Documents/SmartDataTest"
+APP_DIR="${APP_DIR:-$HOME/srv/dataforgetest-app}"
 COMPOSE_FILE="$APP_DIR/compose.prod.yaml"
 DEST="$HOME/srv/backups/dataforgetest"
 STAMP="$(date +%Y%m%d-%H%M%S)"
