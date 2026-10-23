@@ -173,6 +173,65 @@ class TestSyntheticDataGenerator:
         assert rows[0] == ["1", "John", "john@example.com"]
         assert rows[1] == ["2", "Jane", "jane@example.com"]
 
+    def test_parse_csv_response_drops_header_spelled_for_people(self):
+        """LLMs add a header despite the prompt, with accents and spaces in the names."""
+        generator = SyntheticDataGenerator(api_key="test-key")
+
+        csv_text = """Razão Social,Faturamento,UF
+Construtora ABC Ltda,1500.50,CE
+Comércio XYZ S.A.,980.00,SP"""
+
+        rows = generator._parse_csv_response(
+            csv_text, num_columns=3, column_names=["razao_social", "faturamento", "uf"]
+        )
+
+        assert rows == [
+            ["Construtora ABC Ltda", "1500.50", "CE"],
+            ["Comércio XYZ S.A.", "980.00", "SP"],
+        ]
+
+    def test_parse_csv_response_drops_header_of_single_word_columns(self):
+        """The old heuristic needed an underscore in the first cell to spot a header."""
+        generator = SyntheticDataGenerator(api_key="test-key")
+
+        rows = generator._parse_csv_response(
+            "id,uf\n1,CE\n2,SP", num_columns=2, column_names=["id", "uf"]
+        )
+
+        assert rows == [["1", "CE"], ["2", "SP"]]
+
+    def test_parse_csv_response_keeps_data_matching_one_column_name(self):
+        """One cell equal to a column name is data, not a header."""
+        generator = SyntheticDataGenerator(api_key="test-key")
+
+        rows = generator._parse_csv_response(
+            "Nordeste,CE,regiao", num_columns=3, column_names=["regiao", "uf", "tipo"]
+        )
+
+        assert rows == [["Nordeste", "CE", "regiao"]]
+
+    def test_generate_batch_does_not_return_the_header_as_a_row(self):
+        """The header used to come back as the first record ("Razão Social", price None)."""
+        generator = SyntheticDataGenerator(api_key="test-key")
+        generator.llm_client = MagicMock()
+        generator.llm_client.generate.return_value = (
+            "Razão Social,Faturamento\nConstrutora ABC Ltda,1500.5\nComércio XYZ S.A.,980\n"
+        )
+        generator._llm_available = True
+        schema = {
+            "columns": [
+                {"name": "razao_social", "type": "string", "options": {}},
+                {"name": "faturamento", "type": "price", "options": {}},
+            ]
+        }
+
+        records, _ = generator.generate_batch(schema=schema, num_rows=2)
+
+        assert records == [
+            {"razao_social": "Construtora ABC Ltda", "faturamento": 1500.5},
+            {"razao_social": "Comércio XYZ S.A.", "faturamento": 980.0},
+        ]
+
     def test_parse_csv_response_with_markdown(self):
         """Test CSV response parsing with markdown code blocks."""
         generator = SyntheticDataGenerator(api_key="test-key")
