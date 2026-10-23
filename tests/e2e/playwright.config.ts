@@ -81,12 +81,6 @@ export default defineConfig({
           env: {
             BROWSER: 'none',
             PORT: new URL(baseURL).port || '3000',
-            // With "proxy" in package.json, Create React App allows only the
-            // machine's private LAN address as host, and refuses to start
-            // ("allowedHosts[0] should be a non-empty string") when there is
-            // none. Bind to loopback and lift the host check instead.
-            HOST: '127.0.0.1',
-            DANGEROUSLY_DISABLE_HOST_CHECK: 'true',
             // Outside CI mode, CRA shuts down when stdin closes, which it does
             // under Playwright.
             CI: 'true',

@@ -82,11 +82,10 @@ DEMO_LLM_PROVIDER=gemini npm run apresentacao          # usa GEMINI_API_KEY do .
 DEMO_LLM_PROVIDER=env npm run apresentacao             # mantém LLM_PROVIDER/LLM_MODEL do .env
 ```
 
-Sem LLM disponível, o módulo de dados sintéticos devolve linhas de mentira ("mock_uf_0") sem avisar na tela. A rotina detecta isso e falha com uma mensagem, em vez de gravar dados falsos. Hoje o `.env` da raiz tem `LLM_PROVIDER=gemini` com `LLM_MODEL=qwen2.5-coder:7b`, uma combinação que esse módulo rejeita, por isso o padrão da rotina não depende dele.
+Sem LLM disponível, o módulo de dados sintéticos devolve linhas de mentira ("mock_uf_0"). A tela avisa, e a rotina falha com uma mensagem em vez de gravar dados falsos.
 
 ## Observações
 
 - Esperas longas (LLM, limpeza, comparação) entram no vídeo aceleradas, sempre com o selo "vídeo acelerado N×" na tela. Os tempos reais ficam em `metricas.json`.
 - A API iniciada pela rotina roda com `FLASK_ENV=development` e limites de taxa folgados, porque o `.env` da raiz está em modo produção e um percurso completo passa dos limites por hora. Isso vale só para o servidor que a própria rotina sobe.
-- O servidor do React é iniciado só em `127.0.0.1` e sem checagem de host. Com `proxy` no `package.json`, o Create React App só aceita o IP privado de LAN da máquina e não sobe quando ela não tem um (erro `allowedHosts[0] should be a non-empty string`).
 - Como funciona a gravação: `demo/recorder.ts` captura os quadros do Chromium pelo protocolo de depuração (CDP screencast) e os envia ao ffmpeg, que codifica em H.264. O vídeo nativo do Playwright (VP8 a ~1 Mbit/s) deixa código e tabelas borrados.
