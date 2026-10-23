@@ -59,8 +59,14 @@ class SyntheticConfig:
         else:  # anthropic
             default_model = "claude-3-haiku-20240307"
 
-        # Get model from environment, with special handling for Gemini
-        configured_model = os.getenv("LLM_MODEL") or os.getenv("GEMINI_MODEL")
+        # Same precedence as llm_client.create_llm_client: for Gemini,
+        # GEMINI_MODEL wins over LLM_MODEL. Reading LLM_MODEL first paired
+        # provider "gemini" with an Ollama model whenever .env kept both
+        # blocks, and generation silently fell back to mock rows.
+        if provider == "gemini":
+            configured_model = os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL")
+        else:
+            configured_model = os.getenv("LLM_MODEL") or os.getenv("GEMINI_MODEL")
 
         # If no model specified, use default for provider
         model_to_use = configured_model or default_model

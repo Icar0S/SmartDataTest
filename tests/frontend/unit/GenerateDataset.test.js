@@ -136,6 +136,28 @@ describe('GenerateDataset Component', () => {
     });
   });
 
+  test('warns when the preview came from the mock fallback', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        preview: [{ id: 1, name: 'mock_name_0', created_at: '2024-01-01' }],
+        columns: ['id', 'name', 'created_at'],
+        rows_generated: 1,
+        duration_sec: 0.1,
+        logs: ['ERROR: No LLM configured, using mock data']
+      })
+    });
+
+    renderWithRouter(<GenerateDataset />);
+
+    fireEvent.click(screen.getByLabelText(/Preview 50 rows/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/No LLM available/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Preview generated/i)).not.toBeInTheDocument();
+  });
+
   test('displays preview table after successful preview', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,

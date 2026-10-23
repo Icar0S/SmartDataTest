@@ -13,6 +13,12 @@ const COLUMN_TYPES = [
 
 const FILE_TYPES = ['csv', 'xlsx', 'json', 'parquet'];
 
+// Without a working LLM the API returns placeholder rows ("mock_uf_0") and
+// says so only in its logs.
+const MOCK_WARNING =
+  'No LLM available: these rows are placeholders, not generated data. Check LLM_PROVIDER and LLM_MODEL on the API.';
+const usedMockData = (logs) => (logs || []).some((line) => /mock data/i.test(line));
+
 const GenerateDataset = () => {
   const [numColumns, setNumColumns] = useState(3);
   const [columns, setColumns] = useState([
@@ -141,7 +147,11 @@ const GenerateDataset = () => {
 
       const data = await response.json();
       setPreviewData(data);
-      setSuccess(`Preview generated: ${data.rows_generated} rows`);
+      if (usedMockData(data.logs)) {
+        setError(MOCK_WARNING);
+      } else {
+        setSuccess(`Preview generated: ${data.rows_generated} rows`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -191,7 +201,11 @@ const GenerateDataset = () => {
       setDownloadUrl(downloadUrlToUse);
       setLogs(data.logs || []);
       setGenerationSummary(data.summary);
-      setSuccess(`Dataset generated successfully! ${data.summary.rows} rows, ${data.summary.cols} columns`);
+      if (usedMockData(data.logs)) {
+        setError(MOCK_WARNING);
+      } else {
+        setSuccess(`Dataset generated successfully! ${data.summary.rows} rows, ${data.summary.cols} columns`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
