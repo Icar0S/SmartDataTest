@@ -346,6 +346,34 @@ class TestCSVProcessing:
         finally:
             os.unlink(temp_file_utf8)
 
+    def test_latin1_semicolon_csv_with_comma_in_header(self):
+        """Latin-1, ';'-separated CSV whose header also contains a comma.
+
+        Brazilian open data such as the Receita Federal's arrecadacao-estado.csv
+        looks like this. It used to come back as two columns, with every row
+        holding a decimal comma silently skipped.
+        """
+        csv_content = (
+            "Ano;Mês;UF;RETENÇÃO NA FONTE - LEI 10.833, Art. 30;IRPF\n"
+            "2000;Janeiro;CE;0;177197\n"
+            "2024;Março;SP;1234,56;6615099,73\n"
+        )
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".csv", delete=False, encoding="latin-1"
+        ) as f:
+            f.write(csv_content)
+            temp_file = f.name
+
+        try:
+            df = read_csv_robust(Path(temp_file))
+            assert len(df.columns) == 5
+            assert len(df) == 2
+            assert "Mês" in df.columns
+
+        finally:
+            os.unlink(temp_file)
+
     def test_csv_with_mixed_separators(self):
         """Test CSV with mixed or unusual separators."""
         csv_content = "id;name;value\n1;John;100\n2;Jane;200"

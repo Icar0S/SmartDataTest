@@ -62,7 +62,11 @@ def read_csv_robust(file_path: Path, nrows: Optional[int] = None) -> pd.DataFram
     detected_sep = ","
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        # errors="replace": only the separators are counted here, and they are
+        # ASCII. Strict UTF-8 failed on Latin-1 headers ("Mês"), left the
+        # separator at "," and let a ';' file with a comma in its header parse
+        # as two columns, with every row that has a decimal comma skipped.
+        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
             first_line = f.readline().strip()
             if first_line:
                 # Count occurrences of each separator in first line
