@@ -1,17 +1,17 @@
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
 import { demoLlmEnv } from './demo/llm';
+import { baseURL, isLocal } from './demo/target';
 
 /**
  * Recorded platform tour.
  *
- * By default this starts the Flask API (port 5000) and the React dev server
- * (port 3000) from this repository, reusing them if they are already running.
- * Set DEMO_BASE_URL to record against another deployment instead.
+ * Runs against production (https://smart-data-test.vercel.app) by default and
+ * starts nothing. With DEMO_BASE_URL=http://localhost:3000 it starts the Flask
+ * API (port 5000) and the React dev server from this repository instead,
+ * reusing them if they are already running.
  */
 const repoRoot = path.resolve(__dirname, '..', '..');
-const baseURL = process.env.DEMO_BASE_URL ?? 'http://localhost:3000';
-const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(baseURL);
 const python =
   process.env.DEMO_PYTHON ??
   path.join(repoRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');

@@ -2,7 +2,7 @@ import path from 'node:path';
 import { expect, type Locator, type Page, type Response } from '@playwright/test';
 import type { DemoData } from './datasets';
 import type { Director } from './director';
-import { QA_ANSWERS, STORY, SYNTHETIC_COLUMNS, SYNTHETIC_ROWS } from './storyboard';
+import { QA_ANSWERS, STORY, SYNTHETIC_COLUMNS, SYNTHETIC_ROWS, type Chapter } from './storyboard';
 
 /**
  * One function per screen of the platform. Each one presents the screen and,
@@ -16,7 +16,7 @@ export type Tour = {
   data: DemoData;
   artifactsDir: string;
   metrics: Record<string, unknown>;
-  /** Full tour: reach each screen through the home page menus. Short cut: jump straight to it. */
+  /** Reach each screen through the home page menus, or jump straight to it. */
   viaHome: boolean;
 };
 
@@ -50,9 +50,13 @@ async function goHome(tour: Tour): Promise<void> {
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-/** Opens a screen through the home page menus, or directly in the short cut. */
+/**
+ * Opens a screen through the home page menus, captioned with the way there,
+ * or directly when the tour skips the home page.
+ */
 async function open(
   tour: Tour,
+  chapter: Chapter,
   route: string,
   via: (page: Page) => { menu?: Locator; link: Locator },
 ): Promise<void> {
@@ -64,6 +68,7 @@ async function open(
     return;
   }
   if (new URL(page.url()).pathname !== '/') await goHome(tour);
+  if (chapter.path) await d.chapter(chapter, `Na página inicial: ${chapter.path}`);
   const { menu, link } = via(page);
   if (menu) {
     // The home menus open on hover, and clicking their button toggles them shut.
@@ -118,7 +123,7 @@ export const home: ChapterScript = async (tour) => {
 
 export const methodology: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/methodology', (p) => ({ link: p.getByRole('link', { name: 'Methodology Framework' }) }));
+  await open(tour, STORY.methodology, '/methodology', (p) => ({ link: p.getByRole('link', { name: 'Methodology Framework' }) }));
   await expect(page.getByText('Framework Metodológico para QA em Big Data com Suporte de IA')).toBeVisible();
   await d.chapter(STORY.methodology);
   for (let screen = 0; screen < 3; screen++) await d.scrollPage(700, 2200);
@@ -127,7 +132,7 @@ export const methodology: ChapterScript = async (tour) => {
 
 export const pysparkAdvanced: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/pyspark/advanced', (p) => ({
+  await open(tour, STORY.pyspark, '/pyspark/advanced', (p) => ({
     menu: pysparkMenu(p),
     link: p.locator('a[href="/pyspark/advanced"]'),
   }));
@@ -224,7 +229,7 @@ export const pysparkAdvanced: ChapterScript = async (tour) => {
 
 export const qaChecklist: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/qa-checklist', (p) => ({ menu: pysparkMenu(p), link: p.locator('a[href="/qa-checklist"]') }));
+  await open(tour, STORY.qaChat, '/qa-checklist', (p) => ({ menu: pysparkMenu(p), link: p.locator('a[href="/qa-checklist"]') }));
   await expect(page.getByRole('heading', { name: 'Checklist de Testes QA' })).toBeVisible();
   await d.chapter(STORY.qaChat);
 
@@ -251,7 +256,7 @@ export const qaChecklist: ChapterScript = async (tour) => {
 
 export const datasetMetrics: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/data-accuracy/metrics', (p) => ({
+  await open(tour, STORY.metrics, '/data-accuracy/metrics', (p) => ({
     menu: accuracyMenu(p),
     link: p.locator('a[href="/data-accuracy/metrics"]'),
   }));
@@ -302,7 +307,7 @@ export const datasetMetrics: ChapterScript = async (tour) => {
 
 export const goldCleaning: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/data-accuracy/test-gold', (p) => ({
+  await open(tour, STORY.gold, '/data-accuracy/test-gold', (p) => ({
     menu: accuracyMenu(p),
     link: p.locator('a[href="/data-accuracy/test-gold"]'),
   }));
@@ -359,7 +364,7 @@ export const goldCleaning: ChapterScript = async (tour) => {
 
 export const dataAccuracy: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/data-accuracy', (p) => ({ menu: accuracyMenu(p), link: p.locator('a[href="/data-accuracy"]') }));
+  await open(tour, STORY.accuracy, '/data-accuracy', (p) => ({ menu: accuracyMenu(p), link: p.locator('a[href="/data-accuracy"]') }));
   await expect(page.getByRole('heading', { name: 'Acurácia de Dados (Datasets)' })).toBeVisible();
   await d.chapter(STORY.accuracy);
 
@@ -421,7 +426,7 @@ export const dataAccuracy: ChapterScript = async (tour) => {
 
 export const syntheticData: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/generate-dataset', (p) => ({ link: p.getByRole('link', { name: 'Generate Synthetic Dataset' }) }));
+  await open(tour, STORY.synthetic, '/generate-dataset', (p) => ({ link: p.getByRole('link', { name: 'Generate Synthetic Dataset' }) }));
   await expect(page.getByRole('heading', { name: 'Dataset Schema' })).toBeVisible();
   await d.chapter(STORY.synthetic);
 
@@ -476,7 +481,7 @@ export const syntheticData: ChapterScript = async (tour) => {
 
 export const evidenceChecklist: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/checklist', (p) => ({ link: p.getByRole('link', { name: 'Checklist Support QA' }) }));
+  await open(tour, STORY.checklist, '/checklist', (p) => ({ link: p.getByRole('link', { name: 'Checklist Support QA' }) }));
   await expect(page.getByRole('heading', { name: 'Dimensões' })).toBeVisible();
   await d.chapter(STORY.checklist);
 
@@ -506,7 +511,7 @@ export const evidenceChecklist: ChapterScript = async (tour) => {
 
 export const ragAssistant: ChapterScript = async (tour) => {
   const { page, d } = tour;
-  await open(tour, '/support-rag', (p) => ({ link: p.getByRole('link', { name: 'Support RAG' }) }));
+  await open(tour, STORY.rag, '/support-rag', (p) => ({ link: p.getByRole('link', { name: 'Support RAG' }) }));
   await expect(page.getByRole('heading', { name: 'AI Documentation Assistant' })).toBeVisible();
   await d.chapter(STORY.rag);
 

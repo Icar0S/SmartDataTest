@@ -7,12 +7,18 @@ import type { Chapter } from './storyboard';
 type Mark = { at: number; title: string };
 
 /**
+ * `pace` scales reading time: caption holds and pauses on results.
+ * `motion` scales doing: cursor travel, clicks, typing. A tour can move fast
+ * and still leave the captions on screen long enough to read.
+ */
+export type Tempo = { pace?: number; motion?: number };
+
+/**
  * Drives the page at presentation pace: the cursor glides to each target and
  * highlights it before acting, every chapter gets a caption, and waits longer
  * than a few seconds play in time-lapse with an on-screen notice.
  *
- * `pace` scales every pause, so DEMO_PACE=1.3 slows the whole video down
- * for narration and 0.7 tightens it.
+ * See Tempo for the two speed controls.
  */
 export class Director {
   private mouse: { x: number; y: number };
@@ -20,18 +26,28 @@ export class Director {
   private chapterNumber = 0;
   private chapterTotal = 0;
   private readonly marks: Mark[] = [];
+  private readonly pace: number;
+  private readonly motion: number;
 
   constructor(
     private readonly page: Page,
     private readonly recorder: ScreencastRecorder,
-    private readonly pace = 1,
+    tempo: Tempo = {},
   ) {
     const viewport = page.viewportSize() ?? { width: 1600, height: 900 };
     this.mouse = { x: viewport.width / 2, y: viewport.height / 2 };
+    this.pace = tempo.pace ?? 1;
+    this.motion = tempo.motion ?? 1;
   }
 
+  /** Holds so the viewer can read; scaled by `pace`. */
   async pause(ms: number): Promise<void> {
     await this.page.waitForTimeout(Math.round(ms * this.pace));
+  }
+
+  /** Gap between actions; scaled by `pace` and `motion`. */
+  private async beat(ms: number): Promise<void> {
+    await this.page.waitForTimeout(Math.round(ms * this.pace * this.motion));
   }
 
   async goto(url: string): Promise<void> {
@@ -58,14 +74,16 @@ export class Director {
     this.chapterTotal = total;
   }
 
-  async chapter(chapter: Chapter): Promise<void> {
-    this.mark(`${this.chapterNumber}. ${chapter.title}`);
+  /** Shows the chapter caption, with its own text or `text`; marks it once. */
+  async chapter(chapter: Chapter, text = chapter.text): Promise<void> {
+    const title = `${this.chapterNumber}. ${chapter.title}`;
+    if (this.marks.at(-1)?.title !== title) this.mark(title);
     await this.showCaption({
       label: `Capítulo ${this.chapterNumber} de ${this.chapterTotal}`,
       title: chapter.title,
-      text: chapter.text,
+      text,
     });
-    await this.pause(this.readingTime(chapter.text));
+    await this.pause(this.readingTime(text));
   }
 
   /** Replaces the caption text and holds long enough to read it. */
@@ -98,26 +116,26 @@ export class Director {
     await this.call('dodge', box);
     const aim = this.aimAt(box);
     await this.glideTo(aim.x, aim.y);
-    if (highlight) await this.call('highlight', box, 900);
+    if (highlight) await this.call('highlight', box, Math.max(450, 900 * this.motion));
     return box;
   }
 
   async click(target: Locator, options: { after?: number; highlight?: boolean } = {}): Promise<void> {
     const box = await this.point(target, options.highlight ?? true);
-    await this.pause(220);
+    await this.beat(220);
     if (box) {
       const aim = this.aimAt(box);
       await target.click({ position: { x: aim.x - box.x, y: aim.y - box.y } });
     } else {
       await target.click();
     }
-    await this.pause(options.after ?? 700);
+    await this.beat(options.after ?? 700);
   }
 
   async type(target: Locator, text: string, delay = 45): Promise<void> {
     await this.click(target, { after: 150, highlight: false });
-    await target.pressSequentially(text, { delay: Math.round(delay * this.pace) });
-    await this.pause(400);
+    await target.pressSequentially(text, { delay: Math.round(delay * this.pace * this.motion) });
+    await this.beat(400);
   }
 
   /**
@@ -128,32 +146,32 @@ export class Director {
     await this.point(target);
     for (let length = 1; length <= text.length; length++) {
       await target.fill(text.slice(0, length));
-      await this.page.waitForTimeout(Math.round(delay * this.pace));
+      await this.page.waitForTimeout(Math.round(delay * this.pace * this.motion));
     }
-    await this.pause(300);
+    await this.beat(300);
   }
 
   async fill(target: Locator, value: string): Promise<void> {
     await this.point(target, true);
-    await this.pause(200);
+    await this.beat(200);
     await target.fill(value);
-    await this.pause(500);
+    await this.beat(500);
   }
 
   async choose(target: Locator, value: string): Promise<void> {
     await this.point(target, true);
-    await this.pause(250);
+    await this.beat(250);
     await target.selectOption(value);
-    await this.pause(500);
+    await this.beat(500);
   }
 
   /** Points at the drop zone and attaches the file, without the OS file picker. */
   async upload(input: Locator, file: string, dropZone: Locator): Promise<void> {
     await this.point(dropZone, true);
-    await this.pause(300);
+    await this.beat(300);
     await this.call('toast', `📎 ${path.basename(file)}`, 2600);
     await input.setInputFiles(file);
-    await this.pause(900);
+    await this.beat(900);
   }
 
   /** Clicks a download control and saves the file into `directory`. */
@@ -164,7 +182,7 @@ export class Director {
     const target = path.join(directory, download.suggestedFilename());
     await download.saveAs(target);
     await this.call('toast', `⬇ ${download.suggestedFilename()}`, 2600);
-    await this.pause(1200);
+    await this.beat(1200);
     return target;
   }
 
@@ -244,7 +262,7 @@ export class Director {
     const from = { ...this.mouse };
     const distance = Math.hypot(x - from.x, y - from.y);
     if (distance < 2) return;
-    const duration = Math.min(900, 250 + distance * 0.45) * this.pace;
+    const duration = Math.min(900, 250 + distance * 0.45) * this.pace * this.motion;
     const steps = Math.max(8, Math.round(duration / 16));
     for (let step = 1; step <= steps; step++) {
       const t = step / steps;

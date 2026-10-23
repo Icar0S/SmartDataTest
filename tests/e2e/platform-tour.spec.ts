@@ -4,17 +4,20 @@ import { test, type BrowserContext, type Page } from '@playwright/test';
 import * as chapters from './demo/chapters';
 import type { ChapterScript, Tour } from './demo/chapters';
 import { prepareDatasets } from './demo/datasets';
-import { Director } from './demo/director';
+import { Director, type Tempo } from './demo/director';
 import { demoLlm } from './demo/llm';
 import { installOverlay } from './demo/overlay';
 import { ScreencastRecorder } from './demo/recorder';
 import { CLOSING, OPENING } from './demo/storyboard';
+import { apiURL, baseURL } from './demo/target';
 
 /**
  * End-to-end tour of SmartDataTest, recorded as a presentation video.
  *
  *   npm run apresentacao   full tour of every screen  -> output/smartdatatest-apresentacao.mp4
- *   npm run pitch          3-minute cut for the pitch -> output/smartdatatest-pitch.mp4
+ *   npm run pitch          short cut for the pitch    -> output/smartdatatest-pitch.mp4
+ *
+ * Both run against production unless DEMO_BASE_URL says otherwise (demo/target.ts).
  *
  * Each run also writes a chapter list and the figures measured along the way
  * (rows, rules, script size, API times, quality score, accuracy) next to the video.
@@ -22,7 +25,7 @@ import { CLOSING, OPENING } from './demo/storyboard';
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 
-// Session for the short cut, which skips the login screen. Mirrors what the
+// Session for the pitch cut, which skips the login screen. Mirrors what the
 // login page stores for the demo engineer account (frontend/src/utils/authStorage.js).
 const DEMO_SESSION = {
   userId: 'user-eng-002',
@@ -40,6 +43,7 @@ type Plan = {
   viaHome: boolean;
   /** Start already logged in. */
   signedIn: boolean;
+  tempo: Tempo;
 };
 
 test('apresentação completa da plataforma @apresentacao', async ({ page, context }) => {
@@ -47,6 +51,8 @@ test('apresentação completa da plataforma @apresentacao', async ({ page, conte
     name: 'smartdatatest-apresentacao',
     viaHome: true,
     signedIn: false,
+    // Brisk clicks and typing, so eleven screens fit in a shorter video.
+    tempo: { pace: 0.85, motion: 0.45 },
     chapters: [
       chapters.login,
       chapters.home,
@@ -63,11 +69,14 @@ test('apresentação completa da plataforma @apresentacao', async ({ page, conte
   });
 });
 
-test('corte de 3 minutos para o pitch @pitch', async ({ page, context }) => {
+test('corte curto para o pitch @pitch', async ({ page, context }) => {
   await recordTour(page, context, {
     name: 'smartdatatest-pitch',
-    viaHome: false,
+    // Starts on the home page, logged in, and shows the way to each screen.
+    viaHome: true,
     signedIn: true,
+    // Narrated live: keeps the default pace.
+    tempo: {},
     chapters: [chapters.pysparkAdvanced, chapters.datasetMetrics],
   });
 });
@@ -107,7 +116,8 @@ async function recordTour(page: Page, context: BrowserContext, plan: Plan): Prom
     fps: Number(process.env.DEMO_FPS ?? 30),
     crf: Number(process.env.DEMO_CRF ?? 18),
   });
-  const d = new Director(page, recorder, Number(process.env.DEMO_PACE ?? 1));
+  const pace = (plan.tempo.pace ?? 1) * Number(process.env.DEMO_PACE ?? 1);
+  const d = new Director(page, recorder, { ...plan.tempo, pace });
   const tour: Tour = { page, d, data, artifactsDir, metrics: {}, viaHome: plan.viaHome };
 
   // Dark backdrop for the opening card, before the app loads.
@@ -152,9 +162,9 @@ async function saveOutputs(
   fs.writeFileSync(chaptersFile, d.chapterList(), 'utf8');
   const summary = {
     gerado_em: new Date().toISOString(),
+    alvo: baseURL,
     duracao_do_video_s: Math.round(duration),
-    // What the tour asked of the API it started; a reused server keeps its own setting.
-    llm: demoLlm(),
+    llm: await runningLlm(),
     ...tour.metrics,
   };
   fs.writeFileSync(metricsFile, JSON.stringify(summary, null, 2), 'utf8');
@@ -172,4 +182,15 @@ async function saveOutputs(
     ].join('\n'),
   );
   test.info().annotations.push({ type: 'vídeo', description: videoFile });
+}
+
+/** The LLM the API under test actually runs, from its public health probe. */
+async function runningLlm(): Promise<unknown> {
+  try {
+    const response = await fetch(`${apiURL}/api/synth/health`, { signal: AbortSignal.timeout(10_000) });
+    const { provider, model } = (await response.json()) as { provider?: string; model?: string };
+    return { provider, model, fonte: `${apiURL}/api/synth/health` };
+  } catch {
+    return { ...demoLlm(), fonte: 'configuração pedida pela rotina (health indisponível)' };
+  }
 }

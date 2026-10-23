@@ -5,7 +5,8 @@
  */
 import type { Card } from './overlay';
 
-export type Chapter = { title: string; text: string };
+/** `path` tells how the screen is reached from the home page, shown while navigating there. */
+export type Chapter = { title: string; text: string; path?: string };
 
 const number = new Intl.NumberFormat('pt-BR');
 const percent = (value: number): string => `${number.format(Math.round(value * 10) / 10)}%`;
@@ -35,10 +36,12 @@ export const STORY = {
   },
   methodology: {
     title: 'Framework metodológico',
+    path: 'Botão "Metodologia"',
     text: 'Quatro fases de QA para Big Data, com uma camada transversal de IA (LLM + RAG) e seis dimensões de qualidade de dados.',
   },
   pyspark: {
     title: 'Gerador avançado de PySpark',
+    path: 'Menu "Generate PySpark Code" → "Generate Advanced PySpark Code"',
     text: 'Dados abertos reais: arrecadação federal por estado, em ISO-8859-1 e separada por ponto e vírgula.',
     autoDetect: 'Encoding e separador ficam em detecção automática.',
     waiting: 'Processando o dataset',
@@ -59,12 +62,14 @@ export const STORY = {
   },
   qaChat: {
     title: 'Checklist QA conversacional',
+    path: 'Menu "Generate PySpark Code" → "Generate PySpark Code"',
     text: 'Perguntas guiadas sobre schema, integridade, restrições de valor e relações entre colunas.',
     waiting: 'Gerando a especificação',
     result: 'As respostas viram a mesma especificação JSON e um script PySpark de validação.',
   },
   metrics: {
     title: 'Métricas de qualidade',
+    path: 'Menu "Data Accuracy" → "Dataset Metrics"',
     text: 'O mesmo arquivo de arrecadação, avaliado em completude, unicidade, validade e consistência.',
     waiting: 'Analisando o dataset',
     score: (score: number): string =>
@@ -73,6 +78,7 @@ export const STORY = {
   },
   gold: {
     title: 'Dataset GOLD: limpeza automatizada',
+    path: 'Menu "Data Accuracy" → "Test Dataset GOLD"',
     text: 'Recorte da arrecadação com defeitos típicos de exportação: coluna vazia, cabeçalhos irregulares, espaços invisíveis, números no formato brasileiro, datas mistas e duplicatas.',
     preview: 'Formato e colunas detectados; a amostra já mostra os defeitos.',
     options: 'O usuário escolhe as operações de limpeza. Aqui também removemos as linhas duplicadas.',
@@ -84,6 +90,7 @@ export const STORY = {
   },
   accuracy: {
     title: 'Acurácia: GOLD × TARGET',
+    path: 'Menu "Data Accuracy" → "Compare Datasets"',
     text: 'Referência oficial (GOLD) contra a cópia de um sistema legado (TARGET), com formatos diferentes e divergências reais.',
     mapping: 'Chaves: ano, mês e UF. Valores: IRPF e COFINS (demais). A normalização ignora caixa, acentos e vírgula decimal.',
     waiting: 'Comparando os datasets',
@@ -100,6 +107,7 @@ export const STORY = {
   },
   synthetic: {
     title: 'Dados sintéticos com LLM',
+    path: 'Botão "Gerar Dataset"',
     text: 'Dados de teste realistas em pt-BR, para homologar sem expor dados pessoais.',
     schema: 'O schema define nomes, tipos e restrições: faixas, categorias, datas e unicidade.',
     waitingPreview: 'Gerando a prévia com o LLM',
@@ -109,6 +117,7 @@ export const STORY = {
   },
   checklist: {
     title: 'Checklist de QA baseado em evidências',
+    path: 'Botão "Checklist Support QA"',
     text: '14 práticas em 7 dimensões, cada uma com referência da literatura.',
     manual: 'Cada prática traz manual de aplicação, referências e prioridade.',
     waiting: 'Gerando recomendações',
@@ -117,6 +126,7 @@ export const STORY = {
   },
   rag: {
     title: 'Assistente RAG',
+    path: 'Botão "Support RAG"',
     text: 'Respostas fundamentadas numa base curada de revisões sistemáticas, revisão multivocal e guias técnicos.',
     question:
       'Quais testes de qualidade de dados devo aplicar em um pipeline Spark que consolida a arrecadação federal por estado?',
