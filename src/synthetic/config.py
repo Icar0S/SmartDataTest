@@ -52,7 +52,7 @@ class SyntheticConfig:
         provider = os.getenv("LLM_PROVIDER", "ollama")
 
         # Set appropriate default model based on provider
-        if provider == "ollama":
+        if provider in ("ollama", "smartdatatest"):
             default_model = "qwen2.5-coder:7b"
         elif provider == "gemini":
             default_model = "gemini-2.5-flash-lite"

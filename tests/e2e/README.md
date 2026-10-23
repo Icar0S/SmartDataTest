@@ -63,7 +63,7 @@ A rotina sobe sozinha a API Flask (porta 5000) e o servidor de desenvolvimento d
 | `DEMO_SCALE` | `1.3333` (4/3) | Fator de escala; com o viewport padrão gera 1920×1080 com a interface um terço maior, para projetor |
 | `DEMO_FPS` | `30` | Quadros por segundo do vídeo |
 | `DEMO_CRF` | `18` | Qualidade do x264 (menor = mais nítido e maior) |
-| `DEMO_LLM_PROVIDER` | `ollama` | LLM da API iniciada pela rotina: `ollama`, `gemini`, `anthropic` ou `env` (mantém o que está no `.env`) |
+| `DEMO_LLM_PROVIDER` | `ollama` | LLM da API iniciada pela rotina: `ollama`, `smartdatatest`, `gemini`, `anthropic` ou `env` (mantém o que está no `.env`) |
 | `DEMO_LLM_MODEL` | `qwen2.5-coder:7b` no Ollama | Modelo do provedor escolhido |
 | `DEMO_PYTHON` | `.venv` da raiz | Python usado para subir a API |
 | `DEMO_ARRECADACAO_CSV` | `fixtures/arrecadacao-estado.csv` | Outro arquivo de arrecadação |
@@ -78,6 +78,7 @@ Por padrão, a API iniciada pela rotina usa o **Ollama local** com `qwen2.5-code
 Para usar outro provedor só na gravação:
 
 ```bash
+DEMO_LLM_PROVIDER=smartdatatest npm run apresentacao   # API de LLMs (llm.smartdatatest.com), usa LLM_API_KEY do .env
 DEMO_LLM_PROVIDER=gemini npm run apresentacao          # usa GEMINI_API_KEY do .env
 DEMO_LLM_PROVIDER=env npm run apresentacao             # mantém LLM_PROVIDER/LLM_MODEL do .env
 ```

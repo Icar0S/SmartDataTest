@@ -1,10 +1,12 @@
 /**
  * LLM for the API the tour starts: the local Ollama by default, as in
  * production, so nothing leaves the machine. DEMO_LLM_PROVIDER=env keeps the
- * repository .env as it is; gemini and anthropic also work.
+ * repository .env as it is; smartdatatest (the LLM API, key in .env), gemini
+ * and anthropic also work.
  */
 const DEFAULT_MODELS: Record<string, string> = {
   ollama: 'qwen2.5-coder:7b',
+  smartdatatest: 'qwen2.5-coder:7b',
   gemini: 'gemini-2.5-flash-lite',
   anthropic: 'claude-3-haiku-20240307',
 };
