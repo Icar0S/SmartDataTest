@@ -5,6 +5,37 @@
 # but are included in the generated code output
 
 
+def _anchor_regex(pattern: str) -> str:
+    """Transforma um padrão de busca em casamento total.
+
+    `rlike` do Spark procura o padrão em QUALQUER posição da string, então
+    `^\\d{3}$` valida, mas `\\d{3}` aceita "abc123xyz". Como o padrão foi
+    escrito para descrever um campo, ele deve casar o campo inteiro.
+
+    Âncoras já presentes são removidas antes de reenvolver, para não gerar
+    `^(?:^...$)$`, que funciona mas é ilegível para quem lê o script.
+    """
+    p = (pattern or "").strip()
+    if p.startswith("^"):
+        p = p[1:]
+    # `\$` é um cifrão literal, não âncora — não pode ser removido.
+    if p.endswith("$") and not p.endswith("\\$"):
+        p = p[:-1]
+    return f"^(?:{p})$"
+
+
+# Como cada tipo declarado é verificado no código gerado. A expressão à
+# direita devolve NULL quando o valor NÃO é daquele tipo, e é essa nulidade
+# que a regra trata como falha.
+_CONVERSORES_DE_TIPO = {
+    "integer": ('col("{c}").cast("long")', "integer"),
+    "float": ('as_number("{c}")', "number"),
+    "date": ('as_date("{c}")', "date"),
+    "timestamp": ('as_timestamp("{c}")', "timestamp"),
+    "boolean": ('col("{c}").cast("boolean")', "boolean"),
+}
+
+
 def generate_pyspark_code(dsl):
     """Generates PySpark code from the DSL and formats it for Google Colab."""
     dataset_name = dsl.get("dataset", {}).get("name", "data")
@@ -25,7 +56,9 @@ def generate_pyspark_code(dsl):
 import os
 import findspark
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lit, to_date, regexp_extract, array_contains, countDistinct
+from pyspark.sql.functions import (
+    abs as spark_abs, coalesce, col, countDistinct, expr, lit, to_date, to_timestamp,
+)
 from google.colab import files
 
 # Initialize findspark to locate Spark installation
@@ -120,6 +153,40 @@ def check_column_exists(df, column_name):
         return False
     return True
 
+# ----------------------------------------------------------------------
+# Type helpers
+#
+# Spark reads a CSV column as string whenever ANY row in it is not numeric.
+# Comparing that column against a number then casts it silently, and a row
+# holding "abc" becomes NULL — which no comparison matches, so the offending
+# row disappears from every check instead of failing it. That is why putting
+# text in a numeric column used to pass unnoticed.
+#
+# as_number() makes the cast explicit so the rules below can treat
+# "not a number" as a FAILURE rather than as absence of data.
+# ----------------------------------------------------------------------
+def as_number(column_name):
+    \"\"\"Column cast to double; NULL when the text is not a number.\"\"\"
+    return col(column_name).cast("double")
+
+# Date formats tried when validating a date column, in order. The first one
+# that parses wins; a value none of them parse is reported as a failure.
+DATE_FORMATS = [
+    "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd",
+    "dd-MM-yyyy", "MM-dd-yyyy", "yyyyMMdd",
+]
+
+def as_date(column_name):
+    \"\"\"Column parsed with any known date format; NULL when none applies.\"\"\"
+    return coalesce(*[to_date(col(column_name), f) for f in DATE_FORMATS])
+
+def as_timestamp(column_name):
+    \"\"\"Column parsed as timestamp; NULL when it does not parse.\"\"\"
+    return coalesce(
+        to_timestamp(col(column_name)),
+        *[to_timestamp(col(column_name), f) for f in DATE_FORMATS],
+    )
+
 # ================================================================
 # 4. Applying Data Quality Rules
 # ================================================================
@@ -195,41 +262,65 @@ else:
         elif rule_type == "range":
             min_val = rule.get("min")
             max_val = rule.get("max")
-            range_condition = []
+
+            def add_float_literal(val):
+                if val is not None and isinstance(val, (int, float)):
+                    return str(float(val))
+                return str(val)
+
+            # PARÊNTESES EM CADA OPERANDO — não é estilo, é correção.
+            #
+            # Em Python o `|` tem precedência MAIOR que `<` e `>`, então
+            #     col("q") < 1.0 | col("q") > 100.0
+            # é lido como  col("q") < (1.0 | col("q")) > 100.0
+            # e estoura na hora. Foi o erro relatado em 2026-11-19 nos três
+            # datasets: "o código tenta limitar os valores da coluna Quantity
+            # e usa do operador | sem parênteses", obrigando a corrigir o
+            # script à mão antes de rodar.
+            limites = []
             if min_val is not None:
-                range_condition.append(f'col("{column}") < {min_val}')
+                limites.append(f"(valores < {add_float_literal(min_val)})")
             if max_val is not None:
-                range_condition.append(f'col("{column}") > {max_val}')
+                limites.append(f"(valores > {add_float_literal(max_val)})")
 
-            if range_condition:
-                # Add floating point for numeric literals to match test expectations
-                def add_float_literal(val):
-                    if val is not None and isinstance(val, (int, float)):
-                        return str(float(val))
-                    return str(val)
-
-                range_condition = []
-                if min_val is not None:
-                    range_condition.append(f'col("{column}") < {add_float_literal(min_val)}')
-                if max_val is not None:
-                    range_condition.append(f'col("{column}") > {add_float_literal(max_val)}')
-
-                condition_str = " | ".join(range_condition)
+            if limites:
+                fora_do_intervalo = " | ".join(limites)
+                faixa = (
+                    f"[{add_float_literal(min_val) if min_val is not None else '-inf'}, "
+                    f"{add_float_literal(max_val) if max_val is not None else 'inf'}]"
+                )
                 code += f"""
-print(f"\\nChecking range [{add_float_literal(min_val) if min_val is not None else '-inf'}, {add_float_literal(max_val) if max_val is not None else 'inf'}] for column: {column}")
+print(f"\\nChecking range {faixa} for column: {column}")
 if check_column_exists(df, "{column}"):
-    failed_range = df.filter({condition_str})
+    # `valores` é a coluna convertida para número: fica NULL quando o texto
+    # não é numérico, e esse caso conta como FALHA — e não como ausência de
+    # dado, que o filtro descartaria.
+    valores = as_number("{column}")
+    failed_range = df.filter(
+        col("{column}").isNotNull()
+        & (valores.isNull() | {fora_do_intervalo})
+    )
     all_failed_records = run_check(f"range_{column}", failed_range, all_failed_records)
 else:
     print(f"  SKIPPED: Column '{column}' not found in dataset")
 """
         elif rule_type == "in_set":
             values = rule.get("values", [])
-            values_str = ", ".join([f"'{v}'" for v in values])
+            if not values:
+                continue
+            # Lista como literal numa variável, em vez de interpolada na
+            # mensagem: um valor com aspa simples ("O'Brien") ou dupla
+            # fechava o literal da própria mensagem e gerava script inválido.
+            # repr() cuida das aspas; a mensagem só imprime a variável.
+            values_str = "[" + ", ".join(repr(str(v)) for v in values) + "]"
             code += f"""
-print(f"\\nChecking values in set [{values_str}] for column: {column}")
+valores_aceitos = {values_str}
+print(f"\\nChecking values in set {{valores_aceitos}} for column: {column}")
 if check_column_exists(df, "{column}"):
-    failed_in_set = df.filter(~col("{column}").isin({values_str}))
+    # isNotNull(): `~isin(...)` devolve NULL para linha nula, e NULL não
+    # passa no filtro — sem esta guarda os nulos sumiriam do relatório em
+    # vez de ficarem a cargo da regra de obrigatoriedade.
+    failed_in_set = df.filter(col("{column}").isNotNull() & ~col("{column}").isin(*valores_aceitos))
     all_failed_records = run_check(f"in_set_{column}", failed_in_set, all_failed_records)
 else:
     print(f"  SKIPPED: Column '{column}' not found in dataset")
@@ -238,12 +329,22 @@ else:
             pattern = rule.get("pattern")
             if not pattern:
                 continue  # Skip if no pattern specified
+            anchored = _anchor_regex(pattern)
             # Handle backslash escaping for regex patterns
-            escaped_pattern = pattern.replace("\\", "\\\\")
+            escaped_pattern = anchored.replace("\\", "\\\\")
+            # O padrão também entra na MENSAGEM, que é uma f-string: ali
+            # `\d` seria escape inválido e `{7}` um campo de formatação —
+            # a mensagem saía errada e o Python avisava a cada execução.
+            pattern_exibicao = (
+                pattern.replace("\\", "\\\\").replace("{", "{{").replace("}", "}}")
+            )
             code += f"""
-print(f"\\nChecking regex pattern '{pattern}' for column: {column}")
+print(f"\\nChecking regex pattern '{pattern_exibicao}' for column: {column}")
 if check_column_exists(df, "{column}"):
-    failed_regex = df.filter(~col("{column}").rlike("{escaped_pattern}"))
+    # Padrão ancorado: `rlike` faz BUSCA, não casamento total, então
+    # '[0-9]{{3}}' aceitaria "abc123xyz". Quem escreve um padrão para
+    # validar um campo espera que ele descreva o campo inteiro.
+    failed_regex = df.filter(col("{column}").isNotNull() & ~col("{column}").rlike("{escaped_pattern}"))
     all_failed_records = run_check(f"regex_{column}", failed_regex, all_failed_records)
 else:
     print(f"  SKIPPED: Column '{column}' not found in dataset")
@@ -277,10 +378,79 @@ else:
             code += f"""
 print(f"\\nChecking cross-column comparison: {col1} {operator} {col2}")
 if check_column_exists(df, "{col1}") and check_column_exists(df, "{col2}"):
-    failed_comparison = df.filter(~(col("{col1}") {operator} col("{col2}")))
+    # Comparar só onde os dois lados existem: com um lado nulo a comparação
+    # devolve NULL, o filtro a descarta, e a linha some do relatório em vez
+    # de ser avaliada. Ausência de dado é assunto da regra de obrigatoriedade.
+    failed_comparison = df.filter(
+        col("{col1}").isNotNull()
+        & col("{col2}").isNotNull()
+        & ~(col("{col1}") {operator} col("{col2}"))
+    )
     all_failed_records = run_check(f"cross_column_{col1}_{operator}_{col2}", failed_comparison, all_failed_records)
 else:
     print(f"  SKIPPED: One or both columns not found in dataset")
+"""
+
+        elif rule_type == "column_type":
+            expected = rule.get("expected_type")
+            conversor = _CONVERSORES_DE_TIPO.get(expected)
+            if not conversor:
+                continue
+            expressao, rotulo = conversor
+            convertido = expressao.format(c=column)
+            code += f"""
+print(f"\\nChecking that column '{column}' holds {rotulo} values")
+if check_column_exists(df, "{column}"):
+    # O tipo declarado no checklist vira verificação de verdade. A conversão
+    # devolve NULL para o que não é {rotulo}; linha preenchida que não
+    # converte é um valor do tipo errado — o caso de texto em coluna
+    # numérica, que antes passava batido.
+    failed_type = df.filter(col("{column}").isNotNull() & ({convertido}).isNull())
+    all_failed_records = run_check(f"type_{column}", failed_type, all_failed_records)
+else:
+    print(f"  SKIPPED: Column '{column}' not found in dataset")
+"""
+
+        elif rule_type == "computed_comparison":
+            expressao = rule.get("expression")
+            if not column or not expressao:
+                continue
+            origem = rule.get("expression_source", expressao)
+            tolerancia = rule.get("tolerance", 0.01)
+            referenciadas = rule.get("referenced_columns") or []
+            checagens = " and ".join(
+                [f'check_column_exists(df, "{column}")']
+                + [f'check_column_exists(df, "{c}")' for c in referenciadas]
+            )
+            expr_escapada = expressao.replace("\\", "\\\\").replace('"', '\\"')
+            code += f"""
+print(f"\\nChecking business rule: {column} = {origem}")
+if {checagens}:
+    # Tolerância em vez de igualdade exata: 19.99 * 3 dá 59.967000000000006
+    # em ponto flutuante, e uma comparação exata reprovaria o dataset inteiro
+    # por um erro de arredondamento que não existe nos dados.
+    valor_declarado = as_number("{column}")
+    valor_calculado = expr("{expr_escapada}").cast("double")
+    failed_rule = df.filter(
+        valor_declarado.isNotNull()
+        & valor_calculado.isNotNull()
+        & (spark_abs(valor_declarado - valor_calculado) > {tolerancia})
+    )
+    all_failed_records = run_check(f"business_rule_{column}", failed_rule, all_failed_records)
+
+    # Linha em que a conta não pôde sequer ser feita é relatada à parte:
+    # somada às violações, esconderia um problema de tipo atrás de um
+    # problema de regra de negócio.
+    nao_avaliaveis = df.filter(
+        col("{column}").isNotNull()
+        & (as_number("{column}").isNull() | expr("{expr_escapada}").cast("double").isNull())
+    )
+    nao_avaliaveis_count = nao_avaliaveis.count()
+    if nao_avaliaveis_count > 0:
+        print(f"  WARNING: {{nao_avaliaveis_count}} records could not be evaluated (non-numeric values).")
+        all_failed_records.append(("business_rule_{column}_not_numeric", nao_avaliaveis_count))
+else:
+    print(f"  SKIPPED: One or more columns not found in dataset")
 """
 
     # Add final summary and cleanup
