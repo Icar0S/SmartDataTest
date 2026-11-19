@@ -2,6 +2,8 @@
 
 import json
 import os
+import queue
+import threading
 from pathlib import Path
 
 from flask import Blueprint, Response, jsonify, request
@@ -170,6 +172,13 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 
+# Intervalo entre batimentos enviados enquanto o modelo pensa.
+#
+# 15s é folgado para o limite de 100s do Cloudflare e discreto o bastante
+# para não encher o log de nada.
+_HEARTBEAT_S = 15
+
+
 @rag_bp.route("/chat-stream", methods=["POST"])
 @limiter.limit(limit_for("LLM"))
 def chat_stream():
@@ -182,10 +191,53 @@ def chat_stream():
             return jsonify({"error": "Message is required"}), 400
 
         def generate():
+            # POR QUE ISTO NÃO É UM `yield` DIRETO DEPOIS DO chat_engine.chat()
+            #
+            # O streaming aqui é aparente: chat_engine.chat() bloqueia até a
+            # resposta INTEIRA ficar pronta, e só então os "tokens" são
+            # fatiados e emitidos. Ou seja, o primeiro byte só saía quando o
+            # modelo terminava.
+            #
+            # O Cloudflare desiste de esperar o primeiro byte da origem em
+            # 100 segundos e devolve 524. Medido no log do Ollama desta
+            # máquina (222 respostas): mediana 29s, p90 177s — 16% passam de
+            # 100s. Uma em cada seis perguntas virava "erro de conexão" na
+            # tela, com o servidor trabalhando normalmente. Foi o que
+            # aconteceu na apresentação de 18/11.
+            #
+            # A correção: o modelo roda numa thread e o gerador emite um
+            # comentário SSE (`: ping`) a cada 15s enquanto espera. O primeiro
+            # byte sai imediatamente, o relógio do Cloudflare nunca chega a
+            # 100s, e o cliente ignora linhas de comentário por definição do
+            # protocolo — o frontend atual já as descarta sem alteração.
+            resultado: "queue.Queue" = queue.Queue(maxsize=1)
+
+            def trabalhar():
+                try:
+                    resultado.put(("ok", chat_engine.chat(message)))
+                except Exception as e:  # pylint: disable=broad-exception-caught
+                    resultado.put(("erro", e))
+
+            # daemon: se o worker do gunicorn for reciclado, uma chamada de
+            # LLM pendurada não impede o processo de sair.
+            threading.Thread(target=trabalhar, daemon=True).start()
+
+            # Primeiro byte ANTES de qualquer espera.
+            yield ": ping\n\n"
+
+            while True:
+                try:
+                    estado, carga = resultado.get(timeout=_HEARTBEAT_S)
+                    break
+                except queue.Empty:
+                    yield ": ping\n\n"
+
+            if estado == "erro":
+                yield f"data: {json.dumps({'type': 'error', 'content': str(carga)})}\n\n"
+                return
+
             try:
-                # Get response from chat engine
-                result = chat_engine.chat(message)
-                response_text = result["response"]
+                response_text = carga["response"]
 
                 # Stream response word by word
                 words = response_text.split()
@@ -193,7 +245,7 @@ def chat_stream():
                     yield f"data: {json.dumps({'type': 'token', 'content': word + ' '})}\n\n"
 
                 # Send citations at the end
-                yield f"data: {json.dumps({'type': 'citations', 'content': {'citations': result['citations']}})}\n\n"
+                yield f"data: {json.dumps({'type': 'citations', 'content': {'citations': carga['citations']}})}\n\n"
                 yield "data: [DONE]\n\n"
 
             except Exception as e:  # pylint: disable=broad-exception-caught
@@ -205,6 +257,9 @@ def chat_stream():
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
+                # Sem isto o nginx/proxy bufferiza a resposta inteira e os
+                # batimentos não chegam a sair — anulando a correção acima.
+                "X-Accel-Buffering": "no",
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Cache-Control",
             },
