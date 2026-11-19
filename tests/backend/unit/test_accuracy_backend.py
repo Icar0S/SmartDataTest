@@ -61,6 +61,23 @@ class TestNormalization:
         # Invalid value
         assert pd.isna(coerce_numeric("invalid-number", options))
 
+    def test_read_dataset_utf8_with_a_single_accent(self, tmp_path):
+        """UTF-8 CSV whose only accented character is in the header.
+
+        chardet took so little evidence for ISO-8859-1, which turned the "Mês"
+        header into "MÃªs" and made the key column impossible to map.
+        """
+        csv_file = tmp_path / "target.csv"
+        csv_file.write_text(
+            'Ano,Mês,UF,IRPF\n2024,Janeiro,CE,"3654460,85"\n2024,Marco,SP,"100,00"\n',
+            encoding="utf-8",
+        )
+
+        df = read_dataset(csv_file)
+
+        assert list(df.columns) == ["Ano", "Mês", "UF", "IRPF"]
+        assert len(df) == 2
+
     def test_read_dataset_unsupported_type(self):
         """Test unsupported file type."""
         with pytest.raises(ValueError, match="Unsupported file type"):

@@ -7,6 +7,7 @@ import os
 import random
 import re
 import time
+import unicodedata
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -26,6 +27,13 @@ except ImportError:
 # Production testing shows ≤100 rows generates reliably; larger counts cause
 # the model to return fewer rows than requested (typically only ~70-75%).
 _LLM_MAX_ROWS_PER_CALL = 100
+
+
+def _normalize_header(text: str) -> str:
+    """Spell a header cell like a column name: "Razão Social" -> "razao_social"."""
+    decomposed = unicodedata.normalize("NFD", text)
+    plain = "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
+    return re.sub(r"[^a-z0-9]+", "_", plain.lower()).strip("_")
 
 
 class SyntheticDataGenerator:
@@ -189,12 +197,18 @@ Requirements:
 
         return prompt
 
-    def _parse_csv_response(self, response_text: str, num_columns: int) -> List[List[Any]]:
+    def _parse_csv_response(
+        self,
+        response_text: str,
+        num_columns: int,
+        column_names: Optional[List[str]] = None,
+    ) -> List[List[Any]]:
         """Parse LLM CSV response into rows.
 
         Args:
             response_text: Raw LLM response
             num_columns: Expected number of columns
+            column_names: Schema column names, used to drop header rows
 
         Returns:
             List of rows (each row is a list of values)
@@ -211,14 +225,23 @@ Requirements:
             text = "\n".join(lines)
 
         # Parse CSV
+        expected = [_normalize_header(name) for name in column_names or []]
         rows = []
         reader = csv.reader(io.StringIO(text))
         for row in reader:
             # Skip empty rows
             if not row or all(not cell.strip() for cell in row):
                 continue
-            # Skip header row if present (heuristic: check if first cell is a column name)
-            if rows == [] and any(char.isalpha() for char in row[0]) and "_" in row[0]:
+            # Skip header rows. LLMs add one despite "no header" in the prompt,
+            # often with the names spelled for people ("Razão Social" for
+            # razao_social), which the first-cell heuristic let through as data.
+            if expected:
+                matches = sum(
+                    _normalize_header(cell) == name for cell, name in zip(row, expected)
+                )
+                if matches * 2 > len(expected):
+                    continue
+            elif rows == [] and any(char.isalpha() for char in row[0]) and "_" in row[0]:
                 continue
             rows.append(row)
 
@@ -397,8 +420,8 @@ Requirements:
                 logs.append(f"Received response ({len(response_text)} chars)")
 
                 # Parse CSV response
-                num_columns = len(schema.get("columns", []))
-                rows = self._parse_csv_response(response_text, num_columns)
+                column_names = [col["name"] for col in schema.get("columns", [])]
+                rows = self._parse_csv_response(response_text, len(column_names), column_names)
                 logs.append(f"Parsed {len(rows)} rows from CSV")
 
                 # Keep the best partial result in case all retries fail

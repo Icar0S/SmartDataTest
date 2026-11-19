@@ -5,91 +5,14 @@ on:
     workflows: ["CI Pipeline"]
     branches: [main]
     types: [completed]
+  # The backend is self-hosted (compose.prod.yaml on the Mac mini) and is
+  # updated there by hand, so this pipeline only deploys the frontend.
   workflow_dispatch:
-    inputs:
-      deploy_backend:
-        description: 'Deploy backend to Render?'
-        required: true
-        default: true
-        type: boolean
-      deploy_frontend:
-        description: 'Deploy frontend to Vercel?'
-        required: true
-        default: true
-        type: boolean
 
 permissions:
   contents: read
 
 jobs:
-  deploy-backend:
-    name: 🚀 Deploy Backend → Render
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    if: >
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check Render deploy hook
-        id: render_hook
-        run: |
-          # The backend is self-hosted now and Render is being retired. Once
-          # RENDER_DEPLOY_HOOK_URL is removed there is nothing to deploy, and a
-          # missing secret must not turn every merge into a red pipeline — so
-          # this reports and skips rather than failing.
-          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            echo "ℹ️  RENDER_DEPLOY_HOOK_URL is not set — skipping the Render deploy."
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "✅ RENDER_DEPLOY_HOOK_URL is configured"
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Trigger Render deploy webhook
-        if: steps.render_hook.outputs.configured == 'true'
-        run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            --fail-with-body
-
-      - name: Confirm deploy trigger
-        if: steps.render_hook.outputs.configured == 'true'
-        run: |
-          echo "Deploy triggered successfully on Render"
-          echo "Monitor deploy at: https://dashboard.render.com"
-
-      - name: Health check — wait for backend
-        if: steps.render_hook.outputs.configured == 'true'
-        continue-on-error: true
-        run: |
-          MAX_ATTEMPTS=40
-          ATTEMPT=0
-          WAIT_SECONDS=20
-
-          echo "Aguardando backend ficar disponível (pode levar até ~13 min no Render free tier)..."
-
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            ATTEMPT=$((ATTEMPT + 1))
-            echo "Tentativa $ATTEMPT/$MAX_ATTEMPTS..."
-
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              --max-time 15 \
-              https://dataforgetest-backend.onrender.com/ || echo "000")
-
-            if [ "$HTTP_STATUS" = "200" ]; then
-              echo "✅ Backend disponível! Status: $HTTP_STATUS"
-              exit 0
-            fi
-
-            echo "Status: $HTTP_STATUS — aguardando ${WAIT_SECONDS}s..."
-            sleep $WAIT_SECONDS
-          done
-
-          echo "⚠️  Backend não respondeu após ${MAX_ATTEMPTS} tentativas — deploy foi triggerado, verifique o Render dashboard"
-          exit 0
-
   deploy-frontend:
     name: 🌐 Deploy Frontend → Vercel
     runs-on: ubuntu-latest
@@ -130,8 +53,8 @@ jobs:
 
       - name: Verify Vercel deploy
         run: |
-          echo "✅ Frontend deployed to https://data-forge-test.vercel.app"
-          curl -f https://data-forge-test.vercel.app/ \
+          echo "✅ Frontend deployed to https://smart-data-test.vercel.app"
+          curl -f https://smart-data-test.vercel.app/ \
             --max-time 30 \
             -o /dev/null \
             -s \

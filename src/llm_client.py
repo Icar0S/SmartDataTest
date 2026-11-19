@@ -1,6 +1,7 @@
 """LLM client abstraction layer supporting multiple providers."""
 
 import os
+import time
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
@@ -199,6 +200,102 @@ class GeminiClient(LLMClient):
             raise RuntimeError(f"Gemini API error: {e}") from e
 
 
+class SmartDataTestLLMClient(LLMClient):
+    """Client for the SmartDataTest LLM API (https://llm.smartdatatest.com).
+
+    The API serves open models from the same Mac mini as production, one
+    inference at a time. Under load it answers 429 (queue or quota) or 503
+    (memory pressure); both are retried, honouring Retry-After when present.
+    """
+
+    RETRY_STATUSES = frozenset({429, 502, 503})
+    MAX_RETRY_DELAY_S = 30.0
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "qwen2.5-coder:7b",
+        base_url: str = "https://llm.smartdatatest.com",
+        timeout: float = 300.0,
+        max_retries: int = 3,
+    ):
+        """Initialize the client.
+
+        Args:
+            api_key: Key created at https://llm.smartdatatest.com/console
+            model: Model name. Name it explicitly: the API's own default,
+                qwen3:4b, reasons for ~40 s before answering.
+            base_url: API root URL
+            timeout: Seconds to wait for one answer, queue time included
+            max_retries: Retries after a 429/502/503 or a connection error
+        """
+        import requests
+
+        self._requests = requests
+        self.session = requests.Session()
+        self.session.headers["Authorization"] = f"Bearer {api_key}"
+        self.model = model
+        self.url = f"{base_url.rstrip('/')}/v1/chat"
+        self.timeout = timeout
+        self.max_retries = max_retries
+
+    def generate(
+        self,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+    ) -> str:
+        """Generate text using the SmartDataTest LLM API."""
+        chat = [{"role": "system", "content": system}] if system else []
+        payload = {
+            "model": self.model,
+            "messages": chat + list(messages),
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+
+        for attempt in range(self.max_retries + 1):
+            last_attempt = attempt == self.max_retries
+            try:
+                response = self.session.post(self.url, json=payload, timeout=self.timeout)
+            except self._requests.RequestException as e:
+                if last_attempt:
+                    raise RuntimeError(f"SmartDataTest LLM API error: {e}") from e
+                time.sleep(self._backoff(attempt))
+                continue
+
+            if response.status_code in self.RETRY_STATUSES and not last_attempt:
+                time.sleep(self._retry_delay(response, attempt))
+                continue
+            if not response.ok:
+                raise RuntimeError(
+                    f"SmartDataTest LLM API error: HTTP {response.status_code}: "
+                    f"{response.text[:300]}"
+                )
+
+            data = response.json()
+            if data.get("fallback_applied"):
+                # Under memory pressure the API answers with a lighter model.
+                print(
+                    f"[WARNING] LLM API answered with {data.get('model')} "
+                    f"instead of {data.get('requested_model')}"
+                )
+            return data["content"]
+
+        raise RuntimeError("SmartDataTest LLM API error: no attempt was made")
+
+    def _retry_delay(self, response, attempt: int) -> float:
+        """Server's Retry-After when it sends one, else exponential backoff."""
+        try:
+            return min(float(response.headers["Retry-After"]), self.MAX_RETRY_DELAY_S)
+        except (KeyError, ValueError):
+            return self._backoff(attempt)
+
+    def _backoff(self, attempt: int) -> float:
+        return min(2.0**attempt, self.MAX_RETRY_DELAY_S)
+
+
 def create_llm_client(
     provider: Optional[str] = None,
     api_key: Optional[str] = None,
@@ -208,10 +305,13 @@ def create_llm_client(
     """Factory function to create LLM client based on configuration.
 
     Args:
-        provider: LLM provider ('anthropic', 'gemini', or 'ollama'). If None, reads from LLM_PROVIDER env var
-        api_key: API key for Anthropic/Gemini. If None, reads from LLM_API_KEY or GEMINI_API_KEY env var
+        provider: LLM provider ('anthropic', 'gemini', 'ollama' or 'smartdatatest').
+            If None, reads from LLM_PROVIDER env var
+        api_key: API key for Anthropic/Gemini/SmartDataTest. If None, reads from
+            LLM_API_KEY or GEMINI_API_KEY env var
         model: Model name. If None, reads from LLM_MODEL or GEMINI_MODEL env var
-        base_url: Base URL for Ollama. If None, reads from OLLAMA_BASE_URL env var
+        base_url: Base URL for Ollama or the SmartDataTest LLM API. If None, reads
+            from OLLAMA_BASE_URL or LLM_API_BASE_URL env var
 
     Returns:
         Configured LLM client instance
@@ -244,9 +344,24 @@ def create_llm_client(
         base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         return OllamaClient(model=model, base_url=base_url)
 
+    elif provider == "smartdatatest":
+        api_key = api_key or os.getenv("LLM_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "SmartDataTest LLM API key is required. Set LLM_API_KEY "
+                "(create one at https://llm.smartdatatest.com/console)."
+            )
+        model = model or os.getenv("LLM_MODEL", "qwen2.5-coder:7b")
+        base_url = base_url or os.getenv("LLM_API_BASE_URL", "https://llm.smartdatatest.com")
+        timeout = float(os.getenv("LLM_API_TIMEOUT", "300"))
+        return SmartDataTestLLMClient(
+            api_key=api_key, model=model, base_url=base_url, timeout=timeout
+        )
+
     else:
         raise ValueError(
-            f"Invalid LLM provider: {provider}. Must be 'anthropic', 'gemini', or 'ollama'."
+            f"Invalid LLM provider: {provider}. "
+            "Must be 'anthropic', 'gemini', 'ollama' or 'smartdatatest'."
         )
 
 

@@ -52,15 +52,21 @@ class SyntheticConfig:
         provider = os.getenv("LLM_PROVIDER", "ollama")
 
         # Set appropriate default model based on provider
-        if provider == "ollama":
+        if provider in ("ollama", "smartdatatest"):
             default_model = "qwen2.5-coder:7b"
         elif provider == "gemini":
             default_model = "gemini-2.5-flash-lite"
         else:  # anthropic
             default_model = "claude-3-haiku-20240307"
 
-        # Get model from environment, with special handling for Gemini
-        configured_model = os.getenv("LLM_MODEL") or os.getenv("GEMINI_MODEL")
+        # Same precedence as llm_client.create_llm_client: for Gemini,
+        # GEMINI_MODEL wins over LLM_MODEL. Reading LLM_MODEL first paired
+        # provider "gemini" with an Ollama model whenever .env kept both
+        # blocks, and generation silently fell back to mock rows.
+        if provider == "gemini":
+            configured_model = os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL")
+        else:
+            configured_model = os.getenv("LLM_MODEL") or os.getenv("GEMINI_MODEL")
 
         # If no model specified, use default for provider
         model_to_use = configured_model or default_model

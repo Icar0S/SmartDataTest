@@ -1,5 +1,6 @@
 """Data processing logic for Data Accuracy feature."""
 
+import codecs
 import re
 import unicodedata
 from pathlib import Path
@@ -99,6 +100,15 @@ def coerce_numeric(value: Any, options: Dict[str, Any]) -> Any:
         return np.nan
 
 
+def _decodes_as_utf8(sample: bytes) -> bool:
+    """True if `sample` is valid UTF-8, allowing one character cut at its end."""
+    try:
+        codecs.getincrementaldecoder("utf-8")().decode(sample, final=False)
+        return True
+    except UnicodeDecodeError:
+        return False
+
+
 def read_dataset(file_path: Path) -> pd.DataFrame:
     """Read dataset from file with auto-detection of encoding and separator."""
     suffix = file_path.suffix.lower()
@@ -113,6 +123,12 @@ def read_dataset(file_path: Path) -> pd.DataFrame:
                 encoding_result = chardet.detect(raw_data)
                 detected_encoding = encoding_result["encoding"]
                 confidence = encoding_result["confidence"]
+
+                # Valid UTF-8 is left to the loop below, which tries UTF-8
+                # first. With only a few accented bytes to go on, chardet calls
+                # such files ISO-8859-1, which turned a "Mês" header into "MÃªs".
+                if _decodes_as_utf8(raw_data):
+                    detected_encoding = None
 
                 # Use detected encoding if confidence is high enough
                 if confidence > 0.7 and detected_encoding:

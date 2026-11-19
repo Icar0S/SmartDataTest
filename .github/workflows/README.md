@@ -5,9 +5,8 @@
 | Arquivo | Trigger | Descrição |
 |---|---|---|
 | `ci.yml` | push/PR para main | Pipeline completa de CI: lint, testes, docker, security scan |
-| `deploy.yml` | Após CI passar em main | Deploy para Render (backend) e Vercel (frontend) |
+| `deploy.yml` | Após CI passar em main | Deploy do frontend na Vercel |
 | `pr-checks.yml` | Pull Request aberto/atualizado | Quality gates e validação do PR |
-| `nightly.yml` | 03:00 UTC diariamente | Testes de regressão + SLA de produção |
 
 ## Estrutura de Jobs
 
@@ -35,13 +34,20 @@ Push/PR para main
     │security-scan│  (Trivy + pip-audit + npm audit)
     └──────┬──────┘
            │ (apenas em push main, via deploy.yml)
-     ┌─────┴──────┐
-     ▼            ▼
-┌─────────┐  ┌──────────┐
-│ deploy  │  │  deploy  │  ← Paralelo
-│ backend │  │ frontend │
-│ Render  │  │  Vercel  │
-└─────────┘  └──────────┘
+           ▼
+     ┌──────────┐
+     │  deploy  │
+     │ frontend │
+     │  Vercel  │
+     └──────────┘
+```
+
+O backend não passa pelo CD: ele roda self-hosted no Mac mini (`compose.prod.yaml`,
+atrás do Cloudflare Tunnel em `api.smartdatatest.com`) e é atualizado lá, à mão:
+
+```bash
+git pull
+docker compose -f compose.prod.yaml up -d --build
 ```
 
 ## Secrets Necessários (configurar em Settings → Secrets → Actions)
@@ -50,18 +56,11 @@ Push/PR para main
 |---|---|---|
 | `GEMINI_API_KEY` | API key do Google Gemini | Sim |
 | `ANTHROPIC_API_KEY` | API key do Anthropic Claude | Opcional |
-| `RENDER_DEPLOY_HOOK_URL` | Webhook URL do Render para trigger de deploy | Sim (CD) |
 | `VERCEL_TOKEN` | Token de acesso da CLI do Vercel | Sim (CD) |
 | `VERCEL_ORG_ID` | ID da organização no Vercel | Sim (CD) |
 | `VERCEL_PROJECT_ID` | ID do projeto no Vercel | Sim (CD) |
 
 ## Como obter os Secrets
-
-### RENDER_DEPLOY_HOOK_URL
-1. Acessar https://dashboard.render.com
-2. Selecionar o serviço `dataforgetest-backend`
-3. Settings → Deploy Hook → Create Deploy Hook
-4. Copiar a URL gerada
 
 ### VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 1. `npx vercel login`
@@ -87,7 +86,6 @@ Push/PR para main
 | `backend-tests` | 20 min |
 | `frontend-tests` | 15 min |
 | `docker-build` | 30 min |
-| `deploy-backend` | 10 min |
 | `deploy-frontend` | 10 min |
 
 ## Artefatos Gerados
