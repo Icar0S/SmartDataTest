@@ -119,7 +119,9 @@ def add_security_headers(response):
     # Content Security Policy — allow only own origin + trusted CDNs
     # NOTE: 'unsafe-inline' for script-src/style-src is required for the current
     # React frontend build; tracked for removal when a nonce-based CSP is adopted.
-    _backend_url = os.environ.get("BACKEND_URL", "https://dataforgetest-backend.onrender.com")
+    # Defaults to the self-hosted API. The old default pointed at the Render
+    # deployment, which this no longer depends on.
+    _backend_url = os.environ.get("BACKEND_URL", "https://api.smartdatatest.com")
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "

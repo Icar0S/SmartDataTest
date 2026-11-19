@@ -17,7 +17,7 @@
 
 set -uo pipefail
 
-DFT_DIR="${DFT_DIR:-$HOME/Documents/SmartDataTest}"
+DFT_DIR="${DFT_DIR:-$HOME/srv/dataforgetest-app}"
 DFT_LOCAL="${DFT_LOCAL:-http://127.0.0.1:5000/}"
 DFT_PUBLIC="${DFT_PUBLIC:-https://api.smartdatatest.com/}"
 DFT_BACKUP_DIR="${DFT_BACKUP_DIR:-$HOME/srv/backups/dataforgetest}"
