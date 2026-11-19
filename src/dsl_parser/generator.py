@@ -1,16 +1,53 @@
 """DSL generator module for converting user answers to DSL format."""
 
+from .expressions import ExpressaoInvalida, compilar_expressao, dividir_regra
+from .questions import resolver_respostas
+
+# Tipos declaráveis no checklist que viram verificação de conformidade no
+# código gerado. "string" fica de fora de propósito: qualquer valor é uma
+# string válida, então a regra não teria como falhar.
+_TIPOS_VERIFICAVEIS = {
+    "integer": "integer",
+    "int": "integer",
+    "long": "integer",
+    "bigint": "integer",
+    "float": "float",
+    "double": "float",
+    "decimal": "float",
+    "number": "float",
+    "numeric": "float",
+    "date": "date",
+    "datetime": "timestamp",
+    "timestamp": "timestamp",
+    "boolean": "boolean",
+    "bool": "boolean",
+}
+
 
 def generate_dsl(answers):
     """Generates a DSL from the user's answers."""
     dsl = {"dataset": {}, "rules": []}
 
+    # As respostas chegam com o TEXTO DA PERGUNTA como chave. Resolver para
+    # chaves estáveis antes de ler é o que impede uma diferença de redação
+    # entre frontend e backend de descartar a resposta em silêncio — ver
+    # questions.py, que documenta as 7 respostas perdidas por isso.
+    resolvidas, desconhecidas = resolver_respostas(answers)
+    for pergunta in desconhecidas:
+        dsl.setdefault("warnings", []).append(
+            {
+                "type": "unknown_question",
+                "message": (
+                    f"Answer ignored: no rule is associated with the question "
+                    f"'{pergunta[:120]}'."
+                ),
+            }
+        )
+
     # General Information
-    dataset_name = answers.get("What is the name of the dataset you want to validate?")
-    source = answers.get("What is the source of the data (e.g., a file path, a database table)?")
-    data_format = answers.get(
-        "What is the format of the data (e.g., CSV, JSON, Parquet)?", ""
-    )  # Added default empty string
+    dataset_name = resolvidas.get("dataset_name")
+    source = resolvidas.get("dataset_source")
+    data_format = resolvidas.get("dataset_format", "")  # Added default empty string
 
     if not dataset_name:
         dsl.setdefault("errors", []).append(
@@ -30,7 +67,7 @@ def generate_dsl(answers):
     dsl["dataset"]["format"] = data_format
 
     # Schema Validation
-    has_header_answer = answers.get("Does the data have a header? (yes/no)")
+    has_header_answer = resolvidas.get("has_header")
     if has_header_answer is None:
         dsl.setdefault("errors", []).append(
             {
@@ -43,18 +80,12 @@ def generate_dsl(answers):
         has_header = has_header_answer.lower() == "yes"
     dsl["dataset"]["has_header"] = has_header
 
-    column_names_str = answers.get(
-        "What are the expected column names, in order? (e.g., id, first_name, last_name, email)",
-        "",
-    )
+    column_names_str = resolvidas.get("column_names", "")
     column_names = (
         [name.strip() for name in column_names_str.split(",")] if column_names_str else []
     )
 
-    column_types_str = answers.get(
-        "What is the expected data type for each column (e.g., string, integer, float, date)? Please list them in the same order as column names, separated by commas. (e.g., integer, string, string, string)",
-        "",
-    )
+    column_types_str = resolvidas.get("column_types", "")
     column_types = [typ.strip() for typ in column_types_str.split(",")] if column_types_str else []
 
     if not column_names:
@@ -112,30 +143,35 @@ def generate_dsl(answers):
             }
         )
 
+    # O esquema declarado vira VERIFICAÇÃO, não só documentação.
+    #
+    # Antes, dizer que uma coluna é `integer` não gerava checagem nenhuma: o
+    # tipo entrava no DSL e morria ali. Era por isso que texto numa coluna
+    # numérica passava batido — "colocar string em campos numéricos não
+    # quebra o código, mas ainda assim não é identificado como erro" — e por
+    # isso declarar `date` não produzia nenhuma validação de data.
+    for col_name, declarado in (dsl["dataset"].get("schema") or {}).items():
+        esperado = _TIPOS_VERIFICAVEIS.get(str(declarado).strip().lower())
+        if esperado:
+            dsl["rules"].append(
+                {"type": "column_type", "column": col_name, "expected_type": esperado}
+            )
+
     # Data Integrity
-    mandatory_cols_str = answers.get(
-        "Which columns should not contain any missing values (i.e., are mandatory)? List them separated by commas. (e.g., id, email)",
-        "",
-    )
+    mandatory_cols_str = resolvidas.get("mandatory_columns", "")
     if mandatory_cols_str:
         mandatory_cols = [name.strip() for name in mandatory_cols_str.split(",")]
         for col_name in mandatory_cols:
             if col_name:  # Ensure column name is not empty
                 dsl["rules"].append({"type": "not_null", "column": col_name})
 
-    unique_cols_str = answers.get(
-        "Which columns should contain unique values (i.e., are primary keys)? List them separated by commas. (e.g., id, order_id)",
-        "",
-    )
+    unique_cols_str = resolvidas.get("unique_columns", "")
     if unique_cols_str:
         unique_cols = [name.strip() for name in unique_cols_str.split(",")]
         if unique_cols:  # Ensure there are unique columns specified
             dsl["rules"].append({"type": "uniqueness", "columns": unique_cols})
 
-    formatted_cols_str = answers.get(
-        "Are there any columns that should have a specific format (e.g., a date format like YYYY-MM-DD)? List as 'column:format', separated by commas. (e.g., registration_date:YYYY-MM-DD, transaction_time:HH:mm:ss)",
-        "",
-    )
+    formatted_cols_str = resolvidas.get("column_formats", "")
     if formatted_cols_str:
         try:
             formatted_cols = [item.strip().split(":") for item in formatted_cols_str.split(",")]
@@ -158,10 +194,7 @@ def generate_dsl(answers):
             )
 
     # Value Constraints
-    range_cols_str = answers.get(
-        "Are there any columns that should have a minimum or maximum value? List as 'column:min:max', 'column::max', or 'column:min:', separated by commas. (e.g., age:18:99, price::1000, quantity:1:)",
-        "",
-    )
+    range_cols_str = resolvidas.get("value_ranges", "")
     if range_cols_str:
         try:
             range_rules = [item.strip().split(":") for item in range_cols_str.split(",")]
@@ -210,10 +243,7 @@ def generate_dsl(answers):
                 }
             )
 
-    set_cols_str = answers.get(
-        "Are there any columns that should only contain values from a specific set (e.g., a list of categories)?",
-        "",
-    )
+    set_cols_str = resolvidas.get("value_sets", "")
     if set_cols_str:
         try:
             set_rules = [item.strip().split(":", 1) for item in set_cols_str.split("],")]
@@ -248,10 +278,7 @@ def generate_dsl(answers):
                 }
             )
 
-    regex_cols_str = answers.get(
-        "Are there any columns that should match a specific regular expression pattern?",
-        "",
-    )
+    regex_cols_str = resolvidas.get("regex_patterns", "")
     if regex_cols_str:
         try:
             # First split the string by comma, but only when not inside a regex pattern
@@ -294,10 +321,7 @@ def generate_dsl(answers):
                 }
             )
 
-    value_dist_str = answers.get(
-        "Are there any columns for which you want to check the value distribution (e.g., to ensure certain values appear with a specific frequency)?",
-        "",
-    )
+    value_dist_str = resolvidas.get("value_distribution", "")
     if value_dist_str:
         try:
             dist_rules = [item.strip().split(":") for item in value_dist_str.split(",")]
@@ -343,16 +367,7 @@ def generate_dsl(answers):
             )
 
     # Cross-Column Validation
-    cross_column_str = answers.get(
-        (
-            "Are there any relationships between two columns that should always hold true "
-            "(e.g., 'start_date' must be before 'end_date', 'price' must be greater than "
-            "'cost')? List as 'column1:operator:column2', separated by commas. "
-            "Supported operators: <, <=, >, >=, ==, !=. "
-            "(e.g., start_date:<:end_date, price:>:cost)"
-        ),
-        "",
-    )
+    cross_column_str = resolvidas.get("cross_column", "")
     if cross_column_str:
         try:
             cross_column_rules = [item.strip().split(":") for item in cross_column_str.split(",")]
@@ -406,6 +421,65 @@ def generate_dsl(answers):
                         f"Expected 'column1:operator:column2' "
                         f"(e.g., 'start_date:<:end_date')."
                     ),
+                }
+            )
+
+    # Regras de negócio: coluna calculada a partir de outras.
+    #
+    # Separadas por ';' e não por ',': expressões levam vírgula com
+    # naturalidade em nomes de coluna e em números decimais de outras
+    # localidades, e o separador precisa ser um caractere que não apareça
+    # dentro da própria regra.
+    business_rules_str = resolvidas.get("business_rules", "")
+    if business_rules_str:
+        conhecidas = list((dsl["dataset"].get("schema") or {}).keys()) or column_names
+        for bruta in business_rules_str.split(";"):
+            bruta = bruta.strip()
+            if not bruta:
+                continue
+            try:
+                alvo, expressao = dividir_regra(bruta)
+            except ExpressaoInvalida as exc:
+                dsl.setdefault("errors", []).append(
+                    {"type": "business_rule_validation", "message": str(exc)}
+                )
+                continue
+
+            if conhecidas and alvo not in conhecidas:
+                # Checagem antecipada: sem ela a regra vira código que só
+                # falha no Colab, com a coluna inexistente escondida no meio
+                # de um script de centenas de linhas.
+                dsl.setdefault("errors", []).append(
+                    {
+                        "type": "business_rule_validation",
+                        "message": (
+                            f"Business rule target '{alvo}' is not one of the "
+                            f"declared columns. Declared: {', '.join(conhecidas)}."
+                        ),
+                    }
+                )
+                continue
+
+            try:
+                spark_expr, referenciadas = compilar_expressao(expressao, conhecidas)
+            except ExpressaoInvalida as exc:
+                dsl.setdefault("errors", []).append(
+                    {"type": "business_rule_validation", "message": str(exc)}
+                )
+                continue
+
+            dsl["rules"].append(
+                {
+                    "type": "computed_comparison",
+                    "column": alvo,
+                    "operator": "==",
+                    "expression": spark_expr,
+                    "expression_source": expressao,
+                    "referenced_columns": referenciadas,
+                    # Divisão e multiplicação em ponto flutuante não fecham na
+                    # última casa: 19.99 * 3 dá 59.967000000000006. Sem
+                    # tolerância, a regra reprovaria o dataset inteiro.
+                    "tolerance": 0.01,
                 }
             )
 

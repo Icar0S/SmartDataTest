@@ -70,6 +70,13 @@ QUESTIONS = {
             "'cost')? List as 'column1:operator:column2', separated by commas. "
             "Supported operators: <, <=, >, >=, ==, !=. "
             "(e.g., start_date:<:end_date, price:>:cost)"
-        )
+        ),
+        (
+            "Are there any columns calculated from other columns? "
+            "List as 'column=expression', separated by ';'. "
+            "Supported operators: + - * / and parentheses. "
+            "(e.g., Total_Spent = Price per Item * Quantity; "
+            "Margin = Revenue - Cost)"
+        ),
     ],
 }
