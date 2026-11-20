@@ -68,7 +68,14 @@ def test_generate_dsl_basic():
     rule_types = [rule['type'] for rule in dsl['rules']]
     assert 'not_null' in rule_types
     assert 'uniqueness' in rule_types
-    assert 'range' in rule_types
+    # `range` NÃO entra mais automaticamente. A faixa saía do mínimo e
+    # máximo observados no próprio arquivo, e uma regra assim é tautológica:
+    # nenhuma linha do dataset pode violá-la. Era a causa de "o código
+    # gerado aceitou todos os casos de teste, mesmo os propositalmente
+    # errados" (relatório de 2026-11-19). No lugar dela entra a
+    # conformidade de tipo, que pode falhar de verdade.
+    assert 'range' not in rule_types
+    assert 'column_type' in rule_types
 
 
 def test_generate_dsl_with_user_edits():

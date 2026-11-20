@@ -25,6 +25,24 @@ const renderComponent = (component) => {
   return render(component);
 };
 
+/**
+ * Avança até a última pergunta, preenchendo cada uma.
+ *
+ * Antes isto era um `for` com o total fixo em 13 e um comentário dizendo
+ * "there are 14 questions total (3+3+3+4+1)". Acrescentar uma pergunta ao
+ * checklist quebrava dois testes por um motivo que nada tem a ver com o que
+ * eles verificam. Agora avança enquanto houver "Próxima" — o teste segue
+ * valendo com qualquer quantidade de perguntas.
+ */
+function avancarAteAUltimaPergunta(textarea) {
+  let guarda = 0;
+  while (screen.queryByRole('button', { name: /Próxima/i })) {
+    if (guarda++ > 50) throw new Error('não chegou à última pergunta');
+    fireEvent.change(textarea, { target: { value: `answer${guarda}` } });
+    fireEvent.click(screen.getByRole('button', { name: /Próxima/i }));
+  }
+}
+
 describe('QaChecklist Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -156,16 +174,11 @@ describe('QaChecklist Component', () => {
     
     const textarea = screen.getByPlaceholderText(/Digite sua resposta/);
     
-    // Navigate to last question by going through all 14 questions
-    // There are 14 questions total (3+3+3+4+1)
-    for (let i = 0; i < 13; i++) {
-      fireEvent.change(textarea, { target: { value: `answer${i}` } });
-      const nextButton = screen.getByRole('button', { name: /Próxima/i });
-      fireEvent.click(nextButton);
-    }
-    
-    // Should now be on last question
-    expect(screen.getByText(/relationships between two columns/)).toBeInTheDocument();
+    avancarAteAUltimaPergunta(textarea);
+
+    // A última pergunta da seção Cross-Column é a de regras calculadas,
+    // acrescentada para modelar Total = Preço × Quantidade.
+    expect(screen.getByText(/calculated from other columns/)).toBeInTheDocument();
     
     // Fill and submit
     fireEvent.change(textarea, { target: { value: 'start_date:<:end_date' } });
@@ -231,12 +244,7 @@ describe('QaChecklist Component', () => {
     
     const textarea = screen.getByPlaceholderText(/Digite sua resposta/);
     
-    // Navigate to last question
-    for (let i = 0; i < 13; i++) {
-      fireEvent.change(textarea, { target: { value: `answer${i}` } });
-      const nextButton = screen.getByRole('button', { name: /Próxima/i });
-      fireEvent.click(nextButton);
-    }
+    avancarAteAUltimaPergunta(textarea);
     
     // Submit on last question
     fireEvent.change(textarea, { target: { value: 'start_date:<:end_date' } });

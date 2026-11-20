@@ -114,6 +114,107 @@ def detect_csv_delimiter(file_path: str, encoding: str) -> str:
     return best_delimiter
 
 
+# Formatos tentados ao reconhecer uma coluna de data, com o equivalente em
+# Spark. A ordem importa: dd/MM antes de MM/dd porque o dado destes testes é
+# brasileiro, e "05/03/2024" é 5 de março aqui.
+FORMATOS_DE_DATA = (
+    ("%Y-%m-%d", "YYYY-MM-DD"),
+    ("%d/%m/%Y", "DD/MM/YYYY"),
+    ("%m/%d/%Y", "MM/DD/YYYY"),
+    ("%Y/%m/%d", "YYYY/MM/DD"),
+    ("%d-%m-%Y", "DD-MM-YYYY"),
+    ("%Y-%m-%d %H:%M:%S", "YYYY-MM-DD HH:mm:ss"),
+    ("%d/%m/%Y %H:%M:%S", "DD/MM/YYYY HH:mm:ss"),
+)
+
+# Fração dos valores preenchidos que precisa casar um formato para a coluna
+# ser considerada de data. Não é 100% de propósito: um dataset "sujo" tem
+# justamente algumas datas inválidas, e exigir perfeição faria a coluna
+# voltar a ser tratada como texto — que é o estado em que nada é verificado.
+_LIMIAR_DATA = 0.8
+
+# Teto de valores testados por coluna. O reconhecimento roda por coluna em
+# datasets de 100 mil linhas; testar tudo custaria minutos sem mudar a
+# conclusão.
+_AMOSTRA_DATA = 200
+
+
+def detectar_formato_de_data(valores: pd.Series) -> Optional[str]:
+    """Formato de data que a coluna segue, ou None.
+
+    POR QUE ISTO EXISTE
+
+    `pd.read_csv` devolve qualquer coluna de texto como dtype `object`, e o
+    mapeamento para Spark traduzia `object` → `string`. Resultado: NENHUMA
+    data era reconhecida, por mais bem formatada que estivesse. O relatório
+    de testes de 2026-11-19 registrou isso nos dois fluxos — *"não identifica
+    o tipo data"* — e a consequência prática é que colunas de data não
+    recebiam validação nenhuma.
+    """
+    amostra = valores.dropna().astype(str).str.strip()
+    amostra = amostra[amostra != ""]
+    if amostra.empty:
+        return None
+    if len(amostra) > _AMOSTRA_DATA:
+        amostra = amostra.head(_AMOSTRA_DATA)
+
+    # Descarta cedo o que claramente não é data: sem isso, strings numéricas
+    # como "20240115" ou um CEP seriam aceitos por alguns formatos.
+    if not amostra.str.contains(r"[-/]").any():
+        return None
+
+    for formato_py, formato_dsl in FORMATOS_DE_DATA:
+        convertidos = pd.to_datetime(amostra, format=formato_py, errors="coerce")
+        if convertidos.notna().mean() >= _LIMIAR_DATA:
+            return formato_dsl
+    return None
+
+
+def detectar_numerica_suja(valores: pd.Series) -> Optional[str]:
+    """'float'/'int' quando a coluna é numérica com alguns valores inválidos.
+
+    O pandas (como o Spark) rebaixa a coluna inteira para texto se UMA linha
+    não for número. Uma coluna de preços com três células escritas "N/A" vira
+    `object`, perde qualquer verificação numérica, e o dado sujo passa —
+    *"colocar string em campos numéricos não quebra o código, mas ainda assim
+    não é identificado como erro"*.
+
+    Acima do limiar, a leitura certa é "coluna numérica com sujeira", e a
+    sujeira é justamente o que se quer relatar.
+    """
+    amostra = valores.dropna().astype(str).str.strip()
+    amostra = amostra[amostra != ""]
+    if amostra.empty:
+        return None
+    if len(amostra) > _AMOSTRA_DATA:
+        amostra = amostra.head(_AMOSTRA_DATA)
+
+    convertidos = pd.to_numeric(amostra, errors="coerce")
+    proporcao = convertidos.notna().mean()
+    if proporcao < _LIMIAR_DATA or proporcao == 1.0:
+        # proporcao == 1.0 não chega aqui na prática (o pandas já teria dado
+        # um dtype numérico), e tratá-la como suja seria enganoso.
+        return None
+
+    validos = convertidos.dropna()
+    if not validos.empty and (validos % 1 == 0).all():
+        return "int64"
+    return "float64"
+
+
+def _tipo_da_coluna(col_data: pd.Series) -> str:
+    """dtype da coluna, com reconhecimento de datas e numéricas sujas."""
+    if pd.api.types.is_datetime64_any_dtype(col_data):
+        return "datetime64[ns]"
+    if pd.api.types.is_object_dtype(col_data) or pd.api.types.is_string_dtype(col_data):
+        if detectar_formato_de_data(col_data) is not None:
+            return "date"
+        numerica = detectar_numerica_suja(col_data)
+        if numerica:
+            return numerica
+    return str(col_data.dtype)
+
+
 def infer_column_statistics(
     df: pd.DataFrame, column: str, sample_size: int = SAMPLE_SIZE
 ) -> Dict[str, Any]:
@@ -137,7 +238,7 @@ def infer_column_statistics(
 
     stats = {
         "name": column,
-        "type": str(col_data.dtype),
+        "type": _tipo_da_coluna(col_data),
         "null_count": int(col_data.isna().sum()),
         "null_ratio": (float(col_data.isna().sum() / len(col_data)) if len(col_data) > 0 else 0.0),
         "unique_count": int(col_data.nunique()),
@@ -153,6 +254,12 @@ def infer_column_statistics(
             stats["median"] = float(non_null.median())
             stats["std"] = float(non_null.std()) if len(non_null) > 1 else 0.0
     elif pd.api.types.is_string_dtype(col_data) or pd.api.types.is_object_dtype(col_data):
+        # O formato reconhecido acompanha a coluna: é com ele que o gerador
+        # de DSL cria a regra de validação de data, em vez de deixar a
+        # coluna como texto sem verificação nenhuma.
+        formato = detectar_formato_de_data(col_data)
+        if formato:
+            stats["date_format"] = formato
         non_null = col_data.dropna()
         if len(non_null) > 0:
             stats["avg_length"] = float(non_null.astype(str).str.len().mean())
@@ -396,6 +503,7 @@ def map_pandas_type_to_spark(pandas_type: str) -> str:
         "string": "string",
         "bool": "boolean",
         "datetime64[ns]": "timestamp",
+        "date": "date",
     }
 
     return type_mapping.get(pandas_type, "string")

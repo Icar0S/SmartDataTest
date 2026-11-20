@@ -87,7 +87,12 @@ class TestPySparkGenerator(unittest.TestCase):
             "rules": [{"type": "range", "column": "age", "min": 18, "max": 65}],
         }
         code = generate_pyspark_code(dsl)
-        self.assertIn('col("age") < 18.0 | col("age") > 65.0', code)
+        # A asserção anterior exigia `col("age") < 18.0 | col("age") > 65.0`,
+        # que é o DEFEITO relatado em 2026-11-19: em Python o `|` tem
+        # precedência maior que `<` e `>`, então aquilo era lido como
+        # `col("age") < (18.0 | col("age")) > 65.0`. O teste protegia o bug.
+        self.assertIn("(valores < 18.0) | (valores > 65.0)", code)
+        self.assertIn('valores = as_number("age")', code)
         self.assertIn("Checking range [18.0, 65.0] for column: age", code)
 
     def test_in_set_rule(self):
@@ -103,10 +108,12 @@ class TestPySparkGenerator(unittest.TestCase):
             ],
         }
         code = generate_pyspark_code(dsl)
-        self.assertIn("~col(\"status\").isin('active', 'inactive')", code)
-        self.assertIn(
-            "Checking values in set ['active', 'inactive'] for column: status", code
-        )
+        # A lista passou a ser um literal nomeado: interpolada na mensagem,
+        # um valor com aspa ("O'Brien") fechava o literal e gerava script
+        # inválido.
+        self.assertIn("valores_aceitos = ['active', 'inactive']", code)
+        self.assertIn('~col("status").isin(*valores_aceitos)', code)
+        self.assertIn('col("status").isNotNull()', code)
 
     def test_regex_rule(self):
         """Test regex pattern rule code generation."""
@@ -125,12 +132,19 @@ class TestPySparkGenerator(unittest.TestCase):
             ],
         }
         code = generate_pyspark_code(dsl)
+        # `rlike` BUSCA o padrão em vez de casar a string inteira, então um
+        # padrão sem âncora aceitava lixo em volta. O gerador agora reenvolve
+        # em `^(?:...)$` — as âncoras já presentes não são duplicadas.
         self.assertIn(
-            '~col("email").rlike("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$")',
+            '~col("email").rlike("^(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,})$")',
             code,
         )
+        # A mensagem é uma f-string no código gerado, então as chaves do
+        # quantificador precisam estar duplicadas NA FONTE para sairem como
+        # `{2,}` na execução. Sem isso, `{2,}` era lido como campo de
+        # formatação e a mensagem saía errada.
         self.assertIn(
-            "Checking regex pattern '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' for column: email",
+            "Checking regex pattern '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{{2,}}$' for column: email",
             code,
         )
 

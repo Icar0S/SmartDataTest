@@ -29,7 +29,8 @@ const QUESTIONS = {
     "Are there any columns for which you want to check the value distribution (e.g., to ensure certain values appear with a specific frequency)? List as 'column:value:min_freq:max_freq', separated by commas. (e.g., status:active:0.7:1.0, status:inactive:0.0:0.1)"
   ],
   "Cross-Column Validation": [
-    "Are there any relationships between two columns that should always hold true (e.g., 'start_date' must be before 'end_date', 'price' must be greater than 'cost')? List as 'column1:operator:column2', separated by commas. Supported operators: <, <=, >, >=, ==, !=. (e.g., start_date:<:end_date, price:>:cost)"
+    "Are there any relationships between two columns that should always hold true (e.g., 'start_date' must be before 'end_date', 'price' must be greater than 'cost')? List as 'column1:operator:column2', separated by commas. Supported operators: <, <=, >, >=, ==, !=. (e.g., start_date:<:end_date, price:>:cost)",
+    "Are there any columns calculated from other columns? List as 'column=expression', separated by ';'. Supported operators: + - * / and parentheses. (e.g., Total_Spent = Price per Item * Quantity; Margin = Revenue - Cost)"
   ]
 };
 
