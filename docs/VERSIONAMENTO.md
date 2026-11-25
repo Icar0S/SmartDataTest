@@ -42,9 +42,14 @@ git fetch --tags && python3 scripts/release/release.py next
 | Frontend | rodapé das páginas de login e inicial |
 | Os dois, lado a lado | `/admin` → "Versões em execução" |
 
-O frontend é publicado pelo CD. **O backend não**: ele é atualizado no servidor,
-com `deploy.sh`. Os dois podem, portanto, estar em versões diferentes, e é para
-isso que existe o `/api/version`.
+O frontend é publicado pelo CD, e só por ele: a integração Git da Vercel publicava
+a `main` por conta própria, um minuto depois do merge e antes de a CI terminar, e
+está desligada para esse branch em `frontend/vercel.json`. Os previews dos outros
+branches continuam.
+
+**O backend não** passa pelo CD: ele é atualizado no servidor, com `deploy.sh`. Os
+dois podem, portanto, estar em versões diferentes, e é para isso que existe o
+`/api/version`.
 
 ## Publicar e voltar atrás no backend
 

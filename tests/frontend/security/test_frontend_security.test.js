@@ -234,6 +234,14 @@ describe('[Security] Content-Security-Policy', () => {
     expect(header('X-Frame-Options')).toBe('DENY');
   });
 
+  test('reaches production through the CD pipeline only', () => {
+    // Vercel's Git integration published main about a minute after a merge,
+    // before the CI finished, whatever its result. The CD deploys with the CLI,
+    // which this setting does not affect; previews of other branches stay.
+    const { deploymentEnabled } = JSON.parse(read('vercel.json')).git;
+    expect(deploymentEnabled).toEqual({ main: false });
+  });
+
   test('is part of the repository', () => {
     // It used to be git-ignored, in which case none of this would be deployed.
     expect(read('.gitignore').split('\n')).not.toContain('vercel.json');

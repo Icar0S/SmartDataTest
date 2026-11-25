@@ -26,8 +26,11 @@ nova nasce **pendente** — a menos que o e-mail tenha sido liberado antes.
 
 ## Colocar no ar pela primeira vez
 
-**A ordem importa**, e está protegida: enquanto o backend não aceitar login, o CD
-se recusa a publicar o frontend novo, e o atual continua funcionando.
+**A ordem importa: o backend antes do frontend.** O backend novo aceita tanto o
+login com Google quanto o token do frontend antigo, então publicá-lo primeiro não
+tira ninguém do ar. O contrário tiraria: o frontend novo não tem outro login. O
+CD confere isso e se recusa a publicar, mas a ordem certa nem chega a depender
+dele.
 
 1. **Google Cloud Console** → *APIs e serviços* → *Credenciais* → *Criar
    credenciais* → *ID do cliente OAuth* → *Aplicativo da Web*.
@@ -38,16 +41,16 @@ se recusa a publicar o frontend novo, e o atual continua funcionando.
      Os escopos usados (`openid email profile`) não exigem verificação.
 2. **No servidor**, `~/srv/bin/configurar-sso-plataforma.sh`. Pede o ID e o
    segredo sem eco e grava no `.env`.
-3. **Merge** do PR na `main`. O CD marca a versão e para no job *Deploy
-   Frontend*, com "Backend not ready": é o esperado.
-4. **No servidor**, `~/srv/bin/deploy.sh`. O backend passa a aceitar login, e o
-   frontend antigo continua funcionando.
-5. **No GitHub**, Actions → *CD Pipeline* → *Re-run failed jobs*. O frontend novo
-   entra no ar.
-6. Entrar uma vez com a própria conta Google e, no servidor,
+3. **No servidor**, `~/srv/bin/deploy.sh develop`. Confira:
+   `curl https://api.smartdatatest.com/api/auth/config` deve responder
+   `"sso":true`. O frontend antigo continua funcionando.
+4. **Merge** do PR na `main`. O CD marca a versão e publica o frontend novo.
+5. Entrar uma vez com a própria conta Google e, no servidor,
    `~/srv/bin/usuarios-plataforma.sh promover seu@email.com`.
-7. `~/srv/bin/fechar-token-antigo.sh`. **Até este passo a API continua aberta**:
-   o token que ia embutido no frontend antigo é público e ainda é aceito.
+6. **No servidor**, `~/srv/bin/deploy.sh`, para o backend ficar exatamente na
+   versão que acabou de ser marcada, e `~/srv/bin/fechar-token-antigo.sh`.
+   **Até este passo a API continua aberta**: o token que ia embutido no frontend
+   antigo é público e ainda é aceito.
 
 ## Como funciona
 

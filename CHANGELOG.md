@@ -29,7 +29,9 @@ showed, and protected nothing.
 - **Breaking:** every business route requires an approved person's session. The
   API token is now for scripts only and is no longer part of the frontend build
 - Checklist runs belong to whoever is logged in, not to a name sent by the client
-- The frontend is only published when the production backend can log people in
+- The frontend is published by the CD pipeline only, after the CI passes and when
+  the production backend can log people in. Vercel's Git integration used to
+  publish `main` about a minute after each merge, whatever the CI said
 
 ### Removed
 - **Breaking:** `POST /api/auth/validate`, `AUTH_USERS` and `AUTH_USERS_FILE`

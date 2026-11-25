@@ -44,6 +44,9 @@ Push/PR para main
 
 Como a versão é calculada, e como voltar atrás: [docs/VERSIONAMENTO.md](../../docs/VERSIONAMENTO.md).
 
+A integração Git da Vercel está desligada para a `main` (`frontend/vercel.json`):
+ela publicava cada merge em cerca de um minuto, sem esperar a CI.
+
 O `deploy` só publica se `api.smartdatatest.com` aceitar login com Google
 (`/api/auth/config`). O frontend não tem outro login; publicado contra um backend
 sem ele, ninguém entraria. Se o job ficar vermelho nessa checagem, o frontend
