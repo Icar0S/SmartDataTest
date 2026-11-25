@@ -3,148 +3,162 @@
  */
 
 import {
-  saveSession,
-  getSession,
+  SESSION_KEY,
   clearSession,
-  isAuthenticated,
-  saveProfile,
-  hasProfile,
+  getSession,
+  getToken,
+  saveSession,
+  toSession,
+  updateSession,
 } from '../../../frontend/src/utils/authStorage';
 
-const SESSION_KEY = 'smartdatatest_session';
-
-const mockUser = {
-  id: 'user-1',
-  name: 'Test User',
-  email: 'test@example.com',
-  role: 'tester',
-  avatar: null,
-  passwordHash: 'should-not-be-stored',
-};
+const session = (overrides = {}) => ({
+  token: 'sdt_abc',
+  expiresAt: Date.now() + 60_000,
+  status: 'approved',
+  contact: '',
+  userId: 'usr_1',
+  name: 'Fulano',
+  email: 'fulano@gmail.com',
+  avatar: 'FU',
+  isAdmin: false,
+  profile: null,
+  ...overrides,
+});
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
   jest.restoreAllMocks();
 });
 
-describe('saveSession', () => {
-  test('stores session without including passwordHash', () => {
-    const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
-    saveSession(mockUser, false);
-    expect(setItemSpy).toHaveBeenCalled();
-    const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
-    expect(stored).not.toHaveProperty('passwordHash');
-    expect(stored.email).toBe(mockUser.email);
+describe('where the session is kept', () => {
+  test('by default, only until the tab closes', () => {
+    saveSession(session());
+    expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull();
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
-  test('with rememberMe=true sets expiry ~7 days from now', () => {
-    const now = Date.now();
-    saveSession(mockUser, true);
-    const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
-    const expectedExpiry = now + 7 * 24 * 60 * 60 * 1000;
-    expect(stored.expiresAt).toBeGreaterThanOrEqual(expectedExpiry - 5000);
-    expect(stored.expiresAt).toBeLessThanOrEqual(expectedExpiry + 5000);
+  test('with "remember me", across tabs and restarts', () => {
+    saveSession(session(), true);
+    expect(localStorage.getItem(SESSION_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
-  test('without rememberMe sets expiry ~8 hours from now', () => {
-    const now = Date.now();
-    saveSession(mockUser, false);
-    const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
-    const expectedExpiry = now + 8 * 60 * 60 * 1000;
-    expect(stored.expiresAt).toBeGreaterThanOrEqual(expectedExpiry - 5000);
-    expect(stored.expiresAt).toBeLessThanOrEqual(expectedExpiry + 5000);
+  test('signing in again leaves no second session behind', () => {
+    saveSession(session({ token: 'sdt_old' }), true);
+    saveSession(session({ token: 'sdt_new' }));
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(getToken()).toBe('sdt_new');
+  });
+
+  test('clearing removes it from both places', () => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session()));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session()));
+    clearSession();
+    expect(getSession()).toBeNull();
   });
 });
 
 describe('getSession', () => {
-  test('returns null when storage is empty', () => {
+  test('null when there is nothing', () => {
     expect(getSession()).toBeNull();
+    expect(getToken()).toBeNull();
   });
 
-  test('returns null and clears key when JSON is malformed', () => {
+  test('returns a valid session', () => {
+    saveSession(session());
+    expect(getSession().email).toBe('fulano@gmail.com');
+    expect(getToken()).toBe('sdt_abc');
+  });
+
+  test('an expired session is null, and is removed', () => {
+    saveSession(session({ expiresAt: Date.now() - 1 }));
+    expect(getSession()).toBeNull();
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+
+  test('corrupted content is null, and is removed', () => {
     localStorage.setItem(SESSION_KEY, 'not-valid-json{{{');
     expect(getSession()).toBeNull();
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
-  test('returns null when session is expired', () => {
-    const expired = {
-      userId: 'user-1',
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'tester',
-      avatar: null,
-      profile: null,
-      loginAt: Date.now() - 10000,
-      expiresAt: Date.now() - 1000, // expired 1 second ago
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(expired));
+  test('a session from before Google sign-in does not count', () => {
+    // What the old login stored: no token, just a note saying "logged in".
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ userId: 'user-admin-001', role: 'admin', expiresAt: Date.now() + 60_000 })
+    );
     expect(getSession()).toBeNull();
   });
 
-  test('returns session object when session is valid', () => {
-    const valid = {
-      userId: 'user-1',
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'tester',
-      avatar: null,
-      profile: null,
-      loginAt: Date.now(),
-      expiresAt: Date.now() + 8 * 60 * 60 * 1000,
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(valid));
-    const session = getSession();
-    expect(session).not.toBeNull();
-    expect(session.email).toBe('test@example.com');
+  test.each(['null', '[]', '"text"', '1'])('unexpected JSON (%s) does not count', (raw) => {
+    localStorage.setItem(SESSION_KEY, raw);
+    expect(getSession()).toBeNull();
+  });
+
+  test('blocked site data reads as logged out instead of crashing', () => {
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    expect(getSession()).toBeNull();
+    expect(getToken()).toBeNull();
+  });
+
+  test('saving with blocked site data does not crash', () => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    expect(() => saveSession(session(), true)).not.toThrow();
   });
 });
 
-describe('clearSession', () => {
-  test('removes the session key from localStorage', () => {
-    const removeItemSpy = jest.spyOn(Storage.prototype, 'removeItem');
-    saveSession(mockUser, false);
-    clearSession();
-    expect(removeItemSpy).toHaveBeenCalledWith(SESSION_KEY);
-    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+describe('updateSession', () => {
+  test.each([false, true])('changes fields in place (remember=%s)', (remember) => {
+    saveSession(session(), remember);
+    updateSession({ status: 'pending', profile: 'tester' });
+    expect(getSession()).toMatchObject({ status: 'pending', profile: 'tester', token: 'sdt_abc' });
+    expect(localStorage.getItem(SESSION_KEY) !== null).toBe(remember);
+  });
+
+  test('does nothing without a session', () => {
+    updateSession({ profile: 'tester' });
+    expect(getSession()).toBeNull();
   });
 });
 
-describe('isAuthenticated', () => {
-  test('returns false when there is no session', () => {
-    expect(isAuthenticated()).toBe(false);
+describe('toSession', () => {
+  const answer = {
+    expires_at: 1_900_000_000,
+    status: 'approved',
+    user: {
+      id: 'usr_1',
+      name: 'Fulano',
+      email: 'fulano@gmail.com',
+      avatar: 'FU',
+      is_admin: true,
+      profile: 'tester',
+    },
+  };
+
+  test('translates the backend answer', () => {
+    expect(toSession(answer, 'sdt_x')).toEqual({
+      token: 'sdt_x',
+      expiresAt: 1_900_000_000_000,
+      status: 'approved',
+      contact: '',
+      userId: 'usr_1',
+      name: 'Fulano',
+      email: 'fulano@gmail.com',
+      avatar: 'FU',
+      isAdmin: true,
+      profile: 'tester',
+    });
   });
 
-  test('returns true when there is a valid session', () => {
-    saveSession(mockUser, false);
-    expect(isAuthenticated()).toBe(true);
-  });
-});
-
-describe('saveProfile', () => {
-  test('updates session.profile in localStorage', () => {
-    saveSession(mockUser, false);
-    const profileData = { role: 'tester', setAt: new Date().toISOString() };
-    saveProfile(profileData);
-    const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
-    expect(stored.profile).toEqual(profileData);
-  });
-
-  test('does nothing when there is no active session', () => {
-    // No session in localStorage
-    expect(() => saveProfile({ role: 'tester' })).not.toThrow();
-    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
-  });
-});
-
-describe('hasProfile', () => {
-  test('returns false when profile is null', () => {
-    saveSession(mockUser, false);
-    expect(hasProfile()).toBe(false);
-  });
-
-  test('returns true when profile is set', () => {
-    saveSession(mockUser, false);
-    saveProfile({ role: 'tester', setAt: new Date().toISOString() });
-    expect(hasProfile()).toBe(true);
+  test('a pending account carries the operator contact', () => {
+    const pending = { ...answer, status: 'pending', contact: 'fale com fulano' };
+    expect(toSession(pending, 'sdt_x').contact).toBe('fale com fulano');
   });
 });

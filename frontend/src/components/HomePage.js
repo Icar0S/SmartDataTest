@@ -29,6 +29,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Metodologia',
       navChecklist: 'Checklist QA',
       logout: 'Sair',
+      admin: 'Usuários e acessos',
       heroTitle: 'SmartDataTest\nTestes de Qualidade para Big Data',
       heroSubtitle: 'Testes avançados de qualidade com métricas, suporte LLM + RAG e\ngeração automatizada de código PySpark',
       btnChecklist: 'Checklist Support QA',
@@ -49,6 +50,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Methodology',
       navChecklist: 'QA Checklist',
       logout: 'Logout',
+      admin: 'Users and access',
       heroTitle: 'SmartDataTest\nBig Data Quality Testing',
       heroSubtitle: 'Advanced data quality testing with metrics, LLM + RAG support, and\nautomated PySpark code generation',
       btnChecklist: 'Checklist Support QA',
@@ -103,6 +105,16 @@ const DataQualityLLMSystem = () => {
             {user?.avatar || '?'}
           </div>
           <span className="text-sm font-medium text-white hidden md:block">{user?.name}</span>
+          {user?.isAdmin && (
+            <Link
+              to="/admin"
+              title={t.admin}
+              aria-label={t.admin}
+              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-purple-900/20 rounded-lg transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             title={t.logout}

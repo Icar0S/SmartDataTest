@@ -1,22 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
   BookOpen,
   CheckCircle,
-  ChevronRight,
   Clock,
   Code,
   Database,
-  Eye,
-  EyeOff,
   GraduationCap,
   Heart,
   Loader,
   Lock,
-  LogIn,
-  Mail,
   Settings,
   Shield,
   TestTube,
@@ -25,10 +20,12 @@ import {
 } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import GoogleLogo from '../components/GoogleLogo';
 import LanguageToggle from '../components/LanguageToggle';
 import { versionLabel } from '../config/version';
 import useAuth from '../hooks/useAuth';
 import useStats from '../hooks/useStats';
+import { discardPendingLogin, readLoginReturn, safeReturnPath } from '../utils/sso';
 import {
   floatingNode,
   popIn,
@@ -47,16 +44,19 @@ const translations = {
     platformName: 'SmartDataTest',
     loginTitle: 'Bem-vindo de volta',
     loginSubtitle: 'Faça login para acessar a plataforma de QA em Big Data',
-    emailLabel: 'E-mail',
-    emailPlaceholder: 'seu@email.com',
-    passwordLabel: 'Senha',
     rememberMe: 'Lembrar-me por 7 dias',
-    loginButton: 'Entrar',
+    loginButton: 'Entrar com Google',
     loginButtonLoading: 'Autenticando...',
-    demoCredentials: 'Credenciais de demonstração',
-    demoAdmin: 'Admin: admin@smartdatatest.com / admin123',
-    demoEngineer: 'Engenheiro: engineer@smartdatatest.com / engineer123',
-    demoQa: 'QA: qa@smartdatatest.com / qa123456',
+    accessNote:
+      'O acesso é liberado pelo administrador. Se ainda não tem, entre com sua conta Google e peça a liberação a ele.',
+    privacyNote: 'Usamos apenas seu nome e e-mail, para identificar quem tem acesso.',
+    pendingTitle: 'Aguardando liberação',
+    pendingSubtitle: 'Sua conta foi reconhecida, mas ainda não tem acesso.',
+    pendingBody:
+      'Peça a liberação ao administrador da plataforma, informando o e-mail abaixo. Esta página avança sozinha assim que o acesso for liberado.',
+    pendingContact: 'Contato',
+    pendingRetry: 'Verificar agora',
+    pendingSwitch: 'Entrar com outra conta',
     profileTitle: 'Quase lá!',
     profileSubtitle: 'Personalize sua experiência na plataforma',
     profileQuestion: 'Qual é o seu perfil profissional?',
@@ -91,16 +91,19 @@ const translations = {
     platformName: 'SmartDataTest',
     loginTitle: 'Welcome back',
     loginSubtitle: 'Sign in to access the Big Data QA platform',
-    emailLabel: 'Email',
-    emailPlaceholder: 'your@email.com',
-    passwordLabel: 'Password',
     rememberMe: 'Remember me for 7 days',
-    loginButton: 'Sign In',
+    loginButton: 'Sign in with Google',
     loginButtonLoading: 'Authenticating...',
-    demoCredentials: 'Demo credentials',
-    demoAdmin: 'Admin: admin@smartdatatest.com / admin123',
-    demoEngineer: 'Engineer: engineer@smartdatatest.com / engineer123',
-    demoQa: 'QA: qa@smartdatatest.com / qa123456',
+    accessNote:
+      'Access is granted by the administrator. If you do not have it yet, sign in with your Google account and ask for it.',
+    privacyNote: 'We only use your name and e-mail, to identify who has access.',
+    pendingTitle: 'Waiting for approval',
+    pendingSubtitle: 'Your account was recognised, but has no access yet.',
+    pendingBody:
+      'Ask the platform administrator for access, giving the e-mail below. This page moves on by itself once access is granted.',
+    pendingContact: 'Contact',
+    pendingRetry: 'Check now',
+    pendingSwitch: 'Use another account',
     profileTitle: 'Almost there!',
     profileSubtitle: 'Personalize your platform experience',
     profileQuestion: 'What is your professional profile?',
@@ -366,49 +369,83 @@ function LoginFooter({ t }) {
 // ---------------------------------------------------------------------------
 // LoginPage
 // ---------------------------------------------------------------------------
+
+// While an account waits for approval the page asks again by itself, so being
+// let in does not require knowing to reload.
+const PENDING_POLL_MS = 20000;
+
 export default function LoginPage() {
-  const { isAuthenticated, hasProfile } = useAuthContext();
+  const { user, isAuthenticated, isPending, hasProfile, sessionExpired } = useAuthContext();
   const { language } = useLanguage();
-  const { handleLogin, handleSaveProfile, clearError, error, isLoading } = useAuth();
+  const {
+    handleLogin,
+    handleLoginReturn,
+    handleLogout,
+    handleRefresh,
+    handleSaveProfile,
+    showError,
+    clearError,
+    error,
+    isLoading,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [step, setStep] = useState(
-    location.state?.step === 'profile' ? 'profile' : 'login'
-  );
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
   const [customRole, setCustomRole] = useState('');
 
+  const returnHandled = useRef(false);
+  const returnTo = useRef(safeReturnPath(location.state?.from?.pathname));
+
   const t = translations[language];
 
+  // Back from Google: the URL fragment carries a one-time code, or the reason
+  // there is none.
   useEffect(() => {
-    if (isAuthenticated && hasProfile) {
-      navigate(location.state?.from?.pathname || '/');
+    const loginReturn = readLoginReturn(location.hash);
+    // The ref, because a code works once and effects may run twice.
+    if (!loginReturn || returnHandled.current) return;
+    returnHandled.current = true;
+    // Out of the address bar and the history before anything else.
+    navigate('/login', { replace: true });
+    if (loginReturn.error) {
+      discardPendingLogin();
+      showError(loginReturn.error);
+      return;
     }
-    if (isAuthenticated && !hasProfile) {
-      setStep('profile');
-    }
-  }, [isAuthenticated, hasProfile, navigate, location.state]);
+    handleLoginReturn(loginReturn.code, (path) => {
+      returnTo.current = path;
+    });
+  }, [location.hash, navigate, showError, handleLoginReturn]);
 
-  const onSubmitLogin = async (e) => {
-    e.preventDefault();
-    const ok = await handleLogin(email, password, rememberMe);
-    if (ok) setStep('profile');
-  };
+  useEffect(() => {
+    if (sessionExpired) showError('session_expired');
+  }, [sessionExpired, showError]);
+
+  useEffect(() => {
+    if (isAuthenticated && hasProfile && !isLoading) {
+      navigate(returnTo.current, { replace: true });
+    }
+  }, [isAuthenticated, hasProfile, isLoading, navigate]);
+
+  useEffect(() => {
+    if (!isPending) return undefined;
+    const timer = setInterval(handleRefresh, PENDING_POLL_MS);
+    return () => clearInterval(timer);
+  }, [isPending, handleRefresh]);
+
+  const step = isPending ? 'pending' : isAuthenticated ? 'profile' : 'login';
 
   const onSubmitProfile = (e) => {
     e.preventDefault();
     const role = selectedRole === 'other' ? customRole.trim() : selectedRole;
     if (!role) return;
-    handleSaveProfile({ role, setAt: new Date().toISOString() });
+    handleSaveProfile(role);
   };
 
   const onSkipProfile = () => {
-    handleSaveProfile({ role: 'unset', setAt: new Date().toISOString() });
+    handleSaveProfile('unset');
   };
 
   return (
@@ -420,7 +457,7 @@ export default function LoginPage() {
         {/* Left panel */}
         <div className="flex items-center justify-center p-8 w-full md:w-auto md:min-w-[480px] lg:min-w-[520px]">
           <AnimatePresence mode="wait">
-            {step === 'login' ? (
+            {step === 'login' && (
               <motion.div
                 key="login"
                 {...slideInFromLeft}
@@ -437,44 +474,42 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <form onSubmit={onSubmitLogin} className="flex flex-col gap-5">
-                  {/* Email */}
-                  <div>
-                    <label className="text-sm text-gray-300 mb-1.5 block">{t.emailLabel}</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t.emailPlaceholder}
-                        required
-                        className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label className="text-sm text-gray-300 mb-1.5 block">{t.passwordLabel}</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-10 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                <div className="flex flex-col gap-5">
+                  {/* Error */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        key="error"
+                        role="alert"
+                        variants={slideDown}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 text-sm text-red-300"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                        {error[language]}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <button
+                    type="button"
+                    onClick={() => handleLogin(rememberMe, returnTo.current)}
+                    disabled={isLoading}
+                    className="w-full bg-white hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed text-gray-800 font-semibold py-2.5 rounded-lg flex items-center justify-center gap-3 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader className="w-5 h-5 animate-spin" />
+                        {t.loginButtonLoading}
+                      </>
+                    ) : (
+                      <>
+                        <GoogleLogo className="w-5 h-5" />
+                        {t.loginButton}
+                      </>
+                    )}
+                  </button>
 
                   {/* Remember me */}
                   <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
@@ -487,56 +522,59 @@ export default function LoginPage() {
                     {t.rememberMe}
                   </label>
 
-                  {/* Error */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        key="error"
-                        variants={slideDown}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 text-sm text-red-300"
-                      >
-                        {error[language]}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Submit */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin" />
-                        {t.loginButtonLoading}
-                      </>
-                    ) : (
-                      <>
-                        <LogIn className="w-4 h-4" />
-                        {t.loginButton}
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Demo credentials */}
-                <details className="mt-5 group">
-                  <summary className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 cursor-pointer list-none">
-                    <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
-                    {t.demoCredentials}
-                  </summary>
-                  <div className="mt-3 bg-gray-800/50 rounded-lg p-3 text-xs text-gray-400 font-mono flex flex-col gap-1">
-                    <span>{t.demoAdmin}</span>
-                    <span>{t.demoEngineer}</span>
-                    <span>{t.demoQa}</span>
+                  <div className="border-t border-gray-700/50 pt-4 flex gap-3 text-xs text-left text-gray-400">
+                    <Lock className="w-4 h-4 flex-shrink-0 text-purple-400" />
+                    <div className="flex flex-col gap-2">
+                      <p>{t.accessNote}</p>
+                      <p className="text-gray-500">{t.privacyNote}</p>
+                    </div>
                   </div>
-                </details>
+                </div>
               </motion.div>
-            ) : (
+            )}
+
+            {step === 'pending' && (
+              <motion.div
+                key="pending"
+                {...slideInFromRight}
+                data-testid="pending-step"
+                className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 max-w-md w-full"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <Clock className="w-10 h-10 text-yellow-400" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{t.pendingTitle}</h2>
+                    <p className="text-sm text-gray-400 mt-1">{t.pendingSubtitle}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300 mb-4">{t.pendingBody}</p>
+                <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-6 text-sm">
+                  <p className="font-medium text-white">{user?.name}</p>
+                  <p className="text-gray-400 break-all">{user?.email}</p>
+                  {user?.contact && (
+                    <p className="text-gray-400 mt-3">
+                      {t.pendingContact}: <span className="text-gray-200">{user.contact}</span>
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold py-2.5 rounded-lg transition-all"
+                >
+                  {t.pendingRetry}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full mt-3 text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  {t.pendingSwitch}
+                </button>
+              </motion.div>
+            )}
+
+            {step === 'profile' && (
               <motion.div
                 key="profile"
                 {...slideInFromRight}

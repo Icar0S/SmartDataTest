@@ -9,6 +9,11 @@ on:
   # updated there with deploy.sh, so this pipeline marks the version and deploys
   # the frontend.
   workflow_dispatch:
+    inputs:
+      skip_backend_check:
+        description: "Publish the frontend without checking that the backend can log people in"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -85,6 +90,22 @@ jobs:
         with:
           # What goes live is a version, exactly.
           ref: ${{ needs.release.outputs.tag }}
+
+      - name: Check that the backend can log people in
+        if: ${{ !inputs.skip_backend_check }}
+        run: |
+          # This frontend has no login of its own. Published against a backend
+          # without Google sign-in, nobody could get in at all. The previous
+          # frontend stays up until this passes.
+          status=$(curl -sS -o config.json -w '%{http_code}' --max-time 20 \
+            --retry 3 --retry-all-errors \
+            https://api.smartdatatest.com/api/auth/config || true)
+          if [ "$status" = "200" ] && [ "$(jq -r '.sso' config.json 2>/dev/null)" = "true" ]; then
+            echo "✅ The production backend accepts Google sign-in"
+            exit 0
+          fi
+          echo "::error title=Backend not ready::api.smartdatatest.com/api/auth/config answered ${status:-nothing}, without sso=true. On the server: configure sign-in (docs/AUTH.md) and run deploy.sh, then re-run this job. If the backend is ready and this check is what is wrong, run the workflow by hand with skip_backend_check."
+          exit 1
 
       - name: Check required secrets
         run: |

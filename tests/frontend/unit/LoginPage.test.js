@@ -1,37 +1,32 @@
 /**
- * Tests for frontend/src/pages/LoginPage.js
+ * Tests for frontend/src/pages/LoginPage.js — sign-in step, the way back from
+ * Google, and the waiting-for-approval step.
+ *
+ * LoginPage.profile.test.js covers the profile step.
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
+const mockLocation = jest.fn(() => ({ pathname: '/login', state: null, hash: '' }));
 jest.mock('react-router-dom', () => ({
-  BrowserRouter: ({ children }) => <div>{children}</div>,
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: '/login', state: null }),
-  Navigate: () => null,
-  Route: ({ element }) => element,
-  Routes: ({ children }) => <div>{children}</div>,
+  useLocation: () => mockLocation(),
 }));
 
-// Mock useAuth hook
-const mockHandleLogin = jest.fn();
-const mockHandleSaveProfile = jest.fn();
-const mockHandleLogout = jest.fn();
-const mockClearError = jest.fn();
-
-jest.mock('../../../frontend/src/hooks/useAuth', () => () => ({
-  handleLogin: mockHandleLogin,
-  handleLogout: mockHandleLogout,
-  handleSaveProfile: mockHandleSaveProfile,
-  clearError: mockClearError,
-  error: null,
-  isLoading: false,
-}));
+const mockAuth = {
+  handleLogin: jest.fn(),
+  handleLoginReturn: jest.fn(),
+  handleLogout: jest.fn(),
+  handleRefresh: jest.fn(),
+  handleSaveProfile: jest.fn(),
+  showError: jest.fn(),
+  clearError: jest.fn(),
+};
+const mockUseAuth = jest.fn();
+jest.mock('../../../frontend/src/hooks/useAuth', () => () => mockUseAuth());
 
 jest.mock('../../../frontend/src/hooks/useStats', () => () => ({
   tests: '970+',
@@ -40,63 +35,28 @@ jest.mock('../../../frontend/src/hooks/useStats', () => () => ({
   responseSla: '<2s',
 }));
 
-// Mock useLanguage
-const mockChangeLanguage = jest.fn();
+const mockLanguage = jest.fn(() => 'pt-BR');
 jest.mock('../../../frontend/src/context/LanguageContext', () => ({
-  useLanguage: () => ({
-    language: 'pt-BR',
-    changeLanguage: mockChangeLanguage,
-  }),
+  useLanguage: () => ({ language: mockLanguage(), changeLanguage: jest.fn() }),
 }));
 
-// Mock AuthContext
+const mockContext = jest.fn();
 jest.mock('../../../frontend/src/context/AuthContext', () => ({
-  useAuthContext: () => ({
-    isAuthenticated: false,
-    hasProfile: false,
-    isLoading: false,
-    user: null,
-  }),
+  useAuthContext: () => mockContext(),
 }));
 
-// Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    form: ({ children, ...props }) => <form {...props}>{children}</form>,
-    p: ({ children, ...props }) => <p {...props}>{children}</p>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    span: ({ children, ...props }) => <span {...props}>{children}</span>,
-    h2: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
-    textarea: ({ children, ...props }) => <textarea {...props}>{children}</textarea>,
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
+jest.mock('framer-motion', () => {
+  const passthrough = (Tag) =>
+    function Motion({ children, ...props }) {
+      return <Tag {...props}>{children}</Tag>;
+    };
+  return {
+    motion: new Proxy({}, { get: (_target, tag) => passthrough(tag) }),
+    AnimatePresence: ({ children }) => <>{children}</>,
+  };
+});
 
-// Mock lucide-react
-jest.mock('lucide-react', () => ({
-  Database: () => <span data-testid="icon-database">DB</span>,
-  Mail: () => <span data-testid="icon-mail">Mail</span>,
-  Lock: () => <span data-testid="icon-lock">Lock</span>,
-  Eye: () => <span data-testid="icon-eye">Eye</span>,
-  EyeOff: () => <span data-testid="icon-eyeoff">EyeOff</span>,
-  LogIn: () => <span data-testid="icon-login">LogIn</span>,
-  ChevronRight: () => <span data-testid="icon-chevron">Chevron</span>,
-  CheckCircle: () => <span data-testid="icon-check">Check</span>,
-  Languages: () => <span data-testid="icon-languages">Languages</span>,
-  Shield: () => <span data-testid="icon-shield">Shield</span>,
-  Heart: () => <span data-testid="icon-heart">Heart</span>,
-  TestTube: () => <span data-testid="icon-testtube">TestTube</span>,
-  BarChart3: () => <span data-testid="icon-barchart">BarChart</span>,
-  Code: () => <span data-testid="icon-code">Code</span>,
-  GraduationCap: () => <span data-testid="icon-gradcap">GradCap</span>,
-  BookOpen: () => <span data-testid="icon-book">Book</span>,
-  Settings: () => <span data-testid="icon-settings">Settings</span>,
-  User: () => <span data-testid="icon-user">User</span>,
-  Loader: () => <span data-testid="icon-loader">Loader</span>,
-  Clock: () => <span data-testid="icon-clock">Clock</span>,
-  Zap: () => <span data-testid="icon-zap">Zap</span>,
-}));
+jest.mock('lucide-react', () => new Proxy({}, { get: () => () => <span /> }));
 
 // Mock animations
 jest.mock('../../../frontend/src/styles/animations', () => ({
@@ -126,100 +86,190 @@ jest.mock('../../../frontend/src/components/LanguageToggle', () =>
 
 import LoginPage from '../../../frontend/src/pages/LoginPage';
 
-const renderLoginPage = () =>
-  render(<BrowserRouter><LoginPage /></BrowserRouter>);
+const anonymous = {
+  user: null,
+  isAuthenticated: false,
+  isPending: false,
+  hasProfile: false,
+  sessionExpired: false,
+};
 
-describe('LoginPage — Step 1: Login Form', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+const setup = ({ context = {}, auth = {}, location = {} } = {}) => {
+  mockContext.mockReturnValue({ ...anonymous, ...context });
+  mockUseAuth.mockReturnValue({ ...mockAuth, error: null, isLoading: false, ...auth });
+  mockLocation.mockReturnValue({ pathname: '/login', state: null, hash: '', ...location });
+  return render(<LoginPage />);
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockLanguage.mockReturnValue('pt-BR');
+});
+
+describe('sign-in step', () => {
+  test('offers Google and nothing that asks for a password', () => {
+    setup();
+    expect(screen.getByRole('button', { name: 'Entrar com Google' })).toBeEnabled();
+    expect(document.querySelector('input[type="password"]')).toBeNull();
+    expect(document.querySelector('input[type="email"]')).toBeNull();
   });
 
-  test('renders login title in PT-BR by default', () => {
-    renderLoginPage();
-    const elements = screen.getAllByText(/SmartDataTest/i);
-    expect(elements.length).toBeGreaterThan(0);
+  test('no longer prints demo credentials', () => {
+    const { container } = setup();
+    expect(container.textContent).not.toMatch(/admin123|engineer123|qa123456|@smartdatatest\.com/);
+    expect(document.querySelector('details')).toBeNull();
   });
 
-  test('email and password fields exist', () => {
-    renderLoginPage();
-    expect(document.querySelector('input[type="email"]')).toBeTruthy();
-    expect(document.querySelector('input[type="password"]')).toBeTruthy();
+  test('says that access is granted by the administrator', () => {
+    setup();
+    expect(screen.getByText(/liberado pelo administrador/i)).toBeInTheDocument();
   });
 
-  test('password visibility toggle works', () => {
-    renderLoginPage();
-    const passwordInput = document.querySelector('input[type="password"]');
-    expect(passwordInput).toBeTruthy();
-    // Eye icon should be present (password is hidden)
-    expect(screen.getByTestId('icon-eye')).toBeInTheDocument();
-    // Click toggle
-    const eyeIcon = screen.getByTestId('icon-eye');
-    fireEvent.click(eyeIcon.closest('button'));
-    // After click, EyeOff should appear
-    expect(screen.getByTestId('icon-eyeoff')).toBeInTheDocument();
+  test('clicking starts the login', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar com Google' }));
+    expect(mockAuth.handleLogin).toHaveBeenCalledWith(false, '/');
   });
 
-  test('rememberMe checkbox is interactive', () => {
-    renderLoginPage();
-    const checkbox = document.querySelector('input[type="checkbox"]');
-    expect(checkbox).toBeTruthy();
-    fireEvent.click(checkbox);
-    expect(checkbox.checked).toBe(true);
+  test('"remember me" and the page that was asked for go along', () => {
+    setup({ location: { state: { from: { pathname: '/qa-checklist' } } } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar com Google' }));
+    expect(mockAuth.handleLogin).toHaveBeenCalledWith(true, '/qa-checklist');
   });
 
-  test('renders animated background nodes with data-testid', () => {
-    renderLoginPage();
-    expect(document.querySelector('[data-testid="animated-bg"]')).toBeInTheDocument();
+  test('is busy while it happens', () => {
+    setup({ auth: { isLoading: true } });
+    expect(screen.getByRole('button', { name: /Autenticando/ })).toBeDisabled();
   });
 
-  test('footer with copyright renders in PT-BR', () => {
-    renderLoginPage();
-    const elements = screen.getAllByText(/2026/i);
-    expect(elements.length).toBeGreaterThan(0);
+  test('shows the error in the current language', () => {
+    const error = { 'pt-BR': 'Deu errado.', 'en-US': 'It went wrong.' };
+    setup({ auth: { error } });
+    expect(screen.getByRole('alert')).toHaveTextContent('Deu errado.');
   });
 
-  test('demo credentials section is expandable', () => {
-    renderLoginPage();
-    const detailsEl = document.querySelector('details');
-    expect(detailsEl).toBeTruthy();
+  test('speaks English too', () => {
+    mockLanguage.mockReturnValue('en-US');
+    setup();
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+  });
+
+  test('says why when the session ended by itself', () => {
+    setup({ context: { sessionExpired: true } });
+    expect(mockAuth.showError).toHaveBeenCalledWith('session_expired');
+  });
+
+  test('renders background, footer and version', () => {
+    setup();
+    expect(screen.getByTestId('animated-bg')).toBeInTheDocument();
+    expect(screen.getByText(/dev · 2026/)).toBeInTheDocument();
   });
 });
 
-describe('LoginPage — Login Form submission', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('back from Google', () => {
+  test('trades the code, and takes it out of the address bar first', () => {
+    setup({ location: { hash: '#code=abc' } });
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    expect(mockAuth.handleLoginReturn).toHaveBeenCalledWith('abc', expect.any(Function));
+    expect(mockNavigate.mock.invocationCallOrder[0]).toBeLessThan(
+      mockAuth.handleLoginReturn.mock.invocationCallOrder[0]
+    );
   });
 
-  test('calls handleLogin on form submit', async () => {
-    mockHandleLogin.mockResolvedValue(false);
-    renderLoginPage();
-    const emailInput = document.querySelector('input[type="email"]');
-    const passwordInput = document.querySelector('input[type="password"]');
-    if (emailInput && passwordInput) {
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-      fireEvent.change(passwordInput, { target: { value: 'password' } });
-      const form = document.querySelector('form');
-      if (form) fireEvent.submit(form);
-      await waitFor(() => {
-        expect(mockHandleLogin).toHaveBeenCalled();
-      });
-    }
+  test('a code is used once, even where effects run twice', () => {
+    mockContext.mockReturnValue(anonymous);
+    mockUseAuth.mockReturnValue({ ...mockAuth, error: null, isLoading: false });
+    mockLocation.mockReturnValue({ pathname: '/login', state: null, hash: '#code=abc' });
+    render(
+      <React.StrictMode>
+        <LoginPage />
+      </React.StrictMode>
+    );
+    expect(mockAuth.handleLoginReturn).toHaveBeenCalledTimes(1);
+  });
+
+  test('shows the reason when there is no code, and forgets the attempt', () => {
+    sessionStorage.setItem('smartdatatest_login', '{"verifier":"x"}');
+    setup({ location: { hash: '#error=cancelled' } });
+    expect(sessionStorage.getItem('smartdatatest_login')).toBeNull();
+    expect(mockAuth.showError).toHaveBeenCalledWith('cancelled');
+    expect(mockAuth.handleLoginReturn).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+  });
+
+  test('then goes to the page that was asked for', () => {
+    const view = setup({ location: { hash: '#code=abc' } });
+    const [, onReturnTo] = mockAuth.handleLoginReturn.mock.calls[0];
+    onReturnTo('/data-accuracy');
+    mockContext.mockReturnValue({ ...anonymous, isAuthenticated: true, hasProfile: true });
+    mockLocation.mockReturnValue({ pathname: '/login', state: null, hash: '' });
+    view.rerender(<LoginPage />);
+    expect(mockNavigate).toHaveBeenLastCalledWith('/data-accuracy', { replace: true });
+  });
+
+  test('does not move on while the exchange is still running', () => {
+    setup({
+      context: { isAuthenticated: true, hasProfile: true },
+      auth: { isLoading: true },
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
 
-describe('LoginPage — Error display', () => {
-  test('footer with copyright present', () => {
-    renderLoginPage();
-    const elements = screen.getAllByText(/2026/i);
-    expect(elements.length).toBeGreaterThan(0);
+describe('waiting for approval', () => {
+  const pending = {
+    isPending: true,
+    user: { name: 'Fulano', email: 'fulano@gmail.com', contact: '' },
+  };
+
+  test('says which account is waiting, and offers no way around', () => {
+    setup({ context: pending });
+    expect(screen.getByText('Aguardando liberação')).toBeInTheDocument();
+    expect(screen.getByText('fulano@gmail.com')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Entrar com Google' })).toBeNull();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  test('shows the operator contact when there is one', () => {
+    setup({ context: { ...pending, user: { ...pending.user, contact: 'ramal 123' } } });
+    expect(screen.getByText('ramal 123')).toBeInTheDocument();
+  });
+
+  test('hides the contact line when there is none', () => {
+    setup({ context: pending });
+    expect(screen.queryByText(/Contato/)).toBeNull();
+  });
+
+  test('checks again on request and by itself', () => {
+    jest.useFakeTimers();
+    setup({ context: pending });
+    fireEvent.click(screen.getByRole('button', { name: 'Verificar agora' }));
+    expect(mockAuth.handleRefresh).toHaveBeenCalledTimes(1);
+    act(() => jest.advanceTimersByTime(20000));
+    expect(mockAuth.handleRefresh).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  test('stops checking when the page goes away', () => {
+    jest.useFakeTimers();
+    const { unmount } = setup({ context: pending });
+    unmount();
+    act(() => jest.advanceTimersByTime(60000));
+    expect(mockAuth.handleRefresh).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  test('another account can be used', () => {
+    setup({ context: pending });
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar com outra conta' }));
+    expect(mockAuth.handleLogout).toHaveBeenCalled();
   });
 });
 
-describe('LoginPage — Right Panel', () => {
-  test('right panel does not contain live detection feed', () => {
-    renderLoginPage();
-    // "Detecções" / "Detections" should not appear — feed was removed
+describe('right panel', () => {
+  test('does not contain the removed live detection feed', () => {
+    setup();
     expect(screen.queryByText(/Detecções/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Detections/i)).not.toBeInTheDocument();
   });
 });

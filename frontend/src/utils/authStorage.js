@@ -1,81 +1,100 @@
 /**
- * Auth storage utilities.
+ * Where the session lives in the browser.
  *
- * SESSION_KEY: 'smartdatatest_session'
- * Stores: {userId, name, email, role, avatar, profile, loginAt, expiresAt}
- * ⚠️ passwordHash is NEVER stored.
+ * Stores: {token, expiresAt, status, contact, userId, name, email, avatar,
+ *          isAdmin, profile}
+ *
+ * The token is opaque, random, and only means something to the backend, which
+ * checks the account behind it on every request and can end it at any time. It
+ * is kept here, rather than in a cookie, because the frontend and the API are
+ * on different sites and browsers block third-party cookies (docs/AUTH.md).
+ *
+ * "Remember me" decides where it goes: localStorage, until it expires, or
+ * sessionStorage, which the browser clears when the tab closes — the right
+ * default for a shared computer.
  */
 
 export const SESSION_KEY = 'smartdatatest_session';
 
-/**
- * Save user session to localStorage.
- * @param {Object} user - User object (passwordHash is stripped).
- * @param {boolean} rememberMe - true → 7 days expiry; false → 8 hours.
- */
-export function saveSession(user, rememberMe = false) {
-  const now = Date.now();
-  const expiresAt = now + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000);
-  const session = {
-    userId: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    avatar: user.avatar || null,
-    profile: null,
-    loginAt: now,
-    expiresAt,
-  };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-}
+const stores = () => [window.sessionStorage, window.localStorage];
 
-/**
- * Update the profile field in the stored session.
- * @param {Object} profileData - Profile data to save.
- */
-export function saveProfile(profileData) {
-  const session = getSession();
-  if (!session) return;
-  session.profile = profileData;
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-}
+// Storage access throws when the browser blocks site data; being logged out is
+// the correct reading of that, and crashing is not.
+const attempt = (action, fallback) => {
+  try {
+    return action();
+  } catch {
+    return fallback;
+  }
+};
 
-/**
- * Return the current session, or null if absent/expired.
- */
-export function getSession() {
-  const raw = localStorage.getItem(SESSION_KEY);
+const read = (store) => {
+  const raw = store.getItem(SESSION_KEY);
   if (!raw) return null;
   try {
     const session = JSON.parse(raw);
-    if (Date.now() > session.expiresAt) {
-      localStorage.removeItem(SESSION_KEY);
-      return null;
-    }
-    return session;
+    // Sessions from before Google sign-in carry no token: they were never more
+    // than a note saying "logged in", and the API would refuse them.
+    if (session?.token && session.expiresAt > Date.now()) return session;
   } catch {
-    return null;
+    // Not ours, or corrupted.
   }
+  store.removeItem(SESSION_KEY);
+  return null;
+};
+
+/** Turn a backend answer (/exchange or /me) into what is stored. */
+export function toSession(data, token) {
+  return {
+    token,
+    expiresAt: data.expires_at * 1000,
+    status: data.status,
+    contact: data.contact || '',
+    userId: data.user.id,
+    name: data.user.name,
+    email: data.user.email,
+    avatar: data.user.avatar,
+    isAdmin: Boolean(data.user.is_admin),
+    profile: data.user.profile || null,
+  };
 }
 
-/**
- * Remove the session from localStorage.
- */
+export function saveSession(session, remember = false) {
+  clearSession();
+  attempt(() => {
+    const store = remember ? window.localStorage : window.sessionStorage;
+    store.setItem(SESSION_KEY, JSON.stringify(session));
+  });
+}
+
+/** Change fields of the current session, wherever it is stored. */
+export function updateSession(changes) {
+  attempt(() => {
+    for (const store of stores()) {
+      const session = read(store);
+      if (session) {
+        store.setItem(SESSION_KEY, JSON.stringify({ ...session, ...changes }));
+        return;
+      }
+    }
+  });
+}
+
+/** The current session, or null if absent or expired. */
+export function getSession() {
+  return attempt(() => {
+    for (const store of stores()) {
+      const session = read(store);
+      if (session) return session;
+    }
+    return null;
+  }, null);
+}
+
+export function getToken() {
+  return getSession()?.token || null;
+}
+
 export function clearSession() {
-  localStorage.removeItem(SESSION_KEY);
-}
-
-/**
- * Return true if a valid (non-expired) session exists.
- */
-export function isAuthenticated() {
-  return getSession() !== null;
-}
-
-/**
- * Return true if the current session has a non-null profile.
- */
-export function hasProfile() {
-  const session = getSession();
-  return session !== null && session.profile !== null;
+  attempt(() => stores().forEach((store) => store.removeItem(SESSION_KEY)));
 }

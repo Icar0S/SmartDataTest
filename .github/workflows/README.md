@@ -44,6 +44,11 @@ Push/PR para main
 
 Como a versão é calculada, e como voltar atrás: [docs/VERSIONAMENTO.md](../../docs/VERSIONAMENTO.md).
 
+O `deploy` só publica se `api.smartdatatest.com` aceitar login com Google
+(`/api/auth/config`). O frontend não tem outro login; publicado contra um backend
+sem ele, ninguém entraria. Se o job ficar vermelho nessa checagem, o frontend
+anterior continua no ar: atualize o backend e rode o job de novo.
+
 O backend não passa pelo CD: ele roda self-hosted no Mac mini (`compose.prod.yaml`,
 atrás do Cloudflare Tunnel em `api.smartdatatest.com`) e é atualizado lá, à mão:
 
