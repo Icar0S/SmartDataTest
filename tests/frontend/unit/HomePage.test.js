@@ -87,9 +87,10 @@ jest.mock('../../../frontend/src/hooks/useAuth', () => () => ({
 }));
 
 // Mock useAuthContext
+const mockUser = { current: { name: 'Test User', avatar: 'TU', isAdmin: false } };
 jest.mock('../../../frontend/src/context/AuthContext', () => ({
   useAuthContext: () => ({
-    user: { name: 'Test User', avatar: 'TU', role: 'tester' },
+    user: mockUser.current,
     isAuthenticated: true,
     hasProfile: true,
     isLoading: false,
@@ -340,9 +341,28 @@ describe('HomePage Component', () => {
       expect(screen.queryAllByText(/PySpark/i).length).toBeGreaterThan(0);
     });
 
-    test('renders version string', () => {
+    test('renders the version this build was stamped with', () => {
       renderWithRouter(<HomePage />);
-      expect(screen.getByText(/v1\.0\.0/i)).toBeInTheDocument();
+      // "dev" outside the deploy pipeline. It used to be a hard-coded v1.0.0,
+      // whatever the release.
+      expect(screen.getByText('dev · 2026')).toBeInTheDocument();
+    });
+  });
+
+  describe('operator panel link', () => {
+    afterEach(() => {
+      mockUser.current = { name: 'Test User', avatar: 'TU', isAdmin: false };
+    });
+
+    test('is shown to administrators', () => {
+      mockUser.current = { ...mockUser.current, isAdmin: true };
+      renderWithRouter(<HomePage />);
+      expect(screen.getByTitle('Usuários e acessos')).toHaveAttribute('href', '/admin');
+    });
+
+    test('is not shown to anyone else', () => {
+      renderWithRouter(<HomePage />);
+      expect(screen.queryByTitle('Usuários e acessos')).not.toBeInTheDocument();
     });
   });
 });

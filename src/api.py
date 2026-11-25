@@ -160,16 +160,15 @@ blueprints_to_register = [
     ("synthetic", "synthetic.routes", "synth_bp"),
     # RAG last (has complex initialization)
     ("rag", "rag.routes_simple", "rag_bp"),
-    # Auth (login validation)
-    ("auth", "auth.routes", "auth_bp"),
 ]
 
-# Token enforcement is installed before the blueprints so that it covers every
-# route they register, including any added later. See src/auth/api_token.py:
-# everything is protected unless explicitly allowlisted.
-from auth.api_token import init_api_token_auth  # noqa: E402
+# Google sign-in, sessions, user administration and the request gate. Installed
+# before the feature blueprints so that the gate covers every route they
+# register, including any added later. See src/auth/api_token.py: everything is
+# protected unless explicitly allowlisted.
+from auth.setup import init_auth  # noqa: E402
 
-init_api_token_auth(app)
+init_auth(app)
 
 for feature_name, module_path, blueprint_name in blueprints_to_register:
     try:
@@ -256,6 +255,22 @@ def platform_stats():
 def health_check():
     """Health check endpoint to verify API is running."""
     return jsonify({"status": "Backend is running", "message": "Data Quality Chatbot API"})
+
+
+@app.route("/api/version", methods=["GET"])
+@limiter.limit("120 per minute")
+def version():
+    """Which release is running, stamped into the image by the deploy.
+
+    Without this, "the backend is up to date" can only be believed, not checked:
+    a container kept serving four-month-old code while main moved on.
+    """
+    return jsonify(
+        {
+            "version": os.environ.get("APP_VERSION", "dev"),
+            "commit": os.environ.get("APP_COMMIT", "unknown"),
+        }
+    )
 
 
 @app.route("/ask", methods=["POST"])

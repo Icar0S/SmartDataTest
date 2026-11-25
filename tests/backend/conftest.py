@@ -1,12 +1,9 @@
 """Global conftest for all backend tests."""
-import json
 import sys
 import os
 
 # Ensure src/ is always on the path for all backend tests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src")))
-
-from werkzeug.security import generate_password_hash  # noqa: E402
 
 # ── Test environment ───────────────────────────────────────────────────────
 # Everything below must be set before any test module imports `api`, because
@@ -15,11 +12,17 @@ from werkzeug.security import generate_password_hash  # noqa: E402
 # CORS no longer has a built-in production fallback; give the suite an origin.
 os.environ.setdefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
 
-# Business routes now require a bearer token (src/auth/api_token.py). The bulk
-# of the suite predates that and calls those routes directly, so authentication
-# is explicitly disabled here. test_api_token_auth.py overrides this to exercise
-# enforcement, and always restores it afterwards.
+# Business routes require a session or a machine token (src/auth/api_token.py).
+# The bulk of the suite predates that and calls those routes directly, so
+# authentication is explicitly disabled here. Enforcement is exercised by
+# test_api_token_auth.py, which restores this afterwards, and by the test_sso_*
+# and security suites, which build an app of their own (tests/support/sso.py).
 os.environ.setdefault("API_AUTH_DISABLED", "true")
+
+# Some modules load the repository's .env, which on the server holds the real
+# credentials. Already set, even if empty, these are not overridden by it.
+for _name in ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "SESSION_SECRET"):
+    os.environ.setdefault(_name, "")
 
 # The per-category production rate limits (see src/limiter.py) are sized for a
 # human using a browser. The suite drives dozens of uploads and heavy requests
@@ -34,40 +37,6 @@ for _category in ("LLM", "GENERATE", "UPLOAD", "HEAVY", "ADMIN"):
 # config key was corrected from RATELIMIT_DEFAULT_LIMITS (which Flask-Limiter
 # ignores) to RATELIMIT_DEFAULT; before that the suite never met it.
 os.environ.setdefault("RATELIMIT_DEFAULT", "1000000 per hour")
-
-# The application no longer ships built-in accounts, so the suite brings its
-# own. These are test fixtures, not deployable credentials.
-os.environ.setdefault(
-    "AUTH_USERS",
-    json.dumps(
-        [
-            {
-                "id": "user-admin-001",
-                "name": "Admin DataForge",
-                "email": "admin@dataforgetest.com",
-                "password_hash": generate_password_hash("admin123"),
-                "role": "admin",
-                "avatar": None,
-            },
-            {
-                "id": "user-eng-002",
-                "name": "Engineer DataForge",
-                "email": "engineer@dataforgetest.com",
-                "password_hash": generate_password_hash("engineer123"),
-                "role": "data_eng",
-                "avatar": None,
-            },
-            {
-                "id": "user-qa-003",
-                "name": "QA DataForge",
-                "email": "qa@dataforgetest.com",
-                "password_hash": generate_password_hash("qa123456"),
-                "role": "tester",
-                "avatar": None,
-            },
-        ]
-    ),
-)
 
 import pytest  # noqa: E402
 

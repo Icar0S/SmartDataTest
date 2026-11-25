@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer, slideIn, scaleIn } from '../styles/animations';
 import { useAuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { versionLabel } from '../config/version';
 import useAuth from '../hooks/useAuth';
 
 const DataQualityLLMSystem = () => {
@@ -28,6 +29,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Metodologia',
       navChecklist: 'Checklist QA',
       logout: 'Sair',
+      admin: 'Usuários e acessos',
       heroTitle: 'SmartDataTest\nTestes de Qualidade para Big Data',
       heroSubtitle: 'Testes avançados de qualidade com métricas, suporte LLM + RAG e\ngeração automatizada de código PySpark',
       btnChecklist: 'Checklist Support QA',
@@ -48,6 +50,7 @@ const DataQualityLLMSystem = () => {
       navMethodology: 'Methodology',
       navChecklist: 'QA Checklist',
       logout: 'Logout',
+      admin: 'Users and access',
       heroTitle: 'SmartDataTest\nBig Data Quality Testing',
       heroSubtitle: 'Advanced data quality testing with metrics, LLM + RAG support, and\nautomated PySpark code generation',
       btnChecklist: 'Checklist Support QA',
@@ -102,6 +105,16 @@ const DataQualityLLMSystem = () => {
             {user?.avatar || '?'}
           </div>
           <span className="text-sm font-medium text-white hidden md:block">{user?.name}</span>
+          {user?.isAdmin && (
+            <Link
+              to="/admin"
+              title={t.admin}
+              aria-label={t.admin}
+              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-purple-900/20 rounded-lg transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             title={t.logout}
@@ -132,7 +145,7 @@ const DataQualityLLMSystem = () => {
             <Heart className="w-3 h-3 text-pink-600 fill-pink-600" />
             <span className="font-mono text-gray-500">{t.footerTech}</span>
           </div>
-          <span className="text-xs text-gray-600 font-mono">v1.0.0 · 2026</span>
+          <span className="text-xs text-gray-600 font-mono">{versionLabel()} · 2026</span>
         </div>
         <p className="mt-2 text-center text-xs text-gray-600">{t.footerRights}</p>
       </div>

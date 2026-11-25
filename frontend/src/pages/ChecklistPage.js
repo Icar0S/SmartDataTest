@@ -66,7 +66,9 @@ const ChecklistPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 'default_user', // In production, get from auth
+          // The backend records whoever is logged in; this is only the name
+          // for local development without sign-in.
+          user_id: 'default_user',
           project_id: null
         })
       });

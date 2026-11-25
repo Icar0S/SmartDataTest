@@ -1,39 +1,39 @@
 /**
- * Tests for frontend/src/pages/LoginPage.js — Profile step, auth effects,
- * loading/error states, and RightPanel timer.
+ * Tests for frontend/src/pages/LoginPage.js — Profile step, auth effects and
+ * RightPanel timer.
  *
- * Complements LoginPage.test.js which covers the login-form step only.
+ * Complements LoginPage.test.js, which covers sign-in and approval.
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 // ─── Mutable mock primitives (names start with "mock" so Jest hoisting works) ──
 
 const mockNavigate = jest.fn();
-const mockHandleLogin = jest.fn();
 const mockHandleSaveProfile = jest.fn();
 const mockClearError = jest.fn();
-const mockHandleLogout = jest.fn();
 
-// Mutable per-test — change `.mockReturnValue(...)` in beforeEach / per test
-const mockUseLocation = jest.fn(() => ({ pathname: '/login', state: null }));
-const mockUseAuthContext = jest.fn(() => ({
-  isAuthenticated: false,
-  hasProfile: false,
-  isLoading: false,
-  user: null,
-}));
-const mockUseAuth = jest.fn(() => ({
-  handleLogin: mockHandleLogin,
-  handleLogout: mockHandleLogout,
+const signedOut = { isAuthenticated: false, isPending: false, hasProfile: false, user: null };
+const withoutProfile = { ...signedOut, isAuthenticated: true, user: { email: 'test@example.com' } };
+const auth = {
+  handleLogin: jest.fn(),
+  handleLoginReturn: jest.fn(),
+  handleLogout: jest.fn(),
+  handleRefresh: jest.fn(),
   handleSaveProfile: mockHandleSaveProfile,
+  showError: jest.fn(),
   clearError: mockClearError,
   error: null,
   isLoading: false,
-}));
+};
+
+// Mutable per-test — change `.mockReturnValue(...)` in beforeEach / per test
+const mockUseLocation = jest.fn(() => ({ pathname: '/login', state: null, hash: '' }));
+const mockUseAuthContext = jest.fn();
+const mockUseAuth = jest.fn();
 
 // ─── Module mocks ────────────────────────────────────────────────────────────
 
@@ -78,12 +78,7 @@ jest.mock('framer-motion', () => ({
 
 jest.mock('lucide-react', () => ({
   Database: () => <span data-testid="icon-database">DB</span>,
-  Mail: () => <span>Mail</span>,
   Lock: () => <span>Lock</span>,
-  Eye: () => <span data-testid="icon-eye">Eye</span>,
-  EyeOff: () => <span data-testid="icon-eyeoff">EyeOff</span>,
-  LogIn: () => <span>LogIn</span>,
-  ChevronRight: () => <span>Chevron</span>,
   CheckCircle: () => <span data-testid="icon-check">Check</span>,
   Languages: () => <span>Languages</span>,
   Shield: () => <span>Shield</span>,
@@ -128,35 +123,16 @@ const renderPage = () =>
     </BrowserRouter>
   );
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-const setProfileStep = () =>
-  mockUseLocation.mockReturnValue({ pathname: '/login', state: { step: 'profile' } });
-
-const setLoginStep = () =>
-  mockUseLocation.mockReturnValue({ pathname: '/login', state: null });
-
 // ─── Suites ──────────────────────────────────────────────────────────────────
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUseLocation.mockReturnValue({ pathname: '/login', state: null, hash: '' });
+  mockUseAuth.mockReturnValue(auth);
+});
+
 describe('LoginPage — Profile step rendering', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    setProfileStep();
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: false,
-      hasProfile: false,
-      isLoading: false,
-      user: null,
-    });
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: false,
-    });
-  });
+  beforeEach(() => mockUseAuthContext.mockReturnValue(withoutProfile));
 
   test('renders profile title (Quase lá!) when step is profile', () => {
     renderPage();
@@ -197,9 +173,7 @@ describe('LoginPage — Profile step rendering', () => {
     fireEvent.click(document.querySelector('[data-testid="role-card-data_eng"]'));
     const form = document.querySelector('form');
     fireEvent.submit(form);
-    expect(mockHandleSaveProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ role: 'data_eng' })
-    );
+    expect(mockHandleSaveProfile).toHaveBeenCalledWith('data_eng');
   });
 
   test('submitting with no role selected does NOT call handleSaveProfile', () => {
@@ -223,9 +197,7 @@ describe('LoginPage — Profile step rendering', () => {
     fireEvent.change(textarea, { target: { value: 'Data Scientist' } });
     const form = document.querySelector('form');
     fireEvent.submit(form);
-    expect(mockHandleSaveProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ role: 'Data Scientist' })
-    );
+    expect(mockHandleSaveProfile).toHaveBeenCalledWith('Data Scientist');
   });
 
   test('submit is disabled when "other" selected but textarea is empty', () => {
@@ -239,155 +211,52 @@ describe('LoginPage — Profile step rendering', () => {
     renderPage();
     const skipBtn = screen.getByText(/Pular por agora/i);
     fireEvent.click(skipBtn);
-    expect(mockHandleSaveProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ role: 'unset' })
-    );
+    expect(mockHandleSaveProfile).toHaveBeenCalledWith('unset');
   });
 });
 
 describe('LoginPage — Auth redirect effects', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    setLoginStep();
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: false,
-    });
-  });
+  const complete = { ...withoutProfile, hasProfile: true };
 
-  test('navigates to "/" when isAuthenticated=true and hasProfile=true', async () => {
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: true,
-      hasProfile: true,
-      isLoading: false,
-      user: { email: 'test@example.com' },
-    });
+  test('goes to "/" when signed in with a profile', () => {
+    mockUseAuthContext.mockReturnValue(complete);
     renderPage();
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 
-  test('navigates to from.pathname when location.state.from exists', async () => {
+  test('goes to the page that was asked for', () => {
     mockUseLocation.mockReturnValue({
       pathname: '/login',
       state: { from: { pathname: '/checklist' } },
+      hash: '',
     });
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: true,
-      hasProfile: true,
-      isLoading: false,
-      user: null,
-    });
+    mockUseAuthContext.mockReturnValue(complete);
     renderPage();
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/checklist');
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('/checklist', { replace: true });
   });
 
-  test('switches to profile step when isAuthenticated=true but hasProfile=false', async () => {
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: true,
-      hasProfile: false,
-      isLoading: false,
-      user: null,
-    });
+  test('asks for the profile when there is none yet', () => {
+    mockUseAuthContext.mockReturnValue(withoutProfile);
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText(/Quase lá/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/Quase lá/i)).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  test('moves on once the profile is saved', () => {
+    mockUseAuthContext.mockReturnValue(withoutProfile);
+    const { rerender } = renderPage();
+    mockUseAuthContext.mockReturnValue(complete);
+    rerender(
+      <BrowserRouter>
+        <LoginPage />
+      </BrowserRouter>
+    );
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 });
 
-describe('LoginPage — Login form loading and error states', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    setLoginStep();
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: false,
-      hasProfile: false,
-      isLoading: false,
-      user: null,
-    });
-  });
-
-  test('shows loading text on submit button when isLoading=true', () => {
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: true,
-    });
-    renderPage();
-    expect(screen.getByText(/Autenticando/i)).toBeInTheDocument();
-    // Multiple Loader icons may exist (submit button + pipeline step); assert at least one
-    expect(screen.getAllByTestId('icon-loader').length).toBeGreaterThanOrEqual(1);
-  });
-
-  test('shows bilingual error message when error is present', () => {
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: { 'pt-BR': 'Usuário não encontrado.', 'en-US': 'User not found.' },
-      isLoading: false,
-    });
-    renderPage();
-    expect(screen.getByText(/Usuário não encontrado/i)).toBeInTheDocument();
-  });
-
-  test('successful login transitions to profile step', async () => {
-    mockHandleLogin.mockResolvedValue(true);
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: false,
-    });
-    renderPage();
-    const emailInput = document.querySelector('input[type="email"]');
-    const passwordInput = document.querySelector('input[type="password"]');
-    fireEvent.change(emailInput, { target: { value: 'admin@smartdatatest.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'admin123' } });
-    const form = document.querySelector('form');
-    fireEvent.submit(form);
-    await waitFor(() => {
-      expect(mockHandleLogin).toHaveBeenCalledWith('admin@smartdatatest.com', 'admin123', false);
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/Quase lá/i)).toBeInTheDocument();
-    });
-  });
-});
-
-describe('LoginPage — RightPanel live feed timer', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    setLoginStep();
-    mockUseAuthContext.mockReturnValue({
-      isAuthenticated: false,
-      hasProfile: false,
-      isLoading: false,
-      user: null,
-    });
-    mockUseAuth.mockReturnValue({
-      handleLogin: mockHandleLogin,
-      handleLogout: mockHandleLogout,
-      handleSaveProfile: mockHandleSaveProfile,
-      clearError: mockClearError,
-      error: null,
-      isLoading: false,
-    });
-  });
+describe('LoginPage — RightPanel timer', () => {
+  beforeEach(() => mockUseAuthContext.mockReturnValue(signedOut));
 
   test('timer interval fires without crashing after 3100ms', () => {
     jest.useFakeTimers();
@@ -395,7 +264,6 @@ describe('LoginPage — RightPanel live feed timer', () => {
     act(() => {
       jest.advanceTimersByTime(3100);
     });
-    // Verify the page still renders correctly after timer fires
     expect(document.querySelector('[data-testid="animated-bg"]')).toBeInTheDocument();
     jest.useRealTimers();
   });

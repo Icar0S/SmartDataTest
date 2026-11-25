@@ -37,6 +37,9 @@ jest.mock('../../../frontend/src/pages/AdvancedPySparkGenerator', () =>
 jest.mock('../../../frontend/src/pages/MethodologyPage', () =>
   function MockMethodologyPage() { return <div data-testid="methodology">MethodologyPage</div>; }
 );
+jest.mock('../../../frontend/src/pages/AdminUsersPage', () =>
+  function MockAdminUsersPage() { return <div data-testid="admin-users">AdminUsersPage</div>; }
+);
 jest.mock('../../../frontend/src/pages/LoginPage', () =>
   function MockLoginPage() { return <div data-testid="login-page">LoginPage</div>; }
 );

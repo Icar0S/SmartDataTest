@@ -16,6 +16,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Set by deploy.sh; shown by GET /api/version.
+        APP_VERSION: ${APP_VERSION:-dev}
+        APP_COMMIT: ${APP_COMMIT:-unknown}
     image: dataforgetest-backend:prod
     container_name: dataforgetest-backend
 
@@ -31,6 +35,16 @@ services:
       # Required in production — the app refuses to start without it. This is
       # the *frontend* origin (Vercel), not the API domain.
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://smart-data-test.vercel.app}
+
+      # Google sign-in. The three secrets (GOOGLE_CLIENT_ID,
+      # GOOGLE_CLIENT_SECRET, SESSION_SECRET) come from .env; with none of them
+      # the backend runs without sign-in, as before. See docs/AUTH.md.
+      #
+      # Where the browser is sent after Google, and the address registered in
+      # the Google Cloud console. FRONTEND_URL must be in CORS_ALLOWED_ORIGINS.
+      - FRONTEND_URL=${FRONTEND_URL:-https://smart-data-test.vercel.app}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-https://api.smartdatatest.com/api/auth/google/callback}
+      - AUTH_DB_PATH=/app/auth-data/auth.sqlite3
 
       # LLM: the Ollama already installed on the host. No API key, no data
       # leaving the machine.
@@ -99,15 +113,14 @@ services:
     # Secrets come from .env via env_file, NOT via ${VAR} interpolation in the
     # environment: block above.
     #
-    # This matters: Compose expands $ in interpolated values, and a werkzeug
-    # password hash looks like "scrypt:32768:8:1$salt$digest". Interpolating it
-    # ate everything from the second $ onwards, so AUTH_USERS reached the
-    # container truncated and every login failed with "Invalid password".
-    # env_file passes values through literally.
+    # Compose expands $ in interpolated values, so a secret containing one would
+    # reach the container truncated. env_file keeps that out of the picture for
+    # everything that is generated here (hex and URL-safe base64, no $).
     #
-    # Provides AUTH_USERS and API_TOKENS. Anything also named in environment:
-    # above is overridden by that value, which is why the storage paths there
-    # still win over the relative ones in .env.
+    # Provides the Google credentials, SESSION_SECRET, API_TOKENS and
+    # ADMIN_TOKENS. Anything also named in environment: above is overridden by
+    # that value, which is why the storage paths there still win over the
+    # relative ones in .env.
     env_file:
       - path: .env
         required: false
@@ -115,10 +128,12 @@ services:
     volumes:
       - ./storage:/app/storage
       - ./uploads:/app/uploads
-      # The auth store lives in a file, not an env var: Compose interpolates $
-      # in .env and env_file alike, which truncated the werkzeug password hash.
-      # File contents are read directly and never interpolated. git-ignored.
-      - ./secrets/auth_users.json:/run/secrets/auth_users.json:ro
+      # Users, sessions and the audit trail (SQLite, git-ignored). Deliberately
+      # not inside storage/: that tree holds files the API serves back. While
+      # the container runs nothing on the host may open this database — SQLite
+      # locks do not cross the VM boundary. Use `docker exec ... python -m
+      # auth.cli`, backups included.
+      - ./auth-data:/app/auth-data
 
     # Container hardening
     read_only: true

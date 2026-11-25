@@ -5,7 +5,7 @@
 | Arquivo | Trigger | Descrição |
 |---|---|---|
 | `ci.yml` | push/PR para main | Pipeline completa de CI: lint, testes, docker, security scan |
-| `deploy.yml` | Após CI passar em main | Deploy do frontend na Vercel |
+| `deploy.yml` | Após CI passar em main | Cria a versão (tag + Release) e publica o frontend na Vercel |
 | `pr-checks.yml` | Pull Request aberto/atualizado | Quality gates e validação do PR |
 
 ## Estrutura de Jobs
@@ -35,19 +35,29 @@ Push/PR para main
     └──────┬──────┘
            │ (apenas em push main, via deploy.yml)
            ▼
-     ┌──────────┐
-     │  deploy  │
-     │ frontend │
-     │  Vercel  │
-     └──────────┘
+     ┌──────────┐     ┌──────────┐
+     │ release  │────►│  deploy  │
+     │  tag +   │     │ frontend │
+     │ Release  │     │  Vercel  │
+     └──────────┘     └──────────┘
 ```
+
+Como a versão é calculada, e como voltar atrás: [docs/VERSIONAMENTO.md](../../docs/VERSIONAMENTO.md).
+
+A integração Git da Vercel está desligada para a `main` (`frontend/vercel.json`):
+ela publicava cada merge em cerca de um minuto, sem esperar a CI.
+
+O `deploy` só publica se `api.smartdatatest.com` aceitar login com Google
+(`/api/auth/config`). O frontend não tem outro login; publicado contra um backend
+sem ele, ninguém entraria. Se o job ficar vermelho nessa checagem, o frontend
+anterior continua no ar: atualize o backend e rode o job de novo.
 
 O backend não passa pelo CD: ele roda self-hosted no Mac mini (`compose.prod.yaml`,
 atrás do Cloudflare Tunnel em `api.smartdatatest.com`) e é atualizado lá, à mão:
 
 ```bash
-git pull
-docker compose -f compose.prod.yaml up -d --build
+~/srv/bin/deploy.sh            # a versão mais recente
+~/srv/bin/deploy.sh v1.5.0     # uma versão específica
 ```
 
 ## Secrets Necessários (configurar em Settings → Secrets → Actions)

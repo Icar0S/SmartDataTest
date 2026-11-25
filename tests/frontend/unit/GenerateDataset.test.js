@@ -124,7 +124,7 @@ describe('GenerateDataset Component', () => {
         expect.objectContaining({
           method: 'POST',
           // objectContaining, not equality: apiFetch also attaches an
-          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // Authorization header whenever someone is logged in,
           // which is exactly the production case.
           headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })
@@ -206,7 +206,7 @@ describe('GenerateDataset Component', () => {
         expect.objectContaining({
           method: 'POST',
           // objectContaining, not equality: apiFetch also attaches an
-          // Authorization header whenever REACT_APP_API_TOKEN is configured,
+          // Authorization header whenever someone is logged in,
           // which is exactly the production case.
           headers: expect.objectContaining({ 'Content-Type': 'application/json' })
         })

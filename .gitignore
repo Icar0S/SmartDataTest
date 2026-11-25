@@ -56,6 +56,9 @@ docs_to_import/*.docx
 # Local secrets (auth store, tokens) — never commit
 secrets/
 
+# User database (e-mails, sessions) — never commit
+auth-data/
+
 # Metadados do Finder (macOS). Aparecem em toda pasta aberta no Finder e
 # poluem o git status sem terem relacao com o projeto.
 .DS_Store

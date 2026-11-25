@@ -15,6 +15,7 @@ import GenerateDataset from './pages/GenerateDataset';
 import AdvancedPySparkGenerator from './pages/AdvancedPySparkGenerator';
 import MethodologyPage from './pages/MethodologyPage';
 import LoginPage from './pages/LoginPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 import SupportButton from './components/SupportButton';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -35,6 +36,7 @@ function AppContent() {
         <Route path="/checklist" element={<ProtectedRoute><ChecklistPage /></ProtectedRoute>} />
         <Route path="/generate-dataset" element={<ProtectedRoute><GenerateDataset /></ProtectedRoute>} />
         <Route path="/pyspark/advanced" element={<ProtectedRoute><AdvancedPySparkGenerator /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
         <Route path="/methodology" element={<ProtectedRoute><MethodologyPage /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       </Routes>

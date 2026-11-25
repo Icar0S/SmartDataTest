@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, g, jsonify, request, send_file
 from werkzeug.exceptions import HTTPException
 
 from limiter import limit_for, limiter
@@ -52,7 +52,8 @@ def create_run():
     """Create a new checklist run.
 
     Request JSON:
-        user_id: User identifier
+        user_id: User identifier. Ignored when a person is logged in: the run
+            is then theirs, whatever the client says.
         project_id: Optional project identifier
 
     Returns:
@@ -64,7 +65,8 @@ def create_run():
         if not data:
             return jsonify({"error": "No data provided"}), 400
 
-        user_id = data.get("user_id")
+        person = g.get("user")
+        user_id = person["email"] if person else data.get("user_id")
         if not user_id:
             return jsonify({"error": "user_id is required"}), 400
 

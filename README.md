@@ -495,6 +495,12 @@ FLASK_ENV=development
 FLASK_DEBUG=True
 ```
 
+### Access and versions
+
+Sign-in is with Google, for people the operator has let in:
+[docs/AUTH.md](docs/AUTH.md). Every change to `main` becomes a tagged version:
+[docs/VERSIONAMENTO.md](docs/VERSIONAMENTO.md).
+
 ### Supported Data Quality Rules
 
 The PySpark code generator supports comprehensive data quality validation:

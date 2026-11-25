@@ -20,3 +20,4 @@ reportlab
 gunicorn
 requests
 PyPDF2
+Authlib>=1.8

@@ -10,7 +10,7 @@
  * 2. API calls use HTTPS or relative URLs (no hardcoded http://)
  * 3. LLM-generated content is NOT rendered with dangerouslySetInnerHTML without sanitisation
  * 4. No direct imports of .env files containing secrets
- * 5. REACT_APP_* env vars that carry secrets are not exposed in unexpected places
+ * 5. Nothing shipped to the browser authenticates anyone by itself
  *
  * OWASP Reference: A02:2021 – Cryptographic Failures / A03 – Injection
  */
@@ -43,6 +43,10 @@ function collectJsFiles(dir) {
 const allSrcFiles = collectJsFiles(FRONTEND_SRC);
 
 // ── 1. No sensitive data in localStorage / sessionStorage ─────────────────────
+//
+// The one exception is the session of the person using the browser, kept by
+// utils/authStorage.js: opaque, short-lived, and revocable by the server. API
+// keys and shared secrets have no such excuse.
 
 describe('[Security] localStorage / sessionStorage – no secrets', () => {
   const SENSITIVE_STORAGE_PATTERNS = [
@@ -164,7 +168,87 @@ describe('[Security] No hardcoded secrets in frontend source', () => {
   });
 });
 
-// ── 5. Verify frontend source directory exists ────────────────────────────────
+// ── 5. Nothing in the bundle authenticates anyone ─────────────────────────────
+//
+// Everything under src/ is shipped to every visitor. The login used to be a list
+// of users with plain passwords compared in the browser, next to an API token
+// inlined at build time: neither protected anything, and both were public.
+
+describe('[Security] No credentials shipped to the browser', () => {
+  const source = allSrcFiles.map((f) => [path.relative(REPO_ROOT, f), fs.readFileSync(f, 'utf-8')]);
+
+  test.each([
+    ['a password written as a literal', /\bpassword\s*[:=]\s*['"][^'"]+['"]/i],
+    ['the demo passwords', /admin123|engineer123|qa123456/],
+    ['a password field', /type=["']password["']/],
+    ['a credential in a build-time variable', /REACT_APP_[A-Z_]*(?:TOKEN|SECRET|PASSWORD|KEY)/],
+  ])('%s', (_name, pattern) => {
+    expect(source.filter(([, content]) => pattern.test(content)).map(([name]) => name)).toEqual([]);
+  });
+
+  test('the list of users is gone', () => {
+    expect(fs.existsSync(path.join(FRONTEND_SRC, 'data', 'users.js'))).toBe(false);
+  });
+
+  test('the production build configuration carries no credential', () => {
+    const env = fs.readFileSync(path.join(REPO_ROOT, 'frontend', '.env.production'), 'utf-8');
+    const assignments = env.split('\n').filter((line) => /^[A-Z]/.test(line));
+    expect(assignments.filter((line) => /TOKEN|SECRET|PASSWORD|KEY/.test(line))).toEqual([]);
+  });
+});
+
+// ── 6. Content-Security-Policy ────────────────────────────────────────────────
+//
+// The session token is within reach of the page's JavaScript (docs/AUTH.md says
+// why), so what has to be contained is XSS: foreign scripts, inline scripts, and
+// sending data anywhere but the API.
+
+describe('[Security] Content-Security-Policy', () => {
+  const read = (...parts) => fs.readFileSync(path.join(REPO_ROOT, 'frontend', ...parts), 'utf-8');
+  const rule = JSON.parse(read('vercel.json')).headers[0];
+  const header = (name) => rule.headers.find((h) => h.key === name)?.value;
+  const directives = Object.fromEntries(
+    header('Content-Security-Policy')
+      .split(';')
+      .map((d) => d.trim().split(/\s+/))
+      .map(([name, ...values]) => [name, values])
+  );
+
+  test('covers every page', () => {
+    expect(rule.source).toBe('/(.*)');
+  });
+
+  test('only runs scripts from the site itself', () => {
+    expect(directives['script-src']).toEqual(["'self'"]);
+    expect(directives['default-src']).toEqual(["'self'"]);
+    expect(directives['object-src']).toEqual(["'none'"]);
+  });
+
+  test('only talks to the site and to the API it was built for', () => {
+    const api = read('.env.production').match(/^REACT_APP_API_URL=(.+)$/m)[1].trim();
+    expect(directives['connect-src']).toEqual(["'self'", api]);
+  });
+
+  test('cannot be framed', () => {
+    expect(directives['frame-ancestors']).toEqual(["'none'"]);
+    expect(header('X-Frame-Options')).toBe('DENY');
+  });
+
+  test('reaches production through the CD pipeline only', () => {
+    // Vercel's Git integration published main about a minute after a merge,
+    // before the CI finished, whatever its result. The CD deploys with the CLI,
+    // which this setting does not affect; previews of other branches stay.
+    const { deploymentEnabled } = JSON.parse(read('vercel.json')).git;
+    expect(deploymentEnabled).toEqual({ main: false });
+  });
+
+  test('is part of the repository', () => {
+    // It used to be git-ignored, in which case none of this would be deployed.
+    expect(read('.gitignore').split('\n')).not.toContain('vercel.json');
+  });
+});
+
+// ── 7. Verify frontend source directory exists ────────────────────────────────
 
 describe('[Security] Frontend source structure', () => {
   test('frontend/src directory exists', () => {

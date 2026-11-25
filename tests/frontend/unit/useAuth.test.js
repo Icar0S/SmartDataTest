@@ -2,136 +2,124 @@
  * Tests for frontend/src/hooks/useAuth.js
  */
 
-import React from 'react';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock the users data
-jest.mock('../../../frontend/src/data/users', () => ({
-  REGISTERED_USERS: [
-    {
-      id: 'user-1',
-      name: 'Admin User',
-      email: 'admin@smartdatatest.com',
-      password: 'admin123',
-      role: 'admin',
-      avatar: null,
-    },
-  ],
-}));
-
-// Mock authStorage utilities
-const mockLogin = jest.fn();
+const mockSignIn = jest.fn();
+const mockFinishSignIn = jest.fn();
 const mockLogout = jest.fn();
+const mockRefresh = jest.fn();
 const mockSaveUserProfile = jest.fn();
 jest.mock('../../../frontend/src/context/AuthContext', () => ({
   useAuthContext: () => ({
-    login: mockLogin,
+    signIn: mockSignIn,
+    finishSignIn: mockFinishSignIn,
     logout: mockLogout,
+    refresh: mockRefresh,
     saveUserProfile: mockSaveUserProfile,
-    isAuthenticated: false,
-    hasProfile: false,
-    isLoading: false,
-    user: null,
   }),
 }));
 
-// Mock bcrypt/password check — we mock the module that verifies passwords
-jest.mock('../../../frontend/src/utils/authStorage', () => ({
-  saveSession: jest.fn(),
-  getSession: jest.fn(() => null),
-  clearSession: jest.fn(),
-  isAuthenticated: jest.fn(() => false),
-  saveProfile: jest.fn(),
-  hasProfile: jest.fn(() => false),
-}));
+import useAuth, { LOGIN_ERRORS, loginError } from '../../../frontend/src/hooks/useAuth';
 
-import useAuth from '../../../frontend/src/hooks/useAuth';
+const problem = (code) => Object.assign(new Error(code), { code });
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  jest.useFakeTimers();
-});
+beforeEach(() => jest.clearAllMocks());
 
-afterEach(() => {
-  jest.useRealTimers();
-});
-
-describe('useAuth', () => {
-  test('login with correct credentials returns true', async () => {
+describe('handleLogin', () => {
+  test('leaves for Google and stays loading, because the page is going away', async () => {
+    mockSignIn.mockResolvedValue(undefined);
     const { result } = renderHook(() => useAuth());
-    let loginResult;
-    await act(async () => {
-      const promise = result.current.handleLogin('admin@smartdatatest.com', 'admin123', false);
-      jest.advanceTimersByTime(1200);
-      loginResult = await promise;
-    });
-    expect(loginResult).toBe(true);
-  });
-
-  test('login with wrong email returns false and sets bilingual error', async () => {
-    const { result } = renderHook(() => useAuth());
-    let loginResult;
-    await act(async () => {
-      const promise = result.current.handleLogin('wrong@email.com', 'admin123', false);
-      jest.advanceTimersByTime(1200);
-      loginResult = await promise;
-    });
-    expect(loginResult).toBe(false);
-    expect(result.current.error).not.toBeNull();
-    expect(result.current.error['pt-BR']).toBeTruthy();
-    expect(result.current.error['en-US']).toBeTruthy();
-  });
-
-  test('login with wrong password returns false and sets bilingual error', async () => {
-    const { result } = renderHook(() => useAuth());
-    let loginResult;
-    await act(async () => {
-      const promise = result.current.handleLogin('admin@smartdatatest.com', 'wrongpass', false);
-      jest.advanceTimersByTime(1200);
-      loginResult = await promise;
-    });
-    expect(loginResult).toBe(false);
-    expect(result.current.error).not.toBeNull();
-    expect(result.current.error['pt-BR']).toBeTruthy();
-    expect(result.current.error['en-US']).toBeTruthy();
-  });
-
-  test('clearError sets error to null', async () => {
-    const { result } = renderHook(() => useAuth());
-    await act(async () => {
-      const promise = result.current.handleLogin('wrong@email.com', 'pass', false);
-      jest.advanceTimersByTime(1200);
-      await promise;
-    });
-    expect(result.current.error).not.toBeNull();
-    act(() => {
-      result.current.clearError();
-    });
+    await act(async () => result.current.handleLogin(true, '/checklist'));
+    expect(mockSignIn).toHaveBeenCalledWith({ remember: true, returnTo: '/checklist' });
+    expect(result.current.isLoading).toBe(true);
     expect(result.current.error).toBeNull();
   });
 
-  test('handleSaveProfile calls saveUserProfile and navigates to /', () => {
+  test('a failure is explained and the button comes back', async () => {
+    mockSignIn.mockRejectedValue(problem('offline'));
     const { result } = renderHook(() => useAuth());
-    act(() => {
-      result.current.handleSaveProfile({ role: 'tester', setAt: new Date().toISOString() });
-    });
-    expect(mockSaveUserProfile).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    await act(async () => result.current.handleLogin(false, '/'));
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toEqual(LOGIN_ERRORS.offline);
   });
 
-  test('handleLogout calls logout and navigates to /login', () => {
+  test('trying again clears the previous error', async () => {
+    mockSignIn.mockRejectedValueOnce(problem('offline')).mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => useAuth());
-    act(() => {
-      result.current.handleLogout();
-    });
+    await act(async () => result.current.handleLogin(false, '/'));
+    await act(async () => result.current.handleLogin(false, '/'));
+    expect(result.current.error).toBeNull();
+  });
+});
+
+describe('handleLoginReturn', () => {
+  test('hands over the destination before loading ends', async () => {
+    mockFinishSignIn.mockResolvedValue('/qa-checklist');
+    const { result } = renderHook(() => useAuth());
+    const onReturnTo = jest.fn();
+    await act(async () => result.current.handleLoginReturn('code', onReturnTo));
+    expect(mockFinishSignIn).toHaveBeenCalledWith('code');
+    expect(onReturnTo).toHaveBeenCalledWith('/qa-checklist');
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  test('a failure is explained and goes nowhere', async () => {
+    mockFinishSignIn.mockRejectedValue(problem('expired_login'));
+    const { result } = renderHook(() => useAuth());
+    const onReturnTo = jest.fn();
+    await act(async () => result.current.handleLoginReturn('code', onReturnTo));
+    expect(onReturnTo).not.toHaveBeenCalled();
+    expect(result.current.error).toEqual(LOGIN_ERRORS.expired_login);
+  });
+});
+
+describe('the rest', () => {
+  test('handleLogout ends the session and goes to /login', () => {
+    const { result } = renderHook(() => useAuth());
+    act(() => result.current.handleLogout());
     expect(mockLogout).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
+
+  test('profile and refresh go straight to the context', () => {
+    const { result } = renderHook(() => useAuth());
+    result.current.handleSaveProfile('tester');
+    result.current.handleRefresh();
+    expect(mockSaveUserProfile).toHaveBeenCalledWith('tester');
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  test('showError and clearError', () => {
+    const { result } = renderHook(() => useAuth());
+    act(() => result.current.showError('blocked'));
+    expect(result.current.error).toEqual(LOGIN_ERRORS.blocked);
+    act(() => result.current.clearError());
+    expect(result.current.error).toBeNull();
+  });
+});
+
+describe('messages', () => {
+  test.each(Object.keys(LOGIN_ERRORS))('%s exists in both languages', (code) => {
+    expect(LOGIN_ERRORS[code]['pt-BR']).toBeTruthy();
+    expect(LOGIN_ERRORS[code]['en-US']).toBeTruthy();
+  });
+
+  // Every reason the backend can send back (src/auth/routes.py and oidc.py).
+  test.each(['cancelled', 'failed', 'email_unverified', 'blocked', 'unavailable'])(
+    'the backend reason %s has its own message',
+    (code) => {
+      expect(LOGIN_ERRORS).toHaveProperty(code);
+    }
+  );
+
+  test('an unknown reason still says something', () => {
+    expect(loginError('never-heard-of-it')).toEqual(LOGIN_ERRORS.failed);
+    expect(loginError(undefined)).toEqual(LOGIN_ERRORS.failed);
   });
 });

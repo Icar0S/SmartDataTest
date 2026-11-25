@@ -112,4 +112,139 @@ describe('API Configuration', () => {
       expect(config.apiUrl).toBe('');
     });
   });
+
+  describe('getBackendUrl', () => {
+    test('points straight at the backend in development', () => {
+      // The dev server answers page navigations itself instead of proxying them.
+      process.env.NODE_ENV = 'development';
+      process.env.REACT_APP_API_URL = '';
+      const { getBackendUrl } = require('../../../frontend/src/config/api');
+      expect(getBackendUrl('/api/x')).toBe('http://localhost:5000/api/x');
+    });
+
+    test('uses the configured API in production', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.REACT_APP_API_URL = 'https://api.example.com';
+      const { getBackendUrl } = require('../../../frontend/src/config/api');
+      expect(getBackendUrl('/api/x')).toBe('https://api.example.com/api/x');
+    });
+
+    test('stays relative in production without one', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.REACT_APP_API_URL = '';
+      const { getBackendUrl } = require('../../../frontend/src/config/api');
+      expect(getBackendUrl('/api/x')).toBe('/api/x');
+    });
+  });
+
+  describe('requests', () => {
+    const logIn = () =>
+      sessionStorage.setItem(
+        'smartdatatest_session',
+        JSON.stringify({ token: 'sdt_abc', expiresAt: Date.now() + 60000 })
+      );
+    const sentHeaders = () => global.fetch.mock.calls[0][1].headers;
+    const listen = (name) => {
+      const listener = jest.fn();
+      window.addEventListener(name, listener);
+      return listener;
+    };
+
+    beforeEach(() => {
+      process.env.NODE_ENV = 'production';
+      process.env.REACT_APP_API_URL = 'https://api.example.com';
+      sessionStorage.clear();
+      localStorage.clear();
+      global.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true });
+    });
+
+    test('carry the session of whoever is logged in', async () => {
+      logIn();
+      const { apiFetch } = require('../../../frontend/src/config/api');
+      await apiFetch('/api/x', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      expect(global.fetch.mock.calls[0][0]).toBe('https://api.example.com/api/x');
+      expect(sentHeaders()).toEqual({
+        Authorization: 'Bearer sdt_abc',
+        'Content-Type': 'application/json',
+      });
+    });
+
+    test('carry nothing when nobody is', async () => {
+      const { apiFetch, getAuthHeaders } = require('../../../frontend/src/config/api');
+      await apiFetch('/api/x');
+      expect(sentHeaders()).toEqual({});
+      expect(getAuthHeaders()).toEqual({});
+    });
+
+    test('no build-time token is sent, even if someone sets the old variable', async () => {
+      process.env.REACT_APP_API_TOKEN = 'public-because-it-is-in-the-bundle';
+      const { apiFetch } = require('../../../frontend/src/config/api');
+      await apiFetch('/api/x');
+      expect(JSON.stringify(global.fetch.mock.calls)).not.toContain('public-because');
+    });
+
+    test('caller headers win', async () => {
+      logIn();
+      const { apiFetch } = require('../../../frontend/src/config/api');
+      await apiFetch('/api/x', { headers: { Authorization: 'Bearer other' } });
+      expect(sentHeaders().Authorization).toBe('Bearer other');
+    });
+
+    test('never set Content-Type by themselves', async () => {
+      logIn();
+      const { apiFetch } = require('../../../frontend/src/config/api');
+      await apiFetch('/api/x', { method: 'POST', body: new FormData() });
+      expect(sentHeaders()).not.toHaveProperty('Content-Type');
+    });
+
+    test.each([
+      ['https://api.example.com/api/gold/download/a/b', true],
+      ['/api/gold/download/a/b', true],
+      ['https://evil.example/api/gold/download/a/b', false],
+      ['https://api.example.com.evil.example/x', false],
+      ['http://api.example.com/x', false],
+      ['//evil.example/x', false],
+      ['http://[not-a-url', false],
+    ])('the session goes to %s: %s', async (url, expected) => {
+      logIn();
+      const { apiFetchUrl, isBackendUrl } = require('../../../frontend/src/config/api');
+      expect(isBackendUrl(url)).toBe(expected);
+      await apiFetchUrl(url);
+      expect('Authorization' in sentHeaders()).toBe(expected);
+    });
+
+    test('401 announces that the session is over', async () => {
+      logIn();
+      global.fetch.mockResolvedValue({ status: 401, ok: false });
+      const { apiFetch, UNAUTHORIZED_EVENT } = require('../../../frontend/src/config/api');
+      const listener = listen(UNAUTHORIZED_EVENT);
+      const response = await apiFetch('/api/x');
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(401); // the caller still gets its answer
+    });
+
+    test('403 announces that access may have changed', async () => {
+      logIn();
+      global.fetch.mockResolvedValue({ status: 403, ok: false });
+      const { apiFetch, FORBIDDEN_EVENT } = require('../../../frontend/src/config/api');
+      const listener = listen(FORBIDDEN_EVENT);
+      await apiFetch('/api/x');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('a 401 to an anonymous request says nothing about a session', async () => {
+      global.fetch.mockResolvedValue({ status: 401, ok: false });
+      const { apiFetch, UNAUTHORIZED_EVENT } = require('../../../frontend/src/config/api');
+      const listener = listen(UNAUTHORIZED_EVENT);
+      await apiFetch('/api/x');
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    test('a network failure reaches the caller', async () => {
+      logIn();
+      global.fetch.mockRejectedValue(new TypeError('Failed to fetch'));
+      const { apiFetch } = require('../../../frontend/src/config/api');
+      await expect(apiFetch('/api/x')).rejects.toThrow('Failed to fetch');
+    });
+  });
 });

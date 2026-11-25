@@ -52,6 +52,11 @@ test_*.py
 # Data files (these should be mounted as volumes)
 data/
 output/
+auth-data/
+secrets/
+storage/
+uploads/
+.env
 
 # Frontend build files
 package.json
