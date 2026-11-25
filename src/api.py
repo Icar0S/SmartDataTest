@@ -258,6 +258,22 @@ def health_check():
     return jsonify({"status": "Backend is running", "message": "Data Quality Chatbot API"})
 
 
+@app.route("/api/version", methods=["GET"])
+@limiter.limit("120 per minute")
+def version():
+    """Which release is running, stamped into the image by the deploy.
+
+    Without this, "the backend is up to date" can only be believed, not checked:
+    a container kept serving four-month-old code while main moved on.
+    """
+    return jsonify(
+        {
+            "version": os.environ.get("APP_VERSION", "dev"),
+            "commit": os.environ.get("APP_COMMIT", "unknown"),
+        }
+    )
+
+
 @app.route("/ask", methods=["POST"])
 @limiter.limit("10 per minute")
 def ask_question():

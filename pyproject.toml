@@ -4,7 +4,8 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "dataforgetest"
-version = "1.0.0"
+# Not the version of the platform: that is the git tag. See docs/VERSIONAMENTO.md
+version = "0.0.0"
 description = "Automated data quality testing for Big Data systems using LLMs and RAG"
 readme = "README.md"
 license = {file = "LICENSE"}

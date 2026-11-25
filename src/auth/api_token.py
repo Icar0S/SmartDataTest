@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 #   /                    container HEALTHCHECK and the tunnel's origin probe
 #   /api/auth/validate   the login endpoint itself
 #   /api/stats           rendered on the public login page, before any login
+#   /api/version         which release is running
 #
 # Plus every "*/health" blueprint probe, matched by suffix below.
 PUBLIC_PATHS = frozenset(
@@ -35,6 +36,7 @@ PUBLIC_PATHS = frozenset(
         "/",
         "/api/auth/validate",
         "/api/stats",
+        "/api/version",
     }
 )
 

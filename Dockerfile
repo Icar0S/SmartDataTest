@@ -70,6 +70,17 @@ WORKDIR /app/src
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/', timeout=5)"
 
+# Release stamp, reported by GET /api/version and filled in by the deploy. After
+# everything expensive on purpose: it changes on every build, and whatever comes
+# after it loses the layer cache.
+ARG APP_VERSION=dev
+ARG APP_COMMIT=unknown
+ENV APP_VERSION=${APP_VERSION} \
+    APP_COMMIT=${APP_COMMIT}
+LABEL org.opencontainers.image.source="https://github.com/Icar0S/SmartDataTest" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${APP_COMMIT}"
+
 # Run the application with gunicorn.
 #
 # --workers 1 --threads 8: ONE process, several threads.

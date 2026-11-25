@@ -340,9 +340,11 @@ describe('HomePage Component', () => {
       expect(screen.queryAllByText(/PySpark/i).length).toBeGreaterThan(0);
     });
 
-    test('renders version string', () => {
+    test('renders the version this build was stamped with', () => {
       renderWithRouter(<HomePage />);
-      expect(screen.getByText(/v1\.0\.0/i)).toBeInTheDocument();
+      // "dev" outside the deploy pipeline. It used to be a hard-coded v1.0.0,
+      // whatever the release.
+      expect(screen.getByText('dev · 2026')).toBeInTheDocument();
     });
   });
 });

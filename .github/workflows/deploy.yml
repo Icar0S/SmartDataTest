@@ -6,22 +6,85 @@ on:
     branches: [main]
     types: [completed]
   # The backend is self-hosted (compose.prod.yaml on the Mac mini) and is
-  # updated there by hand, so this pipeline only deploys the frontend.
+  # updated there with deploy.sh, so this pipeline marks the version and deploys
+  # the frontend.
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# One at a time, in order: two runs at once could compute the same version.
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
 jobs:
+  release:
+    name: 🏷️ Tag & Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only a push to this repository's own main. workflow_run also fires for
+    # pull requests, and its branch filter looks at the *head* branch: a fork
+    # whose branch is called "main" passes it. This job can write to the
+    # repository, so it must never run on somebody else's commit.
+    if: >
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.plan.outputs.tag }}
+      version: ${{ steps.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The commit the CI approved, not whatever main became meanwhile.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Work out the version
+        id: plan
+        run: python3 scripts/release/release.py next | tee -a "$GITHUB_OUTPUT"
+
+      - name: Create the tag
+        if: steps.plan.outputs.create == 'true'
+        env:
+          TAG: ${{ steps.plan.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "SmartDataTest $TAG"
+          git push origin "refs/tags/$TAG"
+
+      - name: Publish the releases that are missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Every version without a page, oldest first: the one just created,
+          # and any tag pushed by hand.
+          newest=$(git tag -l 'v[0-9]*' --sort=-version:refname | head -1)
+          for tag in $(git tag -l 'v[0-9]*' --sort=version:refname); do
+            if gh release view "$tag" >/dev/null 2>&1; then continue; fi
+            python3 scripts/release/release.py notes "$tag" > notes.md
+            latest=false
+            if [ "$tag" = "$newest" ]; then latest=true; fi
+            gh release create "$tag" --verify-tag --title "$tag" \
+              --notes-file notes.md --latest="$latest"
+          done
+
   deploy-frontend:
     name: 🌐 Deploy Frontend → Vercel
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: >
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    needs: release
     steps:
       - uses: actions/checkout@v4
+        with:
+          # What goes live is a version, exactly.
+          ref: ${{ needs.release.outputs.tag }}
 
       - name: Check required secrets
         run: |
@@ -40,7 +103,10 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          # Shown in the footer and in the operator panel.
+          REACT_APP_VERSION: ${{ needs.release.outputs.version }}
         run: |
+          export REACT_APP_COMMIT=$(git rev-parse HEAD)
           # Pull project settings from Vercel (respects rootDirectory configured on the dashboard)
           npx vercel pull --yes --environment=production \
             --token=${{ secrets.VERCEL_TOKEN }}

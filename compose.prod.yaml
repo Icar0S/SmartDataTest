@@ -16,6 +16,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Set by deploy.sh; shown by GET /api/version.
+        APP_VERSION: ${APP_VERSION:-dev}
+        APP_COMMIT: ${APP_COMMIT:-unknown}
     image: dataforgetest-backend:prod
     container_name: dataforgetest-backend
 

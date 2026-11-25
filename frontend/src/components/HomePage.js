@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer, slideIn, scaleIn } from '../styles/animations';
 import { useAuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { versionLabel } from '../config/version';
 import useAuth from '../hooks/useAuth';
 
 const DataQualityLLMSystem = () => {
@@ -132,7 +133,7 @@ const DataQualityLLMSystem = () => {
             <Heart className="w-3 h-3 text-pink-600 fill-pink-600" />
             <span className="font-mono text-gray-500">{t.footerTech}</span>
           </div>
-          <span className="text-xs text-gray-600 font-mono">v1.0.0 · 2026</span>
+          <span className="text-xs text-gray-600 font-mono">{versionLabel()} · 2026</span>
         </div>
         <p className="mt-2 text-center text-xs text-gray-600">{t.footerRights}</p>
       </div>

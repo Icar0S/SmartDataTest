@@ -98,6 +98,10 @@ class TestPublicPaths(unittest.TestCase):
         """Rendered on the login page before any credential exists."""
         self.assertEqual(self.client.get("/api/stats").status_code, 200)
 
+    def test_version_is_public(self):
+        """The deploy compares it with what it just built."""
+        self.assertEqual(self.client.get("/api/version").status_code, 200)
+
     def test_cors_preflight_not_blocked(self):
         """Rejecting OPTIONS would break the browser before the real request."""
         response = self.client.options(
