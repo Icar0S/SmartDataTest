@@ -77,6 +77,35 @@ class TestAuthenticationRequired:
                     exposed.append(f"{method} {rule.rule}")
         assert exposed == []
 
+    def test_every_route_answers_the_browser_preflight(self, locked_client):
+        """The other side of being closed: the preflight carries no credentials,
+        and a route that refuses it cannot be used from the frontend at all."""
+        refused = []
+        for rule in locked_client.application.url_map.iter_rules():
+            if rule.endpoint == "static":
+                continue
+            path = rule.rule
+            for argument in rule.arguments:
+                path = path.replace(f"<{argument}>", "x")
+            for method in rule.methods - {"HEAD", "OPTIONS"}:
+                response = locked_client.options(
+                    path,
+                    headers={
+                        "Origin": "http://localhost:3000",
+                        "Access-Control-Request-Method": method,
+                        "Access-Control-Request-Headers": "authorization,content-type",
+                    },
+                )
+                allowed = response.headers.get("Access-Control-Allow-Origin")
+                if response.status_code != 200 or allowed != "http://localhost:3000":
+                    refused.append(f"{method} {rule.rule} -> {response.status_code}")
+        assert refused == []
+
+    def test_a_preflight_runs_nothing(self, locked_client):
+        """It is let through without credentials, so it must not do anything."""
+        response = locked_client.options("/api/auth/admin/users")
+        assert response.get_data() == b""
+
     def test_the_static_folder_is_not_served(self, locked_client):
         assert locked_client.get("/static/anything.js").status_code == 401
 

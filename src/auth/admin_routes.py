@@ -27,6 +27,9 @@ def _administrators_only():
     """The gate already checked. This is the second lock on the same door: the
     gate decides by path, and a disagreement between its idea of the path and
     the router's must not be enough to get in."""
+    # The browser's preflight carries no credentials, and runs no view.
+    if request.method == "OPTIONS":
+        return None
     user = g.get("user")
     if not user or not user["is_admin"] or user["status"] != "approved":
         return jsonify({"error": "Not found"}), 404
