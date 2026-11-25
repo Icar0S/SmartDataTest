@@ -6,6 +6,7 @@ provider can be told to misbehave, which is how the hostile cases are covered.
 """
 
 import base64
+import logging
 import time
 from urllib.parse import parse_qs, urlsplit
 
@@ -317,6 +318,115 @@ class TestProviderTrouble:
                 provider.hang_seconds = 0
                 provider.codes.clear()
                 assert fragment(browser.back(callback))["error"] == "failed"
+
+
+def oidc_lines(caplog):
+    """What `grep OIDC` finds in the server log, as (level, message)."""
+    return [(r.levelname, r.getMessage()) for r in caplog.records if "OIDC" in r.getMessage()]
+
+
+class TestTheOperatorLearnsWhy:
+    """The person reads only "try again". Every way a login ends in "failed" or
+    "unavailable" leaves exactly one line for `grep OIDC`, where docs/AUTH.md
+    sends the operator, naming the cause and nothing that could be replayed."""
+
+    @staticmethod
+    def the_one_line(caplog, cause):
+        lines = oidc_lines(caplog)
+        assert len(lines) == 1, lines
+        level, message = lines[0]
+        assert level == "WARNING" and cause in message, message
+        return message
+
+    @staticmethod
+    def nothing_replayable_logged(caplog, callback):
+        query = parse_qs(urlsplit(callback).query)
+        replayable = [query["state"][0], query["code"][0], CHALLENGE, VERIFIER]
+        for record in caplog.records:
+            assert not any(value in record.getMessage() for value in replayable), record
+
+    @staticmethod
+    def started(browser):
+        """Start a login and return the state the provider will send back."""
+        return parse_qs(urlsplit(browser.start().headers["Location"]).query)["state"][0]
+
+    def test_login_cookie_did_not_come_back(self, app, caplog):
+        one, other = Browser(app), Browser(app)
+        callback = one.google(one.start())
+        assert fragment(other.back(callback))["error"] == "failed"
+        self.the_one_line(caplog, "no login in progress, the login cookie did not come back")
+        self.nothing_replayable_logged(caplog, callback)
+
+    def test_login_cookie_that_cannot_be_read(self, browser, app, caplog):
+        callback = browser.google(browser.start())
+        forged = app.test_client()
+        forged.set_cookie("sdt_login", "eyJsb2dpbiI6e319.x.y", path="/api/auth/google")
+        parts = urlsplit(callback)
+        assert fragment(forged.get(f"{parts.path}?{parts.query}"))["error"] == "failed"
+        self.the_one_line(caplog, "the login cookie could not be read")
+
+    def test_callback_opened_directly(self, browser, caplog):
+        """What a crawler does. It is said, so that nobody hunts for a fault."""
+        assert fragment(browser.client.get("/api/auth/google/callback"))["error"] == "failed"
+        self.the_one_line(caplog, "opened directly, not on the way back from the provider")
+
+    def test_state_of_another_login(self, browser, caplog):
+        callback = browser.google(browser.start())
+        assert fragment(browser.back(callback.replace("state=", "state=x")))["error"] == "failed"
+        self.the_one_line(caplog, "state does not match the login in progress")
+        self.nothing_replayable_logged(caplog, callback)
+
+    def test_provider_error(self, browser, caplog):
+        state = self.started(browser)
+        response = browser.client.get(f"/api/auth/google/callback?error=server_error&state={state}")
+        assert fragment(response)["error"] == "failed"
+        message = self.the_one_line(caplog, "the provider returned error=server_error")
+        assert message.endswith("error=server_error")
+
+    def test_provider_error_cannot_write_lines_of_its_own(self, browser, caplog):
+        """Anyone can open the callback, with whatever error they like."""
+        state = self.started(browser)
+        forged = "server_error\r\nOIDC login accepted for admin@example.com" + "x" * 5000
+        response = browser.client.get(
+            "/api/auth/google/callback", query_string={"error": forged, "state": state}
+        )
+        assert fragment(response)["error"] == "failed"
+        message = self.the_one_line(caplog, "error=server_error...")
+        assert "\n" not in message and "\r" not in message
+        assert "admin" not in message and len(message) < 200
+
+    def test_wrong_client_secret(self, browser, provider, caplog):
+        """What actually happened when 2.0.0 first went live."""
+        provider.client_secret = "rotated-on-the-other-side"
+        assert browser.failure() == "failed"
+        self.the_one_line(caplog, "invalid_client")
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [{"aud": "another-client"}, {"nonce": "another-login"}, {"exp": 1_000_000_000},
+         {"email": None}],
+        ids=["aud", "nonce", "expired", "no-email"],
+    )
+    def test_id_token_that_does_not_add_up(self, browser, provider, caplog, overrides):
+        provider.claim_overrides = overrides
+        assert browser.failure() == "failed"
+        self.the_one_line(caplog, "OIDC callback rejected: ")
+
+    def test_provider_unreachable_when_starting(self, tmp_path, caplog):
+        with sso_app(sso_env("http://localhost:9", tmp_path / "auth.sqlite3")) as app:
+            assert fragment(Browser(app).start())["error"] == "unavailable"
+        self.the_one_line(caplog, "OIDC login not started, could not reach the identity provider")
+
+    def test_cancelling_is_not_a_warning(self, browser, caplog):
+        caplog.set_level(logging.INFO, logger="auth.routes")
+        state = self.started(browser)
+        response = browser.client.get(f"/api/auth/google/callback?error=access_denied&state={state}")
+        assert fragment(response)["error"] == "cancelled"
+        assert oidc_lines(caplog) == [("INFO", "OIDC login cancelled at the provider")]
+
+    def test_a_login_that_works_says_nothing(self, browser, caplog):
+        assert browser.sign_in().status_code == 200
+        assert oidc_lines(caplog) == []
 
 
 class TestTheOneTimeCode:

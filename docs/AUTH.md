@@ -164,6 +164,27 @@ sempre, mas a tela de login não tem por onde entrar.
 | "O login com Google ainda não está ativo neste servidor" | backend sem as credenciais, ou anterior à 2.0.0 (`curl …/api/version`) |
 | `redirect_uri_mismatch` na página do Google | o URI cadastrado difere do `OIDC_REDIRECT_URI`, nem que seja numa barra |
 | `access_denied`, "app em teste" | a tela de consentimento não está *Em produção* |
-| "Não foi possível confirmar sua identidade" | `docker logs dataforgetest-backend \| grep OIDC` diz o motivo |
+| "Não foi possível confirmar sua identidade" ou "O Google não respondeu agora" | o log diz o motivo: veja abaixo |
 | O backend não sobe | `SSO is only partially configured`: falta uma das três variáveis |
 | Fiquei trancado para fora | `usuarios-plataforma.sh promover seu@email.com` no servidor |
+
+Todo login que termina numa dessas duas mensagens deixa uma linha no log do
+backend. O `2>&1` é necessário: essas linhas saem pelo stderr, e sem ele o
+`grep` não as vê.
+
+```bash
+docker logs --since 1h dataforgetest-backend 2>&1 | grep OIDC
+```
+
+| A linha diz | Causa |
+|---|---|
+| `invalid_client` | o segredo no servidor não é desse cliente. Gere outro no cliente OAuth do Console, grave com `configurar-sso-plataforma.sh` e rode `deploy.sh` para o contêiner ler o `.env` novo |
+| `the login cookie did not come back` | o navegador não devolveu o cookie do login: bloqueio de cookies para `api.smartdatatest.com`, mais de 10 minutos nas telas do Google, ou o link aberto em outro navegador |
+| `the login cookie could not be read` | o login passou de 10 minutos, ou o `SESSION_SECRET` mudou no meio dele |
+| `opened directly` | alguém abriu o endereço de retorno sem vir do Google, quase sempre um robô. Nada a corrigir |
+| `state does not match` | outro login começou no mesmo navegador depois deste (duas abas, por exemplo) |
+| `the provider returned error=…` | o Google recusou o login; o código diz o porquê |
+| `ExpiredTokenError` ou `issued in the future` | o relógio da VM do OrbStack está fora: compare `date -u` no Mac e no contêiner |
+| `not started, could not reach the identity provider` | o backend não alcança o Google (rede ou DNS) |
+
+Cancelar na tela do Google não é falha e não aparece nesse log.

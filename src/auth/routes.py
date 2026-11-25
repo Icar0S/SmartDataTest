@@ -40,6 +40,8 @@ _CHALLENGE = re.compile(r"[A-Za-z0-9_-]{43}")
 _VERIFIER = re.compile(r"[A-Za-z0-9._~-]{43,128}")
 # What secrets.token_urlsafe(32) produces.
 _CODE = re.compile(r"[A-Za-z0-9_-]{43}")
+# An OAuth error code is a short ASCII token (RFC 6749, section 4.1.2.1).
+_PROVIDER_ERROR = re.compile(r"[A-Za-z0-9_.-]{1,40}")
 
 _PROFILE_MAX = 80
 
@@ -83,6 +85,29 @@ def _back_to_frontend(**fragment):
     return redirect(f"{sso_config().frontend_url}/login#{urlencode(fragment)}", code=303)
 
 
+# Every login that ends in "failed" or "unavailable" leaves one line saying why,
+# starting with OIDC: the person only sees "try again", and docs/AUTH.md sends
+# the operator to `grep OIDC`. The state, the code and the challenge never go
+# into those lines; neither does any secret.
+
+
+def _why_no_login_in_progress() -> str:
+    if not request.args:
+        return "the callback was opened directly, not on the way back from the provider"
+    if current_app.config["SESSION_COOKIE_NAME"] in request.cookies:
+        return "the login cookie could not be read (expired, or signed with another SESSION_SECRET)"
+    return "the login cookie did not come back"
+
+
+def _loggable(provider_error: str) -> str:
+    """The provider's error code, safe to log. Anyone can open the callback
+    with any ``error``, so only the leading code is kept: no line breaks to
+    forge entries with, no unbounded text."""
+    match = _PROVIDER_ERROR.match(provider_error)
+    code = match.group() if match else "?"
+    return code if code == provider_error else f"{code}..."
+
+
 # ── public ──────────────────────────────────────────────────────────────────
 
 
@@ -119,7 +144,11 @@ def google_login():
             settings.redirect_uri, state=state, prompt="select_account"
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        logger.warning("could not reach the identity provider: %s: %s", type(exc).__name__, exc)
+        logger.warning(
+            "OIDC login not started, could not reach the identity provider: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
         session.clear()
         return _back_to_frontend(error="unavailable")
 
@@ -133,11 +162,26 @@ def google_callback():
     login = session.get("login") or {}
     try:
         state = request.args.get("state", "")
-        if not login or not hmac.compare_digest(login["state"].encode(), state.encode()):
+        if not login:
+            logger.warning(
+                "OIDC callback rejected: no login in progress, %s", _why_no_login_in_progress()
+            )
             raise oidc.LoginFailed("failed")
-        if request.args.get("error"):
-            denied = request.args["error"] == "access_denied"
-            raise oidc.LoginFailed("cancelled" if denied else "failed")
+        if not hmac.compare_digest(login["state"].encode(), state.encode()):
+            # A later login in the same browser replaced this one, or the link
+            # was made somewhere else.
+            logger.warning("OIDC callback rejected: state does not match the login in progress")
+            raise oidc.LoginFailed("failed")
+        provider_error = request.args.get("error")
+        if provider_error == "access_denied":
+            # The person pressed cancel: not something for the operator to fix.
+            logger.info("OIDC login cancelled at the provider")
+            raise oidc.LoginFailed("cancelled")
+        if provider_error:
+            logger.warning(
+                "OIDC callback rejected: the provider returned error=%s", _loggable(provider_error)
+            )
+            raise oidc.LoginFailed("failed")
         claims = oidc.fetch_claims(current_app.extensions["google_oidc"], settings)
         user = auth_store().record_google_login(claims)
         if user["status"] == "blocked":
