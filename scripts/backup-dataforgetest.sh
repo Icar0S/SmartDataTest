@@ -14,10 +14,11 @@ set -euo pipefail
 # Ao alterar este arquivo, repita o cp. Agendado por
 # ~/Library/LaunchAgents/com.icaro.backup-dataforgetest.plist (03:45 diário).
 #
-# Este projeto não usa banco: todo o estado vive em arquivos.
-#   storage/  vectorstore (base de conhecimento do RAG), sessões de accuracy,
-#             gold, synth, metrics e as runs do checklist
-#   uploads/  arquivos enviados pelos usuários
+# O estado vive em arquivos e num SQLite:
+#   storage/    vectorstore (base de conhecimento do RAG), sessões de accuracy,
+#               gold, synth, metrics e as runs do checklist
+#   uploads/    arquivos enviados pelos usuários
+#   auth-data/  usuários, sessões e auditoria (SQLite; ver docs/AUTH.md)
 #
 # Segue o mesmo padrão de ~/srv/bin/backup-db.sh: lê de dentro do container e
 # redireciona para fora, carimbo de data, aborta se o resultado sair vazio,
@@ -53,6 +54,37 @@ if ! docker compose -f "$COMPOSE_FILE" ps --status running --quiet backend | gre
   echo "ERRO: container backend não está rodando, abortando" >&2
   exit 1
 fi
+
+in_backend() { docker compose -f "$COMPOSE_FILE" exec -T backend "$@"; }
+
+# ── Banco de usuários ────────────────────────────────────────────────────────
+# A cópia é feita pela própria aplicação, de dentro do contêiner (auth.cli usa a
+# API de backup do SQLite e confere o resultado). Um tar do arquivo em uso
+# poderia pegá-lo no meio de uma gravação, e abri-lo daqui corromperia o banco:
+# as travas do SQLite não atravessam a fronteira da máquina virtual.
+backup_users() {
+  # Sem login configurado não há banco: é um estado legítimo, não um erro.
+  in_backend test -s /app/auth-data/auth.sqlite3 2>/dev/null || return 0
+  local out="$DEST/usuarios-$STAMP.sqlite3"
+  in_backend python -m auth.cli backup /tmp/usuarios.sqlite3 >/dev/null || return 1
+  # Contém nomes e e-mails: mesma cautela do original (modo 600).
+  ( umask 077 && in_backend cat /tmp/usuarios.sqlite3 > "$out" ) || { rm -f "$out"; return 1; }
+  in_backend rm -f /tmp/usuarios.sqlite3 || true
+  # Confere o que CHEGOU aqui, não só o que saiu de lá.
+  if [ "$(sqlite3 "$out" 'PRAGMA integrity_check; SELECT COUNT(*) >= 0 FROM users' 2>&1)" != $'ok\n1' ]; then
+    echo "ERRO: cópia do banco de usuários falhou na verificação" >&2
+    rm -f "$out"
+    return 1
+  fi
+  gzip -f "$out"
+  find "$DEST" -name 'usuarios-*.sqlite3.gz' -mtime +$RETENCAO_DIAS -delete
+  echo "[$(date '+%F %T')] backup ok: $out.gz ($(du -h "$out.gz" | cut -f1))"
+}
+
+# Uma falha não cancela a outra: o banco de usuários e os arquivos se perdem por
+# motivos diferentes. Mas ela aparece no código de saída.
+users_ok=1
+backup_users || { users_ok=0; echo "ERRO: backup do banco de usuários falhou; seguindo" >&2; }
 
 # Arquivos .tmp são gravações em curso (sessões usam temp + rename atômico) e
 # não têm valor num backup.
@@ -91,3 +123,5 @@ echo "[$(date '+%F %T')] backup ok: $OUT ($(du -h "$OUT" | cut -f1), $(tar -tzf 
 # Sem isto, um incêndio ou roubo leva junto os backups. Mesmo padrão do
 # backup-db.sh, que também tem esta seção pendente.
 # rclone copy "$OUT" r2:meus-backups/dataforgetest/
+
+[ "$users_ok" -eq 1 ] || exit 1
