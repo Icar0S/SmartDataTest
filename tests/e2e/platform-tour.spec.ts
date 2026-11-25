@@ -8,6 +8,7 @@ import { Director, type Tempo } from './demo/director';
 import { demoLlm } from './demo/llm';
 import { installOverlay } from './demo/overlay';
 import { ScreencastRecorder } from './demo/recorder';
+import { demoSession, startSignedIn } from './demo/session';
 import { CLOSING, OPENING } from './demo/storyboard';
 import { apiURL, baseURL } from './demo/target';
 
@@ -24,17 +25,6 @@ import { apiURL, baseURL } from './demo/target';
  */
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
-
-// Session for the pitch cut, which skips the login screen. Mirrors what the
-// login page stores for the demo engineer account (frontend/src/utils/authStorage.js).
-const DEMO_SESSION = {
-  userId: 'user-eng-002',
-  name: 'Engineer DataForge',
-  email: 'engineer@smartdatatest.com',
-  role: 'data_eng',
-  avatar: null,
-  profile: { role: 'data_eng', setAt: '2026-01-01T00:00:00.000Z' },
-};
 
 type Plan = {
   name: string;
@@ -87,23 +77,14 @@ async function recordTour(page: Page, context: BrowserContext, plan: Plan): Prom
   fs.mkdirSync(artifactsDir, { recursive: true });
 
   await installOverlay(context);
-  await context.addInitScript(
-    ({ session }) => {
-      try {
-        localStorage.setItem('smartdatatest_language', 'pt-BR');
-        if (session) {
-          const now = Date.now();
-          localStorage.setItem(
-            'smartdatatest_session',
-            JSON.stringify({ ...session, loginAt: now, expiresAt: now + 8 * 60 * 60 * 1000 }),
-          );
-        }
-      } catch {
-        // about:blank has no storage.
-      }
-    },
-    { session: plan.signedIn ? DEMO_SESSION : null },
-  );
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem('smartdatatest_language', 'pt-BR');
+    } catch {
+      // about:blank has no storage.
+    }
+  });
+  if (plan.signedIn) await startSignedIn(context, await demoSession());
 
   const viewport = page.viewportSize() ?? { width: 1600, height: 900 };
   const scale = test.info().project.use.deviceScaleFactor ?? 1;

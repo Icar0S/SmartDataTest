@@ -18,6 +18,15 @@ Nos dois, cada tela é aberta pela página inicial, com uma legenda mostrando o 
 
 Nada precisa estar rodando na máquina: a rotina usa o frontend da Vercel e a API em `api.smartdatatest.com`.
 
+- **Uma sessão na plataforma.** O login é com Google, e automatizá-lo exigiria guardar a senha de alguém num script. Em vez disso, abra no servidor uma sessão curta para uma conta de demonstração (que já tenha entrado uma vez e esteja aprovada) e passe-a por variável de ambiente:
+
+  ```bash
+  export DEMO_SESSION_TOKEN=$(docker exec dataforgetest-backend \
+      python -m auth.cli sessao conta-de-demonstracao@gmail.com --horas 2)
+  ```
+
+  Trate o valor como senha: ele dá acesso à plataforma até expirar.
+
 ## Instalação
 
 ```bash
@@ -42,7 +51,7 @@ Para testar código que ainda não foi para produção:
 DEMO_BASE_URL=http://localhost:3000 npm run apresentacao
 ```
 
-Nesse modo a rotina sobe sozinha a API Flask (porta 5000) e o servidor de desenvolvimento do React (porta 3000), ou reaproveita os que já estiverem rodando. Precisa do `.venv` na raiz com o `requirements.txt` instalado, do `cd frontend && npm install` e de um LLM (seção [LLM](#llm)).
+Nesse modo a rotina sobe sozinha a API Flask (porta 5000), o servidor de desenvolvimento do React (porta 3000) e um provedor de identidade que faz o papel do Google (porta 5200, `tests/support/mock_oidc.py`), ou reaproveita os que já estiverem rodando. O login é o de verdade, e `DEMO_SESSION_TOKEN` não é necessário. Precisa do `.venv` na raiz com o `requirements.txt` instalado, do `cd frontend && npm install` e de um LLM (seção [LLM](#llm)).
 
 ## O que sai em `output/`
 
@@ -69,6 +78,7 @@ São dados públicos ou derivados deles; os uploads ficam nas sessões do servid
 | Variável | Padrão | Efeito |
 |---|---|---|
 | `DEMO_BASE_URL` | `https://smart-data-test.vercel.app` | Endereço gravado. Com `http://localhost:3000`, a rotina sobe a API e o frontend locais |
+| `DEMO_SESSION_TOKEN` | — | Sessão da conta de demonstração. Obrigatória em produção; dispensada no modo local |
 | `DEMO_API_URL` | `https://api.smartdatatest.com` (ou `http://127.0.0.1:5000` no modo local) | API consultada só para registrar qual LLM ela usa |
 | `DEMO_PACE` | `1` | Multiplica o tempo de leitura de legendas e resultados. `1.3` deixa o vídeo mais lento para narração; `0.7` o encurta |
 | `DEMO_VIEWPORT` | `1440x810` | Tamanho da página em pixels CSS |

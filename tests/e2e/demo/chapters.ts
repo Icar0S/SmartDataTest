@@ -2,7 +2,9 @@ import path from 'node:path';
 import { expect, type Locator, type Page, type Response } from '@playwright/test';
 import type { DemoData } from './datasets';
 import type { Director } from './director';
+import { demoSession, enterSession } from './session';
 import { QA_ANSWERS, STORY, SYNTHETIC_COLUMNS, SYNTHETIC_ROWS, type Chapter } from './storyboard';
+import { isLocal } from './target';
 
 /**
  * One function per screen of the platform. Each one presents the screen and,
@@ -88,15 +90,28 @@ export const login: ChapterScript = async (tour) => {
   await d.goto('/login');
   await expect(page.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible();
   await d.chapter(STORY.login);
-  await d.type(page.locator('input[type="email"]'), 'engineer@smartdatatest.com');
-  await d.type(page.locator('input[type="password"]'), 'engineer123');
-  await d.click(page.getByRole('button', { name: 'Entrar', exact: true }));
+  const google = page.getByRole('button', { name: 'Entrar com Google' });
+  if (isLocal) {
+    await d.click(google);
+  } else {
+    // Google's own screens are not part of the tour: show the button and carry on
+    // with the session opened on the server.
+    const session = await demoSession();
+    await d.point(google, true);
+    await d.pause(900);
+    await enterSession(page, session);
+    await d.goto('/');
+  }
 
+  // The profile is asked once per account, so it may or may not come up.
   const role = page.getByTestId('role-card-data_eng');
-  await expect(role).toBeVisible({ timeout: 15_000 });
-  await d.pause(700);
-  await d.click(role);
-  await d.click(page.getByRole('button', { name: 'Acessar plataforma' }));
+  const home = page.getByRole('heading', { level: 1 }).filter({ hasText: 'SmartDataTest' });
+  await expect(role.or(home).first()).toBeVisible({ timeout: 15_000 });
+  if (await role.isVisible()) {
+    await d.pause(700);
+    await d.click(role);
+    await d.click(page.getByRole('button', { name: 'Acessar plataforma' }));
+  }
   await page.waitForURL((url) => url.pathname === '/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('SmartDataTest');
 };

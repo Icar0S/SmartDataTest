@@ -28,7 +28,7 @@ export const CLOSING: Card = {
 export const STORY = {
   login: {
     title: 'Acesso à plataforma',
-    text: 'Login com usuário de demonstração e escolha do perfil profissional.',
+    text: 'Login com a conta Google, para quem o administrador liberou, e escolha do perfil profissional.',
   },
   home: {
     title: 'Visão geral',

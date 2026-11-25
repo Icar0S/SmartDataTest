@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
 import { demoLlmEnv } from './demo/llm';
+import { DEMO_PERSON } from './demo/session';
 import { baseURL, isLocal } from './demo/target';
 
 /**
@@ -12,6 +13,7 @@ import { baseURL, isLocal } from './demo/target';
  * reusing them if they are already running.
  */
 const repoRoot = path.resolve(__dirname, '..', '..');
+const standInProvider = 'http://localhost:5200';
 const python =
   process.env.DEMO_PYTHON ??
   path.join(repoRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
@@ -46,7 +48,20 @@ export default defineConfig({
   webServer: isLocal
     ? [
         {
-          command: `"${python}" api.py`,
+          // Stands in for Google, so a local run signs in through the real flow.
+          command:
+            `"${python}" -m tests.support.mock_oidc --port 5200 --email ${DEMO_PERSON.email} ` +
+            `--name "${DEMO_PERSON.name}" --hd ${DEMO_PERSON.domain}`,
+          cwd: repoRoot,
+          url: `${standInProvider}/.well-known/openid-configuration`,
+          reuseExistingServer: true,
+          timeout: 60_000,
+          stdout: 'ignore',
+          stderr: 'pipe',
+        },
+        {
+          // Invited first, so the account is approved on its first sign-in.
+          command: `"${python}" -m auth.cli convidar ${DEMO_PERSON.email} && "${python}" api.py`,
           cwd: path.join(repoRoot, 'src'),
           url: 'http://127.0.0.1:5000/',
           reuseExistingServer: true,
@@ -54,10 +69,20 @@ export default defineConfig({
           stdout: 'ignore',
           stderr: 'pipe',
           env: {
-            // The repository .env sets FLASK_ENV=production, which demands API
-            // tokens and a CORS allow-list. A local tour runs behind the React
-            // dev proxy and needs neither. Process variables win over .env.
+            // The repository .env is the production one. Process variables win
+            // over it, so this replaces its identity provider, its credentials
+            // and its user database with ones that only exist here.
             FLASK_ENV: 'development',
+            CORS_ALLOWED_ORIGINS: baseURL,
+            FRONTEND_URL: baseURL,
+            GOOGLE_CLIENT_ID: 'dev',
+            GOOGLE_CLIENT_SECRET: 'dev',
+            SESSION_SECRET: 'only-for-recording-the-tour-on-this-machine',
+            OIDC_DISCOVERY_URL: `${standInProvider}/.well-known/openid-configuration`,
+            OIDC_REDIRECT_URI: 'http://localhost:5000/api/auth/google/callback',
+            AUTH_DB_PATH: path.join(__dirname, 'output', 'auth.sqlite3'),
+            API_AUTH_DISABLED: '',
+            API_TOKENS: '',
             PYTHONUTF8: '1',
             PYTHONIOENCODING: 'utf-8',
             // One tour makes more requests than the hourly defaults allow: the
