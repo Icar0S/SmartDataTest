@@ -38,6 +38,7 @@ RUN mkdir -p storage/vectorstore \
     storage/gold \
     storage/metrics \
     uploads \
+    auth-data \
     initial_vectorstore
 
 # Pre-build the RAG document index so cold starts don't need to re-parse PDFs.

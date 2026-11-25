@@ -10,6 +10,31 @@ by the CD pipeline when a pull request reaches `main`; a section written here
 beforehand becomes the notes of that release. See
 [docs/VERSIONAMENTO.md](docs/VERSIONAMENTO.md).
 
+## [2.0.0]
+
+Sign-in with Google. The old login was a list of users and passwords compared in
+the browser, in a bundle anyone could read: it decided what the interface
+showed, and protected nothing.
+
+### Added
+- Google sign-in (OpenID Connect, Authorization Code with PKCE), with sessions
+  kept and revocable on the server
+- Access granted by the operator: accounts start pending, unless their e-mail
+  was invited. Operator panel at `/admin`, and `python -m auth.cli` on the server
+- `GET /api/version`, and the running version in the interface
+- Tags and GitHub Releases created automatically for every change to `main`
+- Content-Security-Policy and related headers on the frontend
+
+### Changed
+- **Breaking:** every business route requires an approved person's session. The
+  API token is now for scripts only and is no longer part of the frontend build
+- Checklist runs belong to whoever is logged in, not to a name sent by the client
+- The frontend is only published when the production backend can log people in
+
+### Removed
+- **Breaking:** `POST /api/auth/validate`, `AUTH_USERS` and `AUTH_USERS_FILE`
+- **Breaking:** the demo accounts, and `REACT_APP_API_TOKEN`
+
 ## [1.5.0] - 2026-11-23
 
 ### Added

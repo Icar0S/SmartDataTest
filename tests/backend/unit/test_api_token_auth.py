@@ -89,18 +89,29 @@ class TestPublicPaths(unittest.TestCase):
                 response = self.client.get(f"/api/{feature}/health")
                 self.assertNotEqual(response.status_code, 401)
 
-    def test_auth_validate_is_public(self):
-        """The login endpoint cannot itself require a token."""
-        response = self.client.post("/api/auth/validate", json={})
-        self.assertNotEqual(response.status_code, 401)
+    def test_login_endpoints_are_public(self):
+        """The login cannot itself require a credential.
 
-    def test_stats_is_public(self):
-        """Rendered on the login page before any credential exists."""
-        self.assertEqual(self.client.get("/api/stats").status_code, 200)
+        This used to be /api/auth/validate, the password login. That route is
+        gone, replaced by Google sign-in.
+        """
+        for method, path in (
+            ("GET", "/api/auth/config"),
+            ("GET", "/api/auth/google/login"),
+            ("GET", "/api/auth/google/callback"),
+            ("POST", "/api/auth/exchange"),
+        ):
+            with self.subTest(path=path):
+                response = self.client.open(path, method=method)
+                self.assertNotEqual(response.status_code, 401)
 
     def test_version_is_public(self):
         """The deploy compares it with what it just built."""
         self.assertEqual(self.client.get("/api/version").status_code, 200)
+
+    def test_stats_is_public(self):
+        """Rendered on the login page before any credential exists."""
+        self.assertEqual(self.client.get("/api/stats").status_code, 200)
 
     def test_cors_preflight_not_blocked(self):
         """Rejecting OPTIONS would break the browser before the real request."""

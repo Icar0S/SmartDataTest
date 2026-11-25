@@ -495,9 +495,10 @@ FLASK_ENV=development
 FLASK_DEBUG=True
 ```
 
-### Versions
+### Access and versions
 
-Every change to `main` becomes a tagged version:
+Sign-in is with Google, for people the operator has let in:
+[docs/AUTH.md](docs/AUTH.md). Every change to `main` becomes a tagged version:
 [docs/VERSIONAMENTO.md](docs/VERSIONAMENTO.md).
 
 ### Supported Data Quality Rules
