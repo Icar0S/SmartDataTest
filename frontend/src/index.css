@@ -71,3 +71,310 @@ body {
     @apply w-full mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50;
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* Landing look: login and home. Everything below is scoped to .sdt-landing  */
+/* or to classes only those pages use, so the other screens are unchanged.  */
+/* ------------------------------------------------------------------------ */
+
+.App.App--landing {
+  display: block;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  background: #07060d;
+}
+
+@layer components {
+  .sdt-landing {
+    --sdt-bg: #07060d;
+    --sdt-fg: #f2effb;
+    --sdt-violet: #a78bfa;
+    --sdt-surface: rgba(20, 17, 34, 0.55);
+    --sdt-surface-strong: rgba(24, 20, 40, 0.78);
+    --sdt-border: rgba(167, 139, 250, 0.14);
+    --sdt-border-strong: rgba(167, 139, 250, 0.3);
+    --sdt-glow: rgba(167, 139, 250, 0.32);
+    --sdt-grid: rgba(167, 139, 250, 0.055);
+    --sdt-gradient: linear-gradient(108deg, #c4b5fd 0%, #a78bfa 28%, #e879f9 58%, #f472b6 82%, #67e8f9 130%);
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    overflow-x: clip;
+    background: var(--sdt-bg);
+    color: var(--sdt-fg);
+    font-family: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .sdt-landing ::selection {
+    color: var(--sdt-fg);
+    background: rgba(167, 139, 250, 0.35);
+  }
+
+  .sdt-landing :focus-visible {
+    outline: 2px solid var(--sdt-violet);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  .section-container {
+    position: relative;
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .section-container {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .section-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  .glass {
+    background: var(--sdt-surface);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--sdt-border);
+  }
+
+  .glass-strong {
+    background: var(--sdt-surface-strong);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    backdrop-filter: blur(28px) saturate(150%);
+    border: 1px solid var(--sdt-border);
+  }
+
+  .gradient-text {
+    background: var(--sdt-gradient);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(var(--sdt-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--sdt-grid) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(rgba(167, 139, 250, 0.16) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .mask-radial {
+    -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 35%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 65% at 50% 35%, #000 30%, transparent 100%);
+  }
+
+  .mask-fade-edges {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(#000 60%, transparent);
+    mask-image: linear-gradient(#000 60%, transparent);
+  }
+
+  /* Fixed ambient light behind everything on the page. */
+  .sdt-ambient {
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgba(167, 139, 250, 0.16), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 100% 20%, rgba(103, 232, 249, 0.06), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 0% 90%, rgba(244, 114, 182, 0.08), transparent 65%);
+  }
+
+  .sdt-grain {
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Rotating conic border, shown on hover and on keyboard focus. */
+  .card-border {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .card-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: conic-gradient(
+      from var(--angle, 0deg),
+      transparent 0%,
+      rgba(196, 181, 253, 0.85) 10%,
+      rgba(244, 114, 182, 0.7) 20%,
+      transparent 34%,
+      transparent 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    transition: opacity 0.5s;
+  }
+
+  .card-border:hover::before,
+  .card-border:focus-within::before {
+    opacity: 1;
+    animation: border-spin 4s linear infinite;
+  }
+
+  /* Light that follows the pointer (CSS variables set from JS). */
+  .spotlight {
+    --x: 50%;
+    --y: 50%;
+  }
+
+  .spotlight-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background: radial-gradient(
+      var(--spotlight-size, 520px) circle at var(--x) var(--y),
+      rgba(167, 139, 250, var(--spotlight-alpha, 0.1)),
+      transparent 55%
+    );
+  }
+
+  .spotlight:hover > .spotlight-layer,
+  .spotlight:focus-within > .spotlight-layer {
+    opacity: 1;
+  }
+
+  .tilt {
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 0.3s ease-out;
+  }
+
+  .cursor-spot {
+    background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(167, 139, 250, 0.08), transparent 55%);
+  }
+
+  /* Enter on scroll, once (see landing/Reveal.js). */
+  .reveal {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-y, 28px), 0);
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+      filter 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+  }
+
+  .reveal-blur {
+    filter: blur(10px);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Words or letters that rise out of a mask. */
+  .rise-mask {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+    vertical-align: baseline;
+  }
+
+  .rise {
+    display: inline-block;
+    transform: translateY(115%);
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .is-visible .rise,
+  .rise.is-visible {
+    transform: none;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* Light sweeping across a primary button on hover. */
+  .shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transition: transform 0.7s;
+  }
+
+  .group:hover > .shine {
+    transform: translateX(100%);
+  }
+
+  .sdt-scroll-progress {
+    transform: scaleX(var(--progress, 0));
+    transform-origin: left;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes border-spin {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sdt-landing *,
+  .sdt-landing *::before,
+  .sdt-landing *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .sdt-landing .reveal,
+  .sdt-landing .rise {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .sdt-landing .tilt {
+    transform: none;
+  }
+}

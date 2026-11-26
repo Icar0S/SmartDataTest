@@ -89,6 +89,10 @@ describe('App Component', () => {
   test('exports a default function component', () => {
     expect(typeof App).toBe('function');
   });
+
+  test('login and home fill the window, edge to edge', () => {
+    // jsdom starts at "/", the home page.
+    render(<App />);
+    expect(document.querySelector('.App')).toHaveClass('App--landing');
+  });
 });
-
-

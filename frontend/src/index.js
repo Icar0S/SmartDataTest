@@ -1,5 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Self-hosted: the CSP allows fonts from this origin only.
+import '@fontsource-variable/syne';
+import '@fontsource-variable/dm-sans';
+import '@fontsource-variable/jetbrains-mono';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
