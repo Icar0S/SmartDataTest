@@ -58,20 +58,6 @@ jest.mock('framer-motion', () => {
 
 jest.mock('lucide-react', () => new Proxy({}, { get: () => () => <span /> }));
 
-// Mock animations
-jest.mock('../../../frontend/src/styles/animations', () => ({
-  fadeIn: {},
-  slideIn: {},
-  staggerContainer: {},
-  slideInFromLeft: {},
-  slideInFromRight: {},
-  slideDown: {},
-  popIn: {},
-  profileCardIn: {},
-  floatingNode: () => ({ animate: {} }),
-  scaleIn: {},
-}));
-
 // Mock LanguageToggle
 jest.mock('../../../frontend/src/components/LanguageToggle', () =>
   function MockLanguageToggle() {
@@ -272,4 +258,47 @@ describe('right panel', () => {
     setup();
     expect(screen.queryByText(/Detecções/i)).not.toBeInTheDocument();
   });
+
+describe('beside the card', () => {
+  test('shows the platform numbers and the pipeline', () => {
+    setup();
+    expect(screen.getByText('1.180+')).toBeInTheDocument();
+    expect(screen.getByText('86%')).toBeInTheDocument();
+    expect(screen.getByText('Pipeline de Qualidade')).toBeInTheDocument();
+    expect(screen.getByText('Validação de schema')).toBeInTheDocument();
+  });
+
+  test('says how sign-in is protected', () => {
+    setup();
+    expect(screen.getByText('Google + PKCE')).toBeInTheDocument();
+    expect(screen.getByText('Nenhuma senha armazenada')).toBeInTheDocument();
+  });
+
+  test('in English too', () => {
+    mockLanguage.mockReturnValue('en-US');
+    setup();
+    expect(screen.getByText('Quality Pipeline')).toBeInTheDocument();
+    expect(screen.getByText('1,180+')).toBeInTheDocument();
+    expect(screen.getByText('No passwords stored')).toBeInTheDocument();
+  });
+
+  test('falls back to Portuguese for an unknown language', () => {
+    mockLanguage.mockReturnValue('fr-FR');
+    setup();
+    expect(screen.getByRole('button', { name: 'Entrar com Google' })).toBeInTheDocument();
+  });
+
+  test('the page title is the sign-in heading', () => {
+    setup();
+    expect(screen.getByRole('heading', { level: 1, name: 'Bem-vindo de volta' })).toBeInTheDocument();
+  });
+
+  test('ticks "remember me" visibly', () => {
+    setup();
+    const checkbox = screen.getByRole('checkbox', { name: 'Lembrar-me por 7 dias' });
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+  });
+});
 });

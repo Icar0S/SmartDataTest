@@ -23,9 +23,11 @@ function AppContent() {
   const location = useLocation();
   const hideSupportButton =
     location.pathname === '/support-rag' || location.pathname === '/login';
+  // Login and home are full-bleed pages with their own background.
+  const isLanding = location.pathname === '/' || location.pathname === '/login';
 
   return (
-    <div className="App">
+    <div className={isLanding ? 'App App--landing' : 'App'}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/support-rag" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
