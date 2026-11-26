@@ -92,4 +92,28 @@ describe('LanguageToggle', () => {
     const icons = screen.getAllByTestId('icon-languages');
     expect(icons).toHaveLength(2);
   });
+
+  describe('glass variant', () => {
+    test('marks the current language as pressed', () => {
+      mockLanguage = 'en-US';
+      renderToggle({ variant: 'glass' });
+      expect(screen.getByRole('button', { name: 'EN-US' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'PT-BR' })).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByRole('group')).toHaveAttribute('data-testid', 'language-toggle');
+    });
+
+    test('switches language', () => {
+      renderToggle({ variant: 'glass' });
+      fireEvent.click(screen.getByRole('button', { name: 'EN-US' }));
+      expect(mockChangeLanguage).toHaveBeenCalledWith('en-US');
+      fireEvent.click(screen.getByRole('button', { name: 'PT-BR' }));
+      expect(mockChangeLanguage).toHaveBeenCalledWith('pt-BR');
+    });
+
+    test('tags each button with its language and needs no icon', () => {
+      renderToggle({ variant: 'glass' });
+      expect(screen.getByRole('button', { name: 'PT-BR' })).toHaveAttribute('lang', 'pt-BR');
+      expect(screen.queryAllByTestId('icon-languages')).toHaveLength(0);
+    });
+  });
 });

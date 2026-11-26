@@ -63,50 +63,19 @@ jest.mock('../../../frontend/src/hooks/useStats', () => () => ({
   responseSla: '<2s',
 }));
 
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    form: ({ children, ...props }) => <form {...props}>{children}</form>,
-    p: ({ children, ...props }) => <p {...props}>{children}</p>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    span: ({ children, ...props }) => <span {...props}>{children}</span>,
-    h2: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
-    textarea: ({ children, ...props }) => <textarea {...props}>{children}</textarea>,
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
+// Any motion element renders as its plain tag; any icon as an empty span.
+jest.mock('framer-motion', () => {
+  const passthrough = (Tag) =>
+    function Motion({ children, initial, animate, exit, transition, variants, ...props }) {
+      return <Tag {...props}>{children}</Tag>;
+    };
+  return {
+    motion: new Proxy({}, { get: (_target, tag) => passthrough(tag) }),
+    AnimatePresence: ({ children }) => <>{children}</>,
+  };
+});
 
-jest.mock('lucide-react', () => ({
-  Database: () => <span data-testid="icon-database">DB</span>,
-  Lock: () => <span>Lock</span>,
-  CheckCircle: () => <span data-testid="icon-check">Check</span>,
-  Languages: () => <span>Languages</span>,
-  Shield: () => <span>Shield</span>,
-  Heart: () => <span>Heart</span>,
-  TestTube: () => <span data-testid="icon-testtube">TestTube</span>,
-  BarChart3: () => <span>BarChart</span>,
-  Code: () => <span data-testid="icon-code">Code</span>,
-  GraduationCap: () => <span>GradCap</span>,
-  BookOpen: () => <span>BookOpen</span>,
-  Settings: () => <span>Settings</span>,
-  User: () => <span>User</span>,
-  Loader: () => <span data-testid="icon-loader">Loader</span>,
-  Clock: () => <span>Clock</span>,
-  Zap: () => <span>Zap</span>,
-}));
-
-jest.mock('../../../frontend/src/styles/animations', () => ({
-  fadeIn: {},
-  slideIn: {},
-  staggerContainer: {},
-  slideInFromLeft: {},
-  slideInFromRight: {},
-  slideDown: {},
-  popIn: {},
-  profileCardIn: {},
-  floatingNode: () => ({ animate: {} }),
-  scaleIn: {},
-}));
+jest.mock('lucide-react', () => new Proxy({}, { get: () => () => <span /> }));
 
 jest.mock('../../../frontend/src/components/LanguageToggle', () =>
   function MockLanguageToggle() {
